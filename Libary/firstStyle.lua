@@ -62,7 +62,7 @@ function Library:CreateWindow(hubName)
     local PageContainer = Instance.new("Frame")
     PageContainer.Parent = MainFrame
     PageContainer.BackgroundTransparency = 1
-    PageContainer.Position = UDim2.new(0, 160, 0, 0) -- Starts right after Sidebar
+    PageContainer.Position = UDim2.new(0, 160, 0, 0) 
     PageContainer.Size = UDim2.new(1, -160, 1, 0)
 
     -- Dragging
@@ -113,7 +113,7 @@ function Library:CreateWindow(hubName)
         Page.Size = UDim2.new(1, 0, 1, 0)
         Page.Visible = false
 
-        -- TOP BAR FOR SUB-TABS (Die "Dinger" oben)
+        -- TOP BAR FOR SUB-TABS
         local TopBar = Instance.new("ScrollingFrame")
         TopBar.Name = "TopBar"
         TopBar.Parent = Page
@@ -182,7 +182,8 @@ function Library:CreateWindow(hubName)
             local SectionLogic = {}
 
             function SectionLogic:CreateButton(text, callback)
-                local btn = Instance.new("TextButton", SubPage)
+                local btn = Instance.new("TextButton")
+                btn.Parent = SubPage
                 btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
                 btn.Size = UDim2.new(1, -10, 0, 35)
                 btn.Font = Enum.Font.GothamSemibold
@@ -194,18 +195,19 @@ function Library:CreateWindow(hubName)
             end
 
             function SectionLogic:CreateToggle(text, callback)
-                local tgl = Instance.new("Frame", SubPage)
+                local tgl = Instance.new("Frame")
+                tgl.Parent = SubPage
                 tgl.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
                 tgl.Size = UDim2.new(1, -10, 0, 40)
                 Instance.new("UICorner", tgl).CornerRadius = UDim.new(0, 4)
-                local lbl = Instance.new("TextLabel", tgl)
-                lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 0); lbl.Size = UDim2.new(1, -60, 1, 0)
+                local lbl = Instance.new("TextLabel")
+                lbl.Parent = tgl; lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 0); lbl.Size = UDim2.new(1, -60, 1, 0)
                 lbl.Font = Enum.Font.Gotham; lbl.Text = text; lbl.TextColor3 = Color3.fromRGB(200, 200, 200); lbl.TextSize = 13; lbl.TextXAlignment = Enum.TextXAlignment.Left
-                local box = Instance.new("Frame", tgl)
-                box.BackgroundColor3 = Color3.fromRGB(40, 40, 40); box.Position = UDim2.new(1, -45, 0.5, -10); box.Size = UDim2.new(0, 35, 0, 20)
+                local box = Instance.new("Frame")
+                box.Parent = tgl; box.BackgroundColor3 = Color3.fromRGB(40, 40, 40); box.Position = UDim2.new(1, -45, 0.5, -10); box.Size = UDim2.new(0, 35, 0, 20)
                 Instance.new("UICorner", box).CornerRadius = UDim.new(1, 0)
-                local check = Instance.new("Frame", box)
-                check.BackgroundColor3 = Color3.fromRGB(255, 255, 255); check.Position = UDim2.new(0, 3, 0.5, -7); check.Size = UDim2.new(0, 14, 0, 14)
+                local check = Instance.new("Frame")
+                check.Parent = box; check.BackgroundColor3 = Color3.fromRGB(255, 255, 255); check.Position = UDim2.new(0, 3, 0.5, -7); check.Size = UDim2.new(0, 14, 0, 14)
                 Instance.new("UICorner", check).CornerRadius = UDim.new(1, 0)
                 local s = false
                 tgl.InputBegan:Connect(function(i)
@@ -216,6 +218,32 @@ function Library:CreateWindow(hubName)
                         callback(s)
                     end
                 end)
+            end
+
+            function SectionLogic:CreateSlider(text, min, max, default, callback)
+                local sld = Instance.new("Frame")
+                sld.Parent = SubPage
+                sld.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+                sld.Size = UDim2.new(1, -10, 0, 50)
+                Instance.new("UICorner", sld).CornerRadius = UDim.new(0, 4)
+                local lbl = Instance.new("TextLabel")
+                lbl.Parent = sld; lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 5); lbl.Size = UDim2.new(1, -20, 0, 20)
+                lbl.Font = Enum.Font.Gotham; lbl.Text = text .. ": " .. default; lbl.TextColor3 = Color3.fromRGB(200, 200, 200); lbl.TextSize = 12; lbl.TextXAlignment = Enum.TextXAlignment.Left
+                local bg = Instance.new("Frame")
+                bg.Parent = sld; bg.BackgroundColor3 = Color3.fromRGB(40, 40, 40); bg.Position = UDim2.new(0, 12, 0, 30); bg.Size = UDim2.new(1, -24, 0, 6)
+                Instance.new("UICorner", bg)
+                local fill = Instance.new("Frame")
+                fill.Parent = bg; fill.BackgroundColor3 = Color3.fromRGB(255, 100, 150); fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+                Instance.new("UICorner", fill)
+                local active = false
+                local function update()
+                    local m = math.clamp((UserInputService:GetMouseLocation().X - bg.AbsolutePosition.X) / bg.AbsoluteSize.X, 0, 1)
+                    local val = math.floor(min + (max - min) * m)
+                    lbl.Text = text .. ": " .. val; fill.Size = UDim2.new(m, 0, 1, 0); callback(val)
+                end
+                bg.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then active = true; update() end end)
+                UserInputService.InputChanged:Connect(function(i) if active and i.UserInputType == Enum.UserInputType.MouseMovement then update() end end)
+                UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then active = false end end)
             end
 
             SubPageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
