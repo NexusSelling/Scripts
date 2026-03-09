@@ -2,6 +2,18 @@
 
 A modern, simplistic, and fluid UI library for Roblox exploit scripts. Designed with sleek visuals, smooth animations, and an easy-to-use API.
 
+## ✨ Features
+- **Highly Customizable:** Change colors, borders, titles, and keybinds on the fly.
+- **Fluid Animations:** Smooth tweening for tabs, elements, and notifications.
+- **Save-State Ready:** Methods like `:Set()` and `:Get()` to programmatically manage UI state.
+- **Smart Notification System:** Stacking notifications that automatically sort and cap at a maximum number to prevent screen clutter.
+
+## 🚀 Requirements & Supported Executors
+The Nexus Library relies on standard Roblox CoreGui injections. It is tested and verified to work on:
+- **Nexus Executor**
+- **Synapse X** / **Script-Ware** (Legacy standard)
+- Most generic Level 7+ executors that support `loadstring`, `game:HttpGet()`, and `CoreGui` parent manipulation.
+
 ## 📥 Loading the Library
 
 You can load the library directly from the GitHub repository using `loadstring`:
@@ -183,3 +195,38 @@ MainSection:CreateButton("Reset Config", function()
     Library:Notify("Config", "All settings have been reset.", 3)
 end)
 ```
+
+---
+
+## 🛠️ Troubleshooting
+
+**"The UI doesn't open / nothing happens when I run the script."**
+- Check your external executor's developer console (F9) for script errors.
+- Ensure your executor supports `game:HttpGet` and doesn't block loading raw strings from GitHub.
+
+**"The notifications aren't showing up!"**
+- Make sure you inject into a game, not the main Roblox menu. `CoreGui` access is required.
+
+**"My callback isn't firing on load!"**
+- Elements do not auto-fire their callbacks on creation. If you want a default state to apply immediately in your script's logic, call `Element:Set(defaultValue)` manually after creating it.
+
+---
+
+## 📅 Changelog
+
+**v1.1.0**
+- Added `:Set()` and `:Get()` object returns on all elements.
+- Upgraded the Notification System to stack dynamically and cap at 5 active alerts.
+- Added fully customizable title text size and font configurations (`TitleSize`, `TitleFont`).
+- Keybinds now automatically listen for keyboard input and fire the callback without manual loops.
+
+**v1.0.0**
+- Initial Release of Nexus Library structure.
+- Basic tabs, dropdowns, toggles, buttons, sliders.
+
+---
+
+## ⚖️ License
+
+This project is intended for educational purposes and personal scripting utility. 
+You are free to use it, branch it, and adapt it into your own scripts. Mentioning the original **Nexus** library in your script hubs is appreciated but not required.
