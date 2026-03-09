@@ -176,7 +176,7 @@ function Library:CreateWindow(hubName)
         local Highlight = Instance.new("Frame", TabButton)
         Highlight.BackgroundColor3 = Library.Theme.Accent; Highlight.Position = UDim2.new(0, 0, 0, 5); Highlight.Size = UDim2.new(0, 3, 1, -10); Highlight.Transparency = 1
 
-        local Page = Instance.new("Frame", PageContainer)
+        local Page = Instance.new("CanvasGroup", PageContainer)
         Page.BackgroundTransparency = 1; Page.Size = UDim2.new(1, 0, 1, 0); Page.Visible = false
 
         local TopBar = Instance.new("ScrollingFrame", Page)
