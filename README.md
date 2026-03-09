@@ -72,10 +72,12 @@ local EspSection = MainTab:CreateSection("Visuals")
 
 ## 🎛️ Creating Elements
 
-All elements must be created inside a **Section**.
+All elements must be created inside a **Section**. 
+**Important Note on Callbacks:** All `callback` arguments in every element are **optional**. You can pass `nil` or leave them out entirely.
+**Returned Objects:** Almost every `Create` method returns an object containing `:Set(value)` and `:Get()` functions so you can programmatically read/change the element's state later!
 
 ### 🔘 Buttons
-A simple clickable button that executes a function.
+A simple clickable button that executes a function. (Does not return an object.)
 
 ```lua
 AimbotSection:CreateButton("Kill All", function()
@@ -84,47 +86,57 @@ end)
 ```
 
 ### ✅ Toggles
-A switch that can be turned on or off. 
+A switch that can be turned on or off. Returns a Toggle Object.
 - *Arguments:* `Name`, `DefaultState`, `Callback`
 
 ```lua
-AimbotSection:CreateToggle("Enable Aimbot", false, function(state)
-    if state then
-        print("Aimbot ON")
-    else
-        print("Aimbot OFF")
-    end
+local AimbotToggle = AimbotSection:CreateToggle("Enable Aimbot", false, function(state)
+    print("Aimbot ON:", state)
 end)
+
+-- You can safely read or update the toggle programmatically later!
+-- AimbotToggle:Set(true) -- Changes toggle visually to ON and fires callback
+-- local isAimbotEnabled = AimbotToggle:Get() -- Returns true/false
 ```
 
 ### 🎚️ Sliders
-A draggable slider to select a number value.
+A draggable slider to select a number value. Returns a Slider Object.
 - *Arguments:* `Name`, `MinValue`, `MaxValue`, `DefaultValue`, `Callback`
 
 ```lua
-AimbotSection:CreateSlider("Aimbot Smoothing", 1, 10, 5, function(value)
+local SmoothSlider = AimbotSection:CreateSlider("Aimbot Smoothing", 1, 10, 5, function(value)
     print("Smoothing set to:", value)
 end)
+
+-- SmoothSlider:Set(8) 
+-- local currentSmoothness = SmoothSlider:Get()
 ```
 
 ### 📜 Dropdowns
-A selection menu with multiple choices.
+A selection menu with multiple choices. Returns a Dropdown Object.
 - *Arguments:* `Name`, `OptionsTable`, `DefaultSelection`, `Callback`
 
 ```lua
-EspSection:CreateDropdown("ESP Color", {"Red", "Blue", "Pink"}, "Pink", function(selectedOption)
+local ColorDropdown = EspSection:CreateDropdown("ESP Color", {"Red", "Blue", "Pink"}, "Pink", function(selectedOption)
     print("Selected color:", selectedOption)
 end)
+
+-- ColorDropdown:Set("Blue")
+-- local colorInfo = ColorDropdown:Get()
 ```
 
 ### ⌨️ Keybinds
-Allows the user to bind a custom key to a function.
+Allows the user to bind a custom key. The callback fires automatically **every time the user presses the currently bound key**. Returns a Keybind Object.
 - *Arguments:* `Name`, `DefaultKey`, `Callback`
 
 ```lua
-AimbotSection:CreateKeybind("Aimbot Lock Key", Enum.KeyCode.RightMouseButton, function(keyCode)
-    print("Aimbot key changed to:", keyCode.Name)
+local AimbotKeybind = AimbotSection:CreateKeybind("Aimbot Lock Key", Enum.KeyCode.E, function()
+    print("The Aimbot key was just pressed!")
 end)
+
+-- You can trigger it programmatically or change the bound key later:
+-- AimbotKeybind:Set(Enum.KeyCode.Q)
+-- local boundKey = AimbotKeybind:Get() -- returns Enum.KeyCode.Q
 ```
 
 ---

@@ -247,7 +247,7 @@ function Library:CreateWindow(hubName)
                     Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Library.Theme.Accent})
                     task.wait(0.1)
                     Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Library.Theme.ButtonBackground})
-                    callback()
+                    if callback then callback() end
                 end)
             end
 
@@ -265,6 +265,13 @@ function Library:CreateWindow(hubName)
                 check.BackgroundColor3 = Library.Theme.Text; check.Position = UDim2.new(0, 3, 0.5, -7); check.Size = UDim2.new(0, 14, 0, 14); Instance.new("UICorner", check).CornerRadius = UDim.new(1, 0)
                 
                 local s = startState or false
+                local function applyState(newState)
+                    s = newState
+                    Tween(box, TweenInfo.new(0.2), {BackgroundColor3 = s and Library.Theme.Accent or Color3.fromRGB(40, 40, 40)})
+                    Tween(check, TweenInfo.new(0.2), {Position = s and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)})
+                    if callback then callback(s) end
+                end
+
                 if s then
                     box.BackgroundColor3 = Library.Theme.Accent
                     check.Position = UDim2.new(1, -17, 0.5, -7)
@@ -272,52 +279,80 @@ function Library:CreateWindow(hubName)
                 
                 tgl.InputBegan:Connect(function(i)
                     if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                        s = not s
-                        Tween(box, TweenInfo.new(0.2), {BackgroundColor3 = s and Library.Theme.Accent or Color3.fromRGB(40, 40, 40)})
-                        Tween(check, TweenInfo.new(0.2), {Position = s and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)})
-                        callback(s)
+                        applyState(not s)
                     end
                 end)
+
+                return {
+                    Set = function(self, newState) applyState(newState) end,
+                    Get = function(self) return s end
+                }
             end
 
-            function SectionLogic:CreateSlider(text, min, max, default, callback)
+            function SectionLogic:CreateSlider(text, min, max, defaultVal, callback)
                 local sld = Instance.new("Frame", SubPage)
                 sld.BackgroundColor3 = Library.Theme.ElementBackground; sld.Size = UDim2.new(1, -10, 0, 50); Instance.new("UICorner", sld).CornerRadius = UDim.new(0, 4)
                 
-                local lbl = Instance.new("TextLabel", sld); lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 5); lbl.Size = UDim2.new(1, -20, 0, 20); lbl.Font = Enum.Font.Gotham; lbl.Text = text .. ": " .. default; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 12; lbl.TextXAlignment = Enum.TextXAlignment.Left
+                local lbl = Instance.new("TextLabel", sld); lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 5); lbl.Size = UDim2.new(1, -20, 0, 20); lbl.Font = Enum.Font.Gotham; lbl.Text = text .. ": " .. defaultVal; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 12; lbl.TextXAlignment = Enum.TextXAlignment.Left
                 
                 local bg = Instance.new("Frame", sld); bg.BackgroundColor3 = Color3.fromRGB(40, 40, 40); bg.Position = UDim2.new(0, 12, 0, 30); bg.Size = UDim2.new(1, -24, 0, 6); Instance.new("UICorner", bg)
-                local fill = Instance.new("Frame", bg); fill.BackgroundColor3 = Library.Theme.Accent; fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0); Instance.new("UICorner", fill)
+                local fill = Instance.new("Frame", bg); fill.BackgroundColor3 = Library.Theme.Accent; fill.Size = UDim2.new((defaultVal - min) / (max - min), 0, 1, 0); Instance.new("UICorner", fill)
                 
                 local active = false
+                local currentVal = defaultVal
+                local function applyValue(val)
+                    currentVal = math.clamp(math.floor(val), min, max)
+                    local m = (currentVal - min) / (max - min)
+                    lbl.Text = text .. ": " .. currentVal; fill.Size = UDim2.new(m, 0, 1, 0)
+                    if callback then callback(currentVal) end
+                end
+
                 local function update()
                     local m = math.clamp((UserInputService:GetMouseLocation().X - bg.AbsolutePosition.X) / bg.AbsoluteSize.X, 0, 1)
                     local val = math.floor(min + (max - min) * m)
-                    lbl.Text = text .. ": " .. val; fill.Size = UDim2.new(m, 0, 1, 0); callback(val)
+                    applyValue(val)
                 end
+
                 bg.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then active = true; update() end end)
                 UserInputService.InputChanged:Connect(function(i) if active and i.UserInputType == Enum.UserInputType.MouseMovement then update() end end)
                 UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then active = false end end)
+
+                return {
+                    Set = function(self, value) applyValue(value) end,
+                    Get = function(self) return currentVal end
+                }
             end
             
             function SectionLogic:CreateDropdown(text, options, default, callback)
-                -- Add basic dropdown functionality mapping
                 local dpd = Instance.new("Frame", SubPage)
                 dpd.BackgroundColor3 = Library.Theme.ElementBackground; dpd.Size = UDim2.new(1, -10, 0, 35); Instance.new("UICorner", dpd).CornerRadius = UDim.new(0, 4)
                 local lbl = Instance.new("TextLabel", dpd)
                 lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 0); lbl.Size = UDim2.new(1, -60, 1, 0); lbl.Font = Enum.Font.Gotham; lbl.Text = text .. " (" .. default .. ")"; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 13; lbl.TextXAlignment = Enum.TextXAlignment.Left
-                -- NOTE: Basic dropdown logic simulation (You might want a full expanded dropdown)
+                
                 local index = 1
+                local currentOption = default
                 for i, v in ipairs(options) do if v == default then index = i break end end
+                
+                local function applyOption(val)
+                    currentOption = val
+                    lbl.Text = text .. " (" .. val .. ")"
+                    if callback then callback(val) end
+                end
+
                 dpd.InputBegan:Connect(function(i)
                     if i.UserInputType == Enum.UserInputType.MouseButton1 then
                         index = index + 1
                         if index > #options then index = 1 end
-                        local sel = options[index]
-                        lbl.Text = text .. " (" .. sel .. ")"
-                        callback(sel)
+                        applyOption(options[index])
                     end
                 end)
+
+                return {
+                    Set = function(self, val)
+                        for i, v in ipairs(options) do if v == val then index = i; applyOption(val) break end end
+                    end,
+                    Get = function(self) return currentOption end
+                }
             end
             
             function SectionLogic:CreateKeybind(text, defaultKey, callback)
@@ -331,20 +366,32 @@ function Library:CreateWindow(hubName)
                 local currentKey = defaultKey
                 local binding = false
                 
+                local function applyKey(newKey)
+                    currentKey = newKey
+                    keyLbl.Text = currentKey.Name
+                end
+
                 kbd.InputBegan:Connect(function(i)
                     if i.UserInputType == Enum.UserInputType.MouseButton1 then
                         binding = true
                         keyLbl.Text = "..."
                     end
                 end)
-                UserInputService.InputBegan:Connect(function(i)
+                
+                UserInputService.InputBegan:Connect(function(i, gpe)
                     if binding and i.UserInputType == Enum.UserInputType.Keyboard then
                         binding = false
-                        currentKey = i.KeyCode
-                        keyLbl.Text = currentKey.Name
-                        callback(currentKey)
+                        applyKey(i.KeyCode)
+                    elseif not binding and not gpe and i.KeyCode == currentKey then
+                        -- Handle triggering logic here automatically
+                        if callback then callback(currentKey) end
                     end
                 end)
+
+                return {
+                    Set = function(self, newKey) applyKey(newKey) end,
+                    Get = function(self) return currentKey end
+                }
             end
 
             SubPageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() SubPage.CanvasSize = UDim2.new(0, 0, 0, SubPageList.AbsoluteContentSize.Y + 10) end)
