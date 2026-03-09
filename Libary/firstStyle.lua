@@ -11,7 +11,9 @@ local Library = {
         Accent = Color3.fromRGB(255, 100, 150),
         Text = Color3.fromRGB(255, 255, 255),
         TextDark = Color3.fromRGB(150, 150, 150),
-        CornerRadius = UDim.new(0, 6)
+        CornerRadius = UDim.new(0, 6),
+        TitleSize = 22,
+        TitleFont = Enum.Font.GothamBold
     }
 }
 
@@ -44,10 +46,10 @@ end
 
 -- Notification System
 function Library:Notify(title, text, duration)
-    local NotifyGui = CoreGui:FindFirstChild("AmbaniNotifications")
+    local NotifyGui = CoreGui:FindFirstChild("NexusLibraryNotifications")
     if not NotifyGui then
         NotifyGui = Instance.new("ScreenGui", CoreGui)
-        NotifyGui.Name = "AmbaniNotifications"
+        NotifyGui.Name = "NexusLibraryNotifications"
     end
 
     local NotificationFrame = Instance.new("Frame")
@@ -82,7 +84,7 @@ end
 
 function Library:CreateWindow(hubName)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "AmbaniStyleUI"
+    ScreenGui.Name = hubName or "NexusUI"
     ScreenGui.Parent = CoreGui
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -125,10 +127,10 @@ function Library:CreateWindow(hubName)
     LogoLabel.BackgroundTransparency = 1
     LogoLabel.Position = UDim2.new(0, 15, 0, 15)
     LogoLabel.Size = UDim2.new(1, -30, 0, 30)
-    LogoLabel.Font = Enum.Font.GothamBold
+    LogoLabel.Font = Library.Theme.TitleFont
     LogoLabel.Text = hubName
     LogoLabel.TextColor3 = Library.Theme.Text
-    LogoLabel.TextSize = 22
+    LogoLabel.TextSize = Library.Theme.TitleSize
     LogoLabel.TextXAlignment = Enum.TextXAlignment.Left
 
     local TabContainer = Instance.new("ScrollingFrame")

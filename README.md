@@ -29,7 +29,9 @@ Library:SetTheme({
     Accent = Color3.fromRGB(255, 100, 150),          -- Main accent color (Highlights, active states)
     Text = Color3.fromRGB(255, 255, 255),            -- Active text color
     TextDark = Color3.fromRGB(150, 150, 150),        -- Inactive text color
-    CornerRadius = UDim.new(0, 6)                    -- UI roundness
+    CornerRadius = UDim.new(0, 6),                   -- UI roundness
+    TitleSize = 22,                                  -- Size of the main title text
+    TitleFont = Enum.Font.GothamBold                 -- Font of the main title text
 })
 ```
 
