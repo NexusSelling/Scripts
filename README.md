@@ -131,7 +131,9 @@ end)
 
 ## 🔔 Notifications
 
-The library comes with a built-in notification system. You can call it anywhere in your code.
+The library comes with a built-in interactive notification system. You can call it anywhere in your code.
+Notifications will **automatically stack upwards** and are **capped at a maximum of 5** active notifications at a time to prevent screen clutter.
+
 - *Arguments:* `Title`, `Message`, `Duration (seconds)`
 
 ```lua

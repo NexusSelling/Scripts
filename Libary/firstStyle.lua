@@ -44,6 +44,9 @@ function Library:SetToggleKey(key)
     end
 end
 
+local ActiveNotifications = {}
+local MAX_NOTIFICATIONS = 5
+
 -- Notification System
 function Library:Notify(title, text, duration)
     local NotifyGui = CoreGui:FindFirstChild("NexusLibraryNotifications")
@@ -73,12 +76,33 @@ function Library:Notify(title, text, duration)
     Desc.BackgroundTransparency = 1; Desc.Position = UDim2.new(0, 12, 0, 28); Desc.Size = UDim2.new(1, -20, 0, 20)
     Desc.Font = Enum.Font.Gotham; Desc.TextColor3 = Library.Theme.TextDark; Desc.TextSize = 12; Desc.Text = text; Desc.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Anim
-    Tween(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(1, -260, 1, -70)})
+    local function UpdatePositions()
+        local count = 0
+        for i = #ActiveNotifications, 1, -1 do
+            local notif = ActiveNotifications[i]
+            local targetY = -70 - (count * 65)
+            Tween(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = UDim2.new(1, -260, 1, targetY)})
+            count = count + 1
+        end
+    end
+
+    if #ActiveNotifications >= MAX_NOTIFICATIONS then
+        local oldest = table.remove(ActiveNotifications, 1)
+        Tween(oldest, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = UDim2.new(1, 10, oldest.Position.Y.Scale, oldest.Position.Y.Offset)})
+        task.delay(0.3, function() oldest:Destroy() end)
+    end
+
+    table.insert(ActiveNotifications, NotificationFrame)
+    UpdatePositions()
+
     task.delay(duration or 3, function()
-        Tween(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Position = UDim2.new(1, 10, 1, -70)})
-        task.wait(0.5)
-        NotificationFrame:Destroy()
+        local index = table.find(ActiveNotifications, NotificationFrame)
+        if index then
+            table.remove(ActiveNotifications, index)
+            Tween(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Position = UDim2.new(1, 10, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)})
+            task.delay(0.5, function() NotificationFrame:Destroy() end)
+            UpdatePositions()
+        end
     end)
 end
 
