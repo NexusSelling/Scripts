@@ -13,7 +13,8 @@ local Library = {
         TextDark = Color3.fromRGB(150, 150, 150),
         CornerRadius = UDim.new(0, 6),
         TitleSize = 22,
-        TitleFont = Enum.Font.GothamBold
+        TitleFont = Enum.Font.GothamBold,
+        NotificationTransparency = 0
     }
 }
 
@@ -55,9 +56,10 @@ function Library:Notify(title, text, duration)
         NotifyGui.Name = "NexusLibraryNotifications"
     end
 
-    local NotificationFrame = Instance.new("Frame")
+    local NotificationFrame = Instance.new("CanvasGroup")
     NotificationFrame.Parent = NotifyGui
     NotificationFrame.BackgroundColor3 = Library.Theme.SidebarBackground
+    NotificationFrame.GroupTransparency = Library.Theme.NotificationTransparency
     NotificationFrame.Size = UDim2.new(0, 250, 0, 60)
     NotificationFrame.Position = UDim2.new(1, 10, 1, -70) -- Start outside
     NotificationFrame.BorderSizePixel = 0

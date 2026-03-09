@@ -43,7 +43,8 @@ Library:SetTheme({
     TextDark = Color3.fromRGB(150, 150, 150),        -- Inactive text color
     CornerRadius = UDim.new(0, 6),                   -- UI roundness
     TitleSize = 22,                                  -- Size of the main title text
-    TitleFont = Enum.Font.GothamBold                 -- Font of the main title text
+    TitleFont = Enum.Font.GothamBold,                -- Font of the main title text
+    NotificationTransparency = 0                     -- Transparency of the notification frames (0 = solid, 1 = invisible)
 })
 ```
 
