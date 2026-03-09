@@ -74,6 +74,7 @@ local MiscTab = Window:CreateTab("Misc", 10734891102)
 ## 🧊 Creating Sections
 
 Sections group UI elements together clearly inside a tab.
+*(Performance Tip: It's recommended to keep it under 30-40 elements per section to ensure extremely smooth UI rendering and scrolling.)*
 
 ```lua
 local AimbotSection = MainTab:CreateSection("Aimbot Settings")
@@ -89,7 +90,7 @@ All elements must be created inside a **Section**.
 **Returned Objects:** Almost every `Create` method returns an object containing `:Set(value)` and `:Get()` functions so you can programmatically read/change the element's state later!
 
 ### 🔘 Buttons
-A simple clickable button that executes a function. (Does not return an object.)
+A simple clickable button that executes a function. (Does not return an object, as buttons are stateless and cannot store a value.)
 
 ```lua
 AimbotSection:CreateButton("Kill All", function()
