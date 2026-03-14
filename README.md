@@ -1,14 +1,16 @@
-# Nexus UI Library (v1.2.0)
+# Nexus UI Library (v1.3.0)
 
-A professional-grade, fluid, and feature-rich UI library for Roblox exploit development. Engineered for maximum performance, premium aesthetics, and advanced functional control.
+A professional-grade, fluid, and feature-rich UI library for Roblox exploit development. Premium aesthetics, advanced controls, and full customization.
 
-## ✨ Key Overhaul Features
-- **Premium Aesthetics:** Integrated `UIStroke` borders and smooth `TweenService` hover/active states.
-- **Dynamic Dropdowns:** Searchable lists with real-time updates (`:SetOptions()`).
-- **Multi-Selection:** Intelligent multi-select dropdowns for complex settings (e.g., ESP Filters).
-- **Universal Tooltips:** Sleek hover-based descriptions for every UI element.
-- **Smart Sliders:** Integrated manual `TextBox` input for pixel-perfect value control.
-- **Real-time Theming:** Change the entire UI appearance on the fly with `Library:ChangeTheme()`.
+## ✨ Key Features
+- **Premium Visuals:** `UIStroke` borders + smooth `TweenService` hover effects on all elements
+- **Searchable Dropdowns:** Real-time filtering with `:SetOptions()`, `:Add()`, `:Clear()`
+- **Multi-Selection:** Multi-select dropdowns for complex settings (e.g., ESP filters)
+- **Universal Tooltips:** Hover descriptions on every element (optional)
+- **Smart Sliders:** Manual `TextBox` input for precise values
+- **Dynamic Themes:** Live theme updates via `Library:ChangeTheme()`
+- **Loading Screen:** Customizable animated loading screen with progress steps
+- **Backward Compatible:** Old API calls (without tooltip) still work
 
 ---
 
@@ -20,107 +22,150 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nexus
 
 ---
 
-## 🎨 Professional Configuration
+## 🎬 Loading Screen
 
-### Dynamic Theme Support
-You can now update the theme even after the UI is loaded! All active elements will refresh instantly.
+Show a professional loading animation before your UI appears. Fully customizable.
 
 ```lua
--- Initial Setup
-Library:SetTheme({
-    Accent = Color3.fromRGB(0, 170, 255),
-    MainBackground = Color3.fromRGB(15, 15, 15)
+Library:CreateLoadingScreen({
+    Title = "Nexus Hub",
+    Subtitle = "Initializing...",
+    Duration = 4,
+    AccentColor = Color3.fromRGB(0, 170, 255),
+    BackgroundColor = Color3.fromRGB(10, 10, 10),
+    LogoIcon = 12345678,  -- optional Roblox Asset ID
+    Steps = {"Connecting...", "Loading modules...", "Verifying...", "Ready!"}
 })
+```
 
--- Dynamic Update (e.g., from a button)
-Library:ChangeTheme({
-    Accent = Color3.fromRGB(255, 100, 150)
-})
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `Title` | string | `"Nexus"` | Main title text |
+| `Subtitle` | string | `"Loading..."` | Subtitle below title |
+| `Duration` | number | `3` | Total loading time (seconds) |
+| `AccentColor` | Color3 | Theme Accent | Progress bar color |
+| `BackgroundColor` | Color3 | `(10,10,10)` | Background color |
+| `LogoIcon` | number | `nil` | Optional image asset ID |
+| `Steps` | table | `{}` | Status text per step |
+
+---
+
+## 🎨 Theming
+
+```lua
+-- Initial setup
+Library:SetTheme({ Accent = Color3.fromRGB(0, 170, 255) })
+
+-- Live update (all elements refresh instantly)
+Library:ChangeTheme({ Accent = Color3.fromRGB(255, 100, 150) })
 ```
 
 ---
 
 ## 📑 Core Structure
 
-### Creating a Window
 ```lua
-local Window = Library:CreateWindow("Nexus Professional")
-```
-
-### Creating Tabs & Sections
-```lua
+local Window = Library:CreateWindow("My Hub")
 local Tab = Window:CreateTab("Combat", 10734949856)
 local Section = Tab:CreateSection("Aimbot")
 ```
 
 ---
 
-## 🎛️ Advanced Elements
+## 🎛️ Elements
 
-### 🔘 Buttons
-- `Section:CreateButton(Text, Tooltip, Callback)`
+> **Tooltip parameter is always optional.** Old API calls without tooltip still work.
+> All elements with state return `:Set(value)` and `:Get()`.
+
+### 🔘 Button
 ```lua
-Section:CreateButton("Kill All", "Instantly eliminates all players in range", function()
-    print("Action executed")
+Section:CreateButton("Kill All", "Tooltip description", function()
+    print("Clicked!")
 end)
 ```
 
-### ✅ Toggles
-- `Section:CreateToggle(Text, Tooltip, Default, Callback)`
+### ✅ Toggle
 ```lua
-local FlyToggle = Section:CreateToggle("Fly", "Allows you to fly through the air", false, function(s)
-    print("Fly:", s)
+local toggle = Section:CreateToggle("Fly", "Fly through walls", false, function(state)
+    print("Fly:", state)
 end)
 ```
 
-### 🎚️ Sliders (with Direct Input)
-- `Section:CreateSlider(Text, Tooltip, Min, Max, Default, Callback)`
-- Includes a manual input box for precise values.
+### 🎚️ Slider (with Direct Input)
 ```lua
-Section:CreateSlider("WalkSpeed", "Change your movement speed", 16, 250, 16, function(v)
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+local slider = Section:CreateSlider("Speed", "Movement speed", 16, 250, 16, function(val)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = val
 end)
 ```
 
-### 📜 Searchable Dropdowns
-- `Section:CreateDropdown(Text, Tooltip, OptionsTable, Default, Callback)`
-- **Methods:** `:SetOptions(newTable)`, `:Add(option)`, `:Clear()`, `:Set(val)`, `:Get()`
+### 📜 Dropdown (Searchable)
 ```lua
-local PlayerList = Section:CreateDropdown("Target Player", "Select a player to focus", {"Player1"}, "Player1", function(v) end)
-PlayerList:SetOptions({"NewPlayer1", "NewPlayer2"})
+local dd = Section:CreateDropdown("Target", "Pick a target", {"Head", "Torso"}, "Head", function(val)
+    print(val)
+end)
+dd:SetOptions({"NewA", "NewB"})  -- dynamic update
+dd:Add("NewC")                    -- add single option
+dd:Clear()                        -- remove all options
 ```
 
-### 📋 Multi-Selection Dropdowns
-- `Section:CreateMultiDropdown(Text, Tooltip, OptionsTable, DefaultTable, Callback)`
+### 📋 Multi-Selection Dropdown
 ```lua
-Section:CreateMultiDropdown("ESP Filters", "Select which entities to highlight", {"Players", "Items", "Vehicles"}, {"Players"}, function(selected)
-    for _, v in pairs(selected) do print("Selected:", v) end
+Section:CreateMultiDropdown("ESP", "What to highlight", {"Players", "Items", "Vehicles"}, {"Players"}, function(selected)
+    for _, v in pairs(selected) do print(v) end
 end)
 ```
 
-### ⌨️ Keybinds
-- `Section:CreateKeybind(Text, Tooltip, DefaultKey, Callback)`
+### ⌨️ Keybind
 ```lua
-Section:CreateKeybind("Toggle Menu", "Key to hide/show the UI", Enum.KeyCode.RightControl, function() end)
+Section:CreateKeybind("Toggle", "Toggle key", Enum.KeyCode.RightControl, function()
+    print("Key pressed!")
+end)
+```
+
+### 📝 Text Input
+```lua
+local tb = Section:CreateTextBox("Name", "Enter a name", "placeholder...", function(text)
+    print("Entered:", text)
+end)
+```
+
+### 🏷️ Label
+```lua
+local label = Section:CreateLabel("Status: Idle")
+label:Set("Status: Active")
+```
+
+### ─── Separator
+```lua
+Section:CreateSeparator()
 ```
 
 ---
 
-## 🔔 Professional Notifications
-Notifications stack dynamically and support custom transparency.
+## 🔔 Notifications
 ```lua
-Library:Notify("Success", "Nexus Library Overhaul Loaded", 5)
+Library:Notify("Success", "Script loaded!", 5)
 ```
 
 ---
 
-## 📅 Professional Changelog (v1.2.0)
-- **Visual Overhaul:** Added `UIStroke` borders and improved hover transitions.
-- **Search Logic:** Implemented real-time filtering for all dropdown types.
-- **Dynamic Updates:** Added `:SetOptions()`, `:Add()`, and `:Clear()` to Dropdowns.
-- **Input System:** Added manual TextBox input to Sliders.
-- **UX Improvements:** Universal Tooltip system for detailed feature explanations.
-- **Theme Engine:** New `Refresher` system for `:ChangeTheme()` support.
+## 📅 Changelog
+
+**v1.3.0**
+- **Bugfix:** Fixed critical `nil value` crash from broken merge
+- **New:** `CreateLoadingScreen()` with full customization and step-based progress
+- **New:** `CreateTextBox()`, `CreateLabel()`, `CreateSeparator()`
+- **New:** Backward-compatible API (tooltip parameter is optional)
+
+**v1.2.0**
+- Visual overhaul with `UIStroke` borders and hover transitions
+- Searchable Dropdowns, Multi-Selection, Dynamic Theme, Tooltips, Slider input
+
+**v1.1.0**
+- `:Set()` / `:Get()` on all elements, stacking notifications, keybind auto-listen
+
+**v1.0.0**
+- Initial release
 
 ---
 
