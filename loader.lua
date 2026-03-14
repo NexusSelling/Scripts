@@ -5,12 +5,18 @@ local Games = {
         Name = "Emergency Hamburg",
         LoadString = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/scripts/7711635737.lua"))()'
     },
+    [17625359962] = {
+        Name = "Rivals",
+        LoadString = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/scripts/17625359962.lua"))()'
+    }
 }
 
 pcall(function()
     Library:SetTheme({
-        Accent = Color3.fromRGB(90, 140, 255),
-        NotificationTransparency = 0.4
+        MainBackground = Color3.fromRGB(15, 15, 15),
+        SidebarBackground = Color3.fromRGB(20, 20, 20),
+        Accent = Color3.fromRGB(220, 40, 40),
+        NotificationTransparency = 0
     })
 end)
 
