@@ -1,3 +1,8 @@
+local queue_teleport = queue_on_teleport or (syn and syn.queue_on_teleport)
+if queue_teleport then
+    queue_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/loader.lua"))()')
+end
+
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/Libary/firstStyle.lua"))()
 
 local Games = {
@@ -8,6 +13,10 @@ local Games = {
     [17625359962] = {
         Name = "Rivals",
         LoadString = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/scripts/17625359962.lua"))()'
+    },
+    [4175673662] = {
+        Name = "Energy Assault",
+        LoadString = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/scripts/4175673662.lua"))()'
     }
 }
 
