@@ -14,9 +14,9 @@ local Games = {
         Name = "Rivals",
         LoadString = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/scripts/17625359962.lua"))()'
     },
-    [4175673662] = {
+    [6172932937] = {
         Name = "Energy Assault",
-        LoadString = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/scripts/4175673662.lua"))()'
+        LoadString = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/scripts/6172932937.lua"))()'
     }
 }
 
