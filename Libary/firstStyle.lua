@@ -198,60 +198,68 @@ function Library:CreateLoadingScreen(config)
     local duration = config.Duration or 3
     local accentColor = config.AccentColor or Library.Theme.Accent
     local bgColor = config.BackgroundColor or Color3.fromRGB(10, 10, 10)
-    local logoIcon = config.LogoIcon -- optional ImageAsset ID
-    local steps = config.Steps or {} -- e.g. {"Connecting...", "Loading modules...", "Done!"}
+    local logoIcon = config.LogoIcon
+    local steps = config.Steps or {}
 
     local LoadGui = Instance.new("ScreenGui", CoreGui)
     LoadGui.Name = "NexusLoadingScreen"
     LoadGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     LoadGui.DisplayOrder = 999
 
+    -- Semi-transparent backdrop
     local BG = Instance.new("Frame", LoadGui)
     BG.BackgroundColor3 = bgColor
+    BG.BackgroundTransparency = 0.4
     BG.Size = UDim2.new(1, 0, 1, 0)
     BG.BorderSizePixel = 0
 
-    local Center = Instance.new("Frame", BG)
-    Center.BackgroundTransparency = 1
-    Center.AnchorPoint = Vector2.new(0.5, 0.5)
-    Center.Position = UDim2.new(0.5, 0, 0.5, 0)
-    Center.Size = UDim2.new(0, 300, 0, 180)
+    -- Compact card
+    local Card = Instance.new("Frame", LoadGui)
+    Card.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    Card.AnchorPoint = Vector2.new(0.5, 0.5)
+    Card.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Card.Size = UDim2.new(0, 280, 0, 100)
+    Card.BorderSizePixel = 0
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
+    AddStroke(Card, accentColor, 1)
 
+    local yOff = 12
     if logoIcon then
-        local logo = Instance.new("ImageLabel", Center)
+        local logo = Instance.new("ImageLabel", Card)
         logo.BackgroundTransparency = 1
         logo.AnchorPoint = Vector2.new(0.5, 0)
-        logo.Position = UDim2.new(0.5, 0, 0, 0)
-        logo.Size = UDim2.new(0, 60, 0, 60)
+        logo.Position = UDim2.new(0.5, 0, 0, 10)
+        logo.Size = UDim2.new(0, 30, 0, 30)
         logo.Image = "rbxassetid://" .. tostring(logoIcon)
+        Card.Size = UDim2.new(0, 280, 0, 130)
+        yOff = 45
     end
 
-    local TitleLabel = Instance.new("TextLabel", Center)
+    local TitleLabel = Instance.new("TextLabel", Card)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.AnchorPoint = Vector2.new(0.5, 0)
-    TitleLabel.Position = UDim2.new(0.5, 0, 0, logoIcon and 70 or 10)
-    TitleLabel.Size = UDim2.new(1, 0, 0, 35)
+    TitleLabel.Position = UDim2.new(0.5, 0, 0, yOff)
+    TitleLabel.Size = UDim2.new(1, -20, 0, 22)
     TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.Text = title
     TitleLabel.TextColor3 = Library.Theme.Text
-    TitleLabel.TextSize = 28
+    TitleLabel.TextSize = 18
 
-    local SubLabel = Instance.new("TextLabel", Center)
+    local SubLabel = Instance.new("TextLabel", Card)
     SubLabel.BackgroundTransparency = 1
     SubLabel.AnchorPoint = Vector2.new(0.5, 0)
-    SubLabel.Position = UDim2.new(0.5, 0, 0, logoIcon and 105 or 45)
-    SubLabel.Size = UDim2.new(1, 0, 0, 20)
+    SubLabel.Position = UDim2.new(0.5, 0, 0, yOff + 24)
+    SubLabel.Size = UDim2.new(1, -20, 0, 16)
     SubLabel.Font = Enum.Font.Gotham
     SubLabel.Text = subtitle
     SubLabel.TextColor3 = Library.Theme.TextDark
-    SubLabel.TextSize = 14
+    SubLabel.TextSize = 11
 
-    -- Progress Bar
-    local BarBG = Instance.new("Frame", Center)
-    BarBG.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    local BarBG = Instance.new("Frame", Card)
+    BarBG.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     BarBG.AnchorPoint = Vector2.new(0.5, 0)
-    BarBG.Position = UDim2.new(0.5, 0, 0, logoIcon and 135 or 75)
-    BarBG.Size = UDim2.new(0.8, 0, 0, 4)
+    BarBG.Position = UDim2.new(0.5, 0, 0, yOff + 48)
+    BarBG.Size = UDim2.new(0.85, 0, 0, 3)
     Instance.new("UICorner", BarBG).CornerRadius = UDim.new(1, 0)
 
     local BarFill = Instance.new("Frame", BarBG)
@@ -259,38 +267,36 @@ function Library:CreateLoadingScreen(config)
     BarFill.Size = UDim2.new(0, 0, 1, 0)
     Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 
-    -- Step Label
-    local StepLabel = Instance.new("TextLabel", Center)
+    local StepLabel = Instance.new("TextLabel", Card)
     StepLabel.BackgroundTransparency = 1
     StepLabel.AnchorPoint = Vector2.new(0.5, 0)
-    StepLabel.Position = UDim2.new(0.5, 0, 0, logoIcon and 148 or 88)
-    StepLabel.Size = UDim2.new(1, 0, 0, 20)
+    StepLabel.Position = UDim2.new(0.5, 0, 0, yOff + 56)
+    StepLabel.Size = UDim2.new(1, -20, 0, 16)
     StepLabel.Font = Enum.Font.Gotham
     StepLabel.Text = ""
     StepLabel.TextColor3 = Library.Theme.TextDark
-    StepLabel.TextSize = 12
+    StepLabel.TextSize = 10
 
-    -- Animate
     if #steps > 0 then
         local stepDur = duration / #steps
         for i, stepText in ipairs(steps) do
             StepLabel.Text = stepText
-            Tween(BarFill, TweenInfo.new(stepDur, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(i / #steps, 0, 1, 0)})
+            Tween(BarFill, TweenInfo.new(stepDur, Enum.EasingStyle.Quad), {Size = UDim2.new(i / #steps, 0, 1, 0)})
             task.wait(stepDur)
         end
     else
-        Tween(BarFill, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)})
+        Tween(BarFill, TweenInfo.new(duration, Enum.EasingStyle.Quad), {Size = UDim2.new(1, 0, 1, 0)})
         task.wait(duration)
     end
 
-    -- Fade out
-    Tween(BG, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {BackgroundTransparency = 1})
-    Tween(TitleLabel, TweenInfo.new(0.5), {TextTransparency = 1})
-    Tween(SubLabel, TweenInfo.new(0.5), {TextTransparency = 1})
-    Tween(StepLabel, TweenInfo.new(0.5), {TextTransparency = 1})
-    Tween(BarBG, TweenInfo.new(0.5), {BackgroundTransparency = 1})
-    Tween(BarFill, TweenInfo.new(0.5), {BackgroundTransparency = 1})
-    task.wait(0.5)
+    Tween(BG, TweenInfo.new(0.4), {BackgroundTransparency = 1})
+    Tween(Card, TweenInfo.new(0.4), {BackgroundTransparency = 1})
+    Tween(TitleLabel, TweenInfo.new(0.4), {TextTransparency = 1})
+    Tween(SubLabel, TweenInfo.new(0.4), {TextTransparency = 1})
+    Tween(StepLabel, TweenInfo.new(0.4), {TextTransparency = 1})
+    Tween(BarBG, TweenInfo.new(0.4), {BackgroundTransparency = 1})
+    Tween(BarFill, TweenInfo.new(0.4), {BackgroundTransparency = 1})
+    task.wait(0.4)
     LoadGui:Destroy()
 end
 
