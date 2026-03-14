@@ -29,6 +29,36 @@ local function Tween(obj, info, goal)
     return tween
 end
 
+local function AddStroke(parent, color, thickness)
+    local stroke = Instance.new("UIStroke")
+    stroke.Parent = parent
+    stroke.Color = color or Library.Theme.Accent
+    stroke.Thickness = thickness or 1
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Transparency = 0.6
+    return stroke
+end
+
+local TipGui
+local function ShowTooltip(text, pos)
+    if not TipGui then
+        TipGui = Instance.new("ScreenGui", CoreGui)
+        TipGui.Name = "NexusTooltips"
+    end
+    TipGui:ClearAllChildren()
+    
+    local frame = Instance.new("Frame", TipGui)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); frame.AutomaticSize = Enum.AutomaticSize.XY; frame.Position = UDim2.new(0, pos.X + 15, 0, pos.Y + 15)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 4); AddStroke(frame, Library.Theme.Accent, 0.8)
+    
+    local padding = Instance.new("UIPadding", frame); padding.PaddingBottom = UDim.new(0, 5); padding.PaddingTop = UDim.new(0, 5); padding.PaddingLeft = UDim.new(0, 8); padding.PaddingRight = UDim.new(0, 8)
+    
+    local lbl = Instance.new("TextLabel", frame)
+    lbl.BackgroundTransparency = 1; lbl.Font = Enum.Font.Gotham; lbl.Text = text; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 12; lbl.AutomaticSize = Enum.AutomaticSize.XY
+end
+
+local function HideTooltip() if TipGui then TipGui:ClearAllChildren() end end
+
 function Library:SetTheme(cfg)
     if type(cfg) == "table" then
         for k, v in pairs(cfg) do
@@ -36,6 +66,14 @@ function Library:SetTheme(cfg)
                 Library.Theme[k] = v
             end
         end
+    end
+end
+
+local Refresher = {}
+function Library:ChangeTheme(cfg)
+    Library:SetTheme(cfg)
+    for _, ref in pairs(Refresher) do
+        ref()
     end
 end
 
@@ -69,6 +107,13 @@ function Library:Notify(title, text, duration)
     Accent.BackgroundColor3 = Library.Theme.Accent
     Accent.Size = UDim2.new(0, 3, 1, 0)
     Instance.new("UICorner", Accent)
+    
+    AddStroke(NotificationFrame, Color3.fromRGB(60, 60, 60), 0.8)
+
+    table.insert(Refresher, function()
+        NotificationFrame.BackgroundColor3 = Library.Theme.SidebarBackground
+        Accent.BackgroundColor3 = Library.Theme.Accent
+    end)
 
     local Title = Instance.new("TextLabel", NotificationFrame)
     Title.BackgroundTransparency = 1; Title.Position = UDim2.new(0, 12, 0, 8); Title.Size = UDim2.new(1, -20, 0, 20)
@@ -127,6 +172,9 @@ function Library:CreateWindow(hubName)
     
     local UICorner = Instance.new("UICorner", MainFrame)
     UICorner.CornerRadius = Library.Theme.CornerRadius
+    
+    local MainStroke = AddStroke(MainFrame, Color3.fromRGB(45, 45, 45), 1)
+    MainStroke.Transparency = 0.4
     
     Tween(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quart), {BackgroundTransparency = 0})
 
@@ -242,9 +290,28 @@ function Library:CreateWindow(hubName)
             if #SubTabs == 1 then SubPage.Visible = true; SubTabButton.TextColor3 = Library.Theme.Text end
 
             local SectionLogic = {}
-            function SectionLogic:CreateButton(text, callback)
+            function SectionLogic:CreateButton(text, tooltip, callback)
                 local btn = Instance.new("TextButton", SubPage)
                 btn.BackgroundColor3 = Library.Theme.ButtonBackground; btn.Size = UDim2.new(1, -10, 0, 35); btn.Font = Enum.Font.GothamSemibold; btn.Text = text; btn.TextColor3 = Library.Theme.Text; btn.TextSize = 13; Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+                local bstroke = AddStroke(btn, Color3.fromRGB(50, 50, 50), 0.8)
+                
+                table.insert(Refresher, function()
+                    btn.BackgroundColor3 = Library.Theme.ButtonBackground
+                    btn.TextColor3 = Library.Theme.Text
+                    bstroke.Color = Color3.fromRGB(50, 50, 50)
+                end)
+                
+                btn.MouseEnter:Connect(function()
+                    Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
+                    Tween(bstroke, TweenInfo.new(0.2), {Color = Library.Theme.Accent, Transparency = 0.2})
+                    if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
+                end)
+                btn.MouseLeave:Connect(function()
+                    Tween(btn, TweenInfo.new(0.2), {BackgroundColor3 = Library.Theme.ButtonBackground})
+                    Tween(bstroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(50, 50, 50), Transparency = 0.6})
+                    HideTooltip()
+                end)
+                
                 btn.MouseButton1Click:Connect(function()
                     Tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Library.Theme.Accent})
                     task.wait(0.1)
@@ -253,9 +320,24 @@ function Library:CreateWindow(hubName)
                 end)
             end
 
-            function SectionLogic:CreateToggle(text, startState, callback)
+            function SectionLogic:CreateToggle(text, tooltip, startState, callback)
                 local tgl = Instance.new("Frame", SubPage)
                 tgl.BackgroundColor3 = Library.Theme.ElementBackground; tgl.Size = UDim2.new(1, -10, 0, 40); Instance.new("UICorner", tgl).CornerRadius = UDim.new(0, 4)
+                local tstroke = AddStroke(tgl, Color3.fromRGB(45, 45, 45), 0.8)
+                
+                table.insert(Refresher, function()
+                    tgl.BackgroundColor3 = Library.Theme.ElementBackground
+                    tstroke.Color = Color3.fromRGB(45, 45, 45)
+                end)
+                
+                tgl.MouseEnter:Connect(function()
+                    Tween(tstroke, TweenInfo.new(0.2), {Color = Library.Theme.Accent, Transparency = 0.4})
+                    if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
+                end)
+                tgl.MouseLeave:Connect(function()
+                    Tween(tstroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(45, 45, 45), Transparency = 0.6})
+                    HideTooltip()
+                end)
                 
                 local lbl = Instance.new("TextLabel", tgl)
                 lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 0); lbl.Size = UDim2.new(1, -60, 1, 0); lbl.Font = Enum.Font.Gotham; lbl.Text = text; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 13; lbl.TextXAlignment = Enum.TextXAlignment.Left
@@ -291,23 +373,48 @@ function Library:CreateWindow(hubName)
                 }
             end
 
-            function SectionLogic:CreateSlider(text, min, max, defaultVal, callback)
+            function SectionLogic:CreateSlider(text, tooltip, min, max, defaultVal, callback)
                 local sld = Instance.new("Frame", SubPage)
                 sld.BackgroundColor3 = Library.Theme.ElementBackground; sld.Size = UDim2.new(1, -10, 0, 50); Instance.new("UICorner", sld).CornerRadius = UDim.new(0, 4)
+                local sstroke = AddStroke(sld, Color3.fromRGB(45, 45, 45), 0.8)
+                
+                sld.MouseEnter:Connect(function()
+                    Tween(sstroke, TweenInfo.new(0.2), {Color = Library.Theme.Accent, Transparency = 0.4})
+                    if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
+                end)
+                sld.MouseLeave:Connect(function()
+                    Tween(sstroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(45, 45, 45), Transparency = 0.6})
+                    HideTooltip()
+                end)
                 
                 local lbl = Instance.new("TextLabel", sld); lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 5); lbl.Size = UDim2.new(1, -20, 0, 20); lbl.Font = Enum.Font.Gotham; lbl.Text = text .. ": " .. defaultVal; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 12; lbl.TextXAlignment = Enum.TextXAlignment.Left
                 
-                local bg = Instance.new("Frame", sld); bg.BackgroundColor3 = Color3.fromRGB(40, 40, 40); bg.Position = UDim2.new(0, 12, 0, 30); bg.Size = UDim2.new(1, -24, 0, 6); Instance.new("UICorner", bg)
+                local bg = Instance.new("Frame", sld); bg.BackgroundColor3 = Color3.fromRGB(40, 40, 40); bg.Position = UDim2.new(0, 12, 0, 30); bg.Size = UDim2.new(1, -75, 0, 6); Instance.new("UICorner", bg)
                 local fill = Instance.new("Frame", bg); fill.BackgroundColor3 = Library.Theme.Accent; fill.Size = UDim2.new((defaultVal - min) / (max - min), 0, 1, 0); Instance.new("UICorner", fill)
+                
+                local input = Instance.new("TextBox", sld)
+                input.BackgroundColor3 = Color3.fromRGB(35, 35, 35); input.Position = UDim2.new(1, -55, 0, 22); input.Size = UDim2.new(0, 45, 0, 22); input.Font = Enum.Font.Gotham; input.Text = tostring(defaultVal); input.TextColor3 = Library.Theme.Text; input.TextSize = 12; Instance.new("UICorner", input).CornerRadius = UDim.new(0, 4); AddStroke(input, Color3.fromRGB(50, 50, 50), 0.8)
+
+                table.insert(Refresher, function()
+                    sstroke.Color = Color3.fromRGB(45, 45, 45)
+                    lbl.TextColor3 = Library.Theme.Text
+                    fill.BackgroundColor3 = Library.Theme.Accent
+                end)
                 
                 local active = false
                 local currentVal = defaultVal
                 local function applyValue(val)
                     currentVal = math.clamp(math.floor(val), min, max)
                     local m = (currentVal - min) / (max - min)
-                    lbl.Text = text .. ": " .. currentVal; fill.Size = UDim2.new(m, 0, 1, 0)
+                    lbl.Text = text .. ": "; fill.Size = UDim2.new(m, 0, 1, 0)
+                    input.Text = tostring(currentVal)
                     if callback then callback(currentVal) end
                 end
+
+                input.FocusLost:Connect(function()
+                    local n = tonumber(input.Text)
+                    if n then applyValue(n) else input.Text = tostring(currentVal) end
+                end)
 
                 local function update()
                     local m = math.clamp((UserInputService:GetMouseLocation().X - bg.AbsolutePosition.X) / bg.AbsoluteSize.X, 0, 1)
@@ -325,41 +432,206 @@ function Library:CreateWindow(hubName)
                 }
             end
             
-            function SectionLogic:CreateDropdown(text, options, default, callback)
+            function SectionLogic:CreateDropdown(text, tooltip, options, default, callback)
                 local dpd = Instance.new("Frame", SubPage)
                 dpd.BackgroundColor3 = Library.Theme.ElementBackground; dpd.Size = UDim2.new(1, -10, 0, 35); Instance.new("UICorner", dpd).CornerRadius = UDim.new(0, 4)
+                local dstroke = AddStroke(dpd, Color3.fromRGB(45, 45, 45), 0.8)
+                dpd.ClipsDescendants = true
+                
+                dpd.MouseEnter:Connect(function() if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end end)
+                dpd.MouseLeave:Connect(function() HideTooltip() end)
+                
+                return DropdownLogic
+            end
+            
+            function SectionLogic:CreateMultiDropdown(text, tooltip, options, defaultTable, callback)
+                local dpd = Instance.new("Frame", SubPage)
+                dpd.BackgroundColor3 = Library.Theme.ElementBackground; dpd.Size = UDim2.new(1, -10, 0, 35); Instance.new("UICorner", dpd).CornerRadius = UDim.new(0, 4)
+                local dstroke = AddStroke(dpd, Color3.fromRGB(45, 45, 45), 0.8)
+                dpd.ClipsDescendants = true
+                
+                dpd.MouseEnter:Connect(function() if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end end)
+                dpd.MouseLeave:Connect(function() HideTooltip() end)
+                
+                table.insert(Refresher, function()
+                    dpd.BackgroundColor3 = Library.Theme.ElementBackground
+                    dstroke.Color = Color3.fromRGB(45, 45, 45)
+                    lbl.TextColor3 = Library.Theme.Text
+                end)
+                
                 local lbl = Instance.new("TextLabel", dpd)
-                lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 0); lbl.Size = UDim2.new(1, -60, 1, 0); lbl.Font = Enum.Font.Gotham; lbl.Text = text .. " (" .. default .. ")"; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 13; lbl.TextXAlignment = Enum.TextXAlignment.Left
+                lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 0); lbl.Size = UDim2.new(1, -60, 1, 0); lbl.Font = Enum.Font.Gotham; lbl.Text = text .. " (Multi)"; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 13; lbl.TextXAlignment = Enum.TextXAlignment.Left
                 
-                local index = 1
-                local currentOption = default
-                for i, v in ipairs(options) do if v == default then index = i break end end
+                local arrow = Instance.new("TextLabel", dpd)
+                arrow.BackgroundTransparency = 1; arrow.Position = UDim2.new(1, -30, 0, 0); arrow.Size = UDim2.new(0, 30, 1, 0); arrow.Font = Enum.Font.GothamBold; arrow.Text = ">"; arrow.TextColor3 = Library.Theme.TextDark; arrow.TextSize = 14
                 
-                local function applyOption(val)
-                    currentOption = val
-                    lbl.Text = text .. " (" .. val .. ")"
-                    if callback then callback(val) end
+                local list = Instance.new("Frame", dpd)
+                list.Name = "OptionList"; list.BackgroundColor3 = Color3.fromRGB(24, 24, 24); list.Position = UDim2.new(0, 5, 0, 40); list.Size = UDim2.new(1, -10, 0, 120); list.Visible = false; list.BackgroundTransparency = 0.1
+                Instance.new("UICorner", list).CornerRadius = UDim.new(0, 4); AddStroke(list, Color3.fromRGB(50, 50, 50), 0.8)
+                
+                local search = Instance.new("TextBox", list)
+                search.BackgroundColor3 = Color3.fromRGB(30, 30, 30); search.Position = UDim2.new(0, 5, 0, 5); search.Size = UDim2.new(1, -10, 0, 25); search.Font = Enum.Font.Gotham; search.PlaceholderText = "Search..."; search.Text = ""; search.TextColor3 = Library.Theme.Text; search.TextSize = 12; Instance.new("UICorner", search).CornerRadius = UDim.new(0, 4)
+                
+                local scroll = Instance.new("ScrollingFrame", list)
+                scroll.BackgroundTransparency = 1; scroll.Position = UDim2.new(0, 0, 0, 35); scroll.Size = UDim2.new(1, 0, 1, -40); scroll.ScrollBarThickness = 2; scroll.ScrollBarImageColor3 = Library.Theme.Accent
+                local slist = Instance.new("UIListLayout", scroll); slist.Padding = UDim.new(0, 2)
+                
+                local open = false
+                local selected = {}
+                for _, v in pairs(defaultTable or {}) do selected[v] = true end
+                
+                local optionButtons = {}
+                local function refreshOptions(filter)
+                    for _, b in pairs(optionButtons) do
+                        b.Visible = (filter == nil or filter == "" or b.Name:lower():find(filter:lower()))
+                    end
+                    scroll.CanvasSize = UDim2.new(0, 0, 0, slist.AbsoluteContentSize.Y + 5)
                 end
+
+                local function addOption(val)
+                    local opt = Instance.new("TextButton", scroll)
+                    opt.Name = val; opt.BackgroundColor3 = Color3.fromRGB(30, 30, 30); opt.Size = UDim2.new(1, -4, 0, 28); opt.Font = Enum.Font.Gotham; opt.Text = val; opt.TextColor3 = selected[val] and Library.Theme.Accent or Library.Theme.TextDark; opt.TextSize = 12; Instance.new("UICorner", opt).CornerRadius = UDim.new(0, 4)
+                    
+                    opt.MouseButton1Click:Connect(function()
+                        selected[val] = not selected[val]
+                        opt.TextColor3 = selected[val] and Library.Theme.Accent or Library.Theme.TextDark
+                        local out = {}
+                        for k, v in pairs(selected) do if v then table.insert(out, k) end end
+                        if callback then callback(out) end
+                    end)
+                    table.insert(optionButtons, opt)
+                end
+
+                for _, v in pairs(options or {}) do addOption(v) end
+                refreshOptions()
+
+                search:GetPropertyChangedSignal("Text"):Connect(function() refreshOptions(search.Text) end)
 
                 dpd.InputBegan:Connect(function(i)
                     if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                        index = index + 1
-                        if index > #options then index = 1 end
-                        applyOption(options[index])
+                        open = not open
+                        list.Visible = open
+                        dpd:TweenSize(open and UDim2.new(1, -10, 0, 165) or UDim2.new(1, -10, 0, 35), "Out", "Quart", 0.3, true)
+                        Tween(arrow, TweenInfo.new(0.3), {Rotation = open and 90 or 0})
+                        if open then refreshOptions() end
                     end
                 end)
 
                 return {
-                    Set = function(self, val)
-                        for i, v in ipairs(options) do if v == val then index = i; applyOption(val) break end end
+                    SetOptions = function(self, newOptions)
+                        for _, b in pairs(optionButtons) do b:Destroy() end
+                        optionButtons = {}
+                        for _, v in pairs(newOptions) do addOption(v) end
+                        refreshOptions()
                     end,
-                    Get = function(self) return currentOption end
+                    Get = function(self)
+                        local out = {}
+                        for k, v in pairs(selected) do if v then table.insert(out, k) end end
+                        return out
+                    end
                 }
             end
+                lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 0); lbl.Size = UDim2.new(1, -60, 1, 0); lbl.Font = Enum.Font.Gotham; lbl.Text = text .. " (" .. default .. ")"; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 13; lbl.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local arrow = Instance.new("TextLabel", dpd)
+                arrow.BackgroundTransparency = 1; arrow.Position = UDim2.new(1, -30, 0, 0); arrow.Size = UDim2.new(0, 30, 1, 0); arrow.Font = Enum.Font.GothamBold; arrow.Text = ">"; arrow.TextColor3 = Library.Theme.TextDark; arrow.TextSize = 14
+                
+                local list = Instance.new("Frame", dpd)
+                list.Name = "OptionList"; list.BackgroundColor3 = Color3.fromRGB(24, 24, 24); list.Position = UDim2.new(0, 5, 0, 40); list.Size = UDim2.new(1, -10, 0, 120); list.Visible = false; list.BackgroundTransparency = 0.1
+                Instance.new("UICorner", list).CornerRadius = UDim.new(0, 4); AddStroke(list, Color3.fromRGB(50, 50, 50), 0.8)
+                
+                local search = Instance.new("TextBox", list)
+                search.BackgroundColor3 = Color3.fromRGB(30, 30, 30); search.Position = UDim2.new(0, 5, 0, 5); search.Size = UDim2.new(1, -10, 0, 25); search.Font = Enum.Font.Gotham; search.PlaceholderText = "Search..."; search.Text = ""; search.TextColor3 = Library.Theme.Text; search.TextSize = 12; Instance.new("UICorner", search).CornerRadius = UDim.new(0, 4)
+                
+                local scroll = Instance.new("ScrollingFrame", list)
+                scroll.BackgroundTransparency = 1; scroll.Position = UDim2.new(0, 0, 0, 35); scroll.Size = UDim2.new(1, 0, 1, -40); scroll.ScrollBarThickness = 2; scroll.ScrollBarImageColor3 = Library.Theme.Accent
+                local slist = Instance.new("UIListLayout", scroll); slist.Padding = UDim.new(0, 2)
+                
+                local open = false
+                local currentOption = default
+                local optionButtons = {}
+
+                local function refreshOptions(filter)
+                    for _, b in pairs(optionButtons) do
+                        b.Visible = (filter == nil or filter == "" or b.Name:lower():find(filter:lower()))
+                    end
+                    scroll.CanvasSize = UDim2.new(0, 0, 0, slist.AbsoluteContentSize.Y + 5)
+                end
+
+                local function addOption(val)
+                    local opt = Instance.new("TextButton", scroll)
+                    opt.Name = val; opt.BackgroundColor3 = Color3.fromRGB(30, 30, 30); opt.Size = UDim2.new(1, -4, 0, 28); opt.Font = Enum.Font.Gotham; opt.Text = val; opt.TextColor3 = Library.Theme.TextDark; opt.TextSize = 12; Instance.new("UICorner", opt).CornerRadius = UDim.new(0, 4)
+                    
+                    opt.MouseButton1Click:Connect(function()
+                        currentOption = val
+                        lbl.Text = text .. " (" .. val .. ")"
+                        open = false
+                        dpd:TweenSize(UDim2.new(1, -10, 0, 35), "Out", "Quart", 0.3, true)
+                        list.Visible = false
+                        Tween(arrow, TweenInfo.new(0.3), {Rotation = 0})
+                        if callback then callback(val) end
+                    end)
+                    table.insert(optionButtons, opt)
+                end
+
+                for _, v in pairs(options or {}) do addOption(v) end
+                refreshOptions()
+
+                search:GetPropertyChangedSignal("Text"):Connect(function() refreshOptions(search.Text) end)
+
+                dpd.InputBegan:Connect(function(i)
+                    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                        open = not open
+                        list.Visible = open
+                        dpd:TweenSize(open and UDim2.new(1, -10, 0, 165) or UDim2.new(1, -10, 0, 35), "Out", "Quart", 0.3, true)
+                        Tween(arrow, TweenInfo.new(0.3), {Rotation = open and 90 or 0})
+                        if open then refreshOptions() end
+                    end
+                end)
+
+                local DropdownLogic = {}
+                function DropdownLogic:SetOptions(newOptions)
+                    for _, b in pairs(optionButtons) do b:Destroy() end
+                    optionButtons = {}
+                    for _, v in pairs(newOptions) do addOption(v) end
+                    refreshOptions()
+                end
+                function DropdownLogic:Add(val) addOption(val); refreshOptions() end
+                function DropdownLogic:Clear() 
+                    for _, b in pairs(optionButtons) do b:Destroy() end
+                    optionButtons = {}
+                    refreshOptions()
+                end
+                function DropdownLogic:Set(val)
+                    currentOption = val
+                    lbl.Text = text .. " (" .. val .. ")"
+                    if callback then callback(val) end
+                end
+                function DropdownLogic:Get() return currentOption end
+                
+                return DropdownLogic
+            end
             
-            function SectionLogic:CreateKeybind(text, defaultKey, callback)
+            function SectionLogic:CreateKeybind(text, tooltip, defaultKey, callback)
                 local kbd = Instance.new("Frame", SubPage)
                 kbd.BackgroundColor3 = Library.Theme.ElementBackground; kbd.Size = UDim2.new(1, -10, 0, 35); Instance.new("UICorner", kbd).CornerRadius = UDim.new(0, 4)
+                local kstroke = AddStroke(kbd, Color3.fromRGB(45, 45, 45), 0.8)
+                
+                kbd.MouseEnter:Connect(function()
+                    Tween(kstroke, TweenInfo.new(0.2), {Color = Library.Theme.Accent, Transparency = 0.4})
+                    if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
+                end)
+                kbd.MouseLeave:Connect(function()
+                    Tween(kstroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(45, 45, 45), Transparency = 0.6})
+                    HideTooltip()
+                end)
+                
+                table.insert(Refresher, function()
+                    kbd.BackgroundColor3 = Library.Theme.ElementBackground
+                    kstroke.Color = Color3.fromRGB(45, 45, 45)
+                    keyLbl.TextColor3 = Library.Theme.Accent
+                end)
+                
                 local lbl = Instance.new("TextLabel", kbd)
                 lbl.BackgroundTransparency = 1; lbl.Position = UDim2.new(0, 12, 0, 0); lbl.Size = UDim2.new(1, -60, 1, 0); lbl.Font = Enum.Font.Gotham; lbl.Text = text; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 13; lbl.TextXAlignment = Enum.TextXAlignment.Left
                 local keyLbl = Instance.new("TextLabel", kbd)
@@ -385,7 +657,6 @@ function Library:CreateWindow(hubName)
                         binding = false
                         applyKey(i.KeyCode)
                     elseif not binding and not gpe and i.KeyCode == currentKey then
-                        -- Handle triggering logic here automatically
                         if callback then callback(currentKey) end
                     end
                 end)
