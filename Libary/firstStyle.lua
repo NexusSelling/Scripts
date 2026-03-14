@@ -206,10 +206,9 @@ function Library:CreateLoadingScreen(config)
     LoadGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     LoadGui.DisplayOrder = 999
 
-    -- Semi-transparent backdrop
+    -- Invisible backdrop (no overlay)
     local BG = Instance.new("Frame", LoadGui)
-    BG.BackgroundColor3 = bgColor
-    BG.BackgroundTransparency = 0.4
+    BG.BackgroundTransparency = 1
     BG.Size = UDim2.new(1, 0, 1, 0)
     BG.BorderSizePixel = 0
 
