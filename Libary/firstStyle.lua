@@ -188,6 +188,204 @@ function Library:Notify(title, text, duration)
 end
 
 -- ══════════════════════════════════════
+-- Key System
+-- ══════════════════════════════════════
+
+function Library:CreateKeySystem(config)
+    config = config or {}
+    local title = config.Title or "Key System"
+    local subtitle = config.Subtitle or "Enter your key to continue"
+    local keys = config.Keys or {} -- table of valid keys, e.g. {"abc123", "vip-key"}
+    local keyLink = config.KeyLink or nil -- URL where user can get the key
+    local maxAttempts = config.MaxAttempts or 0 -- 0 = unlimited
+    local onSuccess = config.OnSuccess or nil
+    local onFail = config.OnFail or nil
+    local accentColor = config.AccentColor or Library.Theme.Accent
+
+    local KeyGui = Instance.new("ScreenGui", CoreGui)
+    KeyGui.Name = "NexusKeySystem"
+    KeyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    KeyGui.DisplayOrder = 998
+
+    -- Dim backdrop
+    local BG = Instance.new("Frame", KeyGui)
+    BG.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    BG.BackgroundTransparency = 0.5
+    BG.Size = UDim2.new(1, 0, 1, 0)
+    BG.BorderSizePixel = 0
+
+    -- Card
+    local Card = Instance.new("Frame", KeyGui)
+    Card.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    Card.AnchorPoint = Vector2.new(0.5, 0.5)
+    Card.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Card.Size = UDim2.new(0, 320, 0, 185)
+    Card.BorderSizePixel = 0
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
+    AddStroke(Card, accentColor, 1)
+
+    -- Title
+    local TitleLabel = Instance.new("TextLabel", Card)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Position = UDim2.new(0, 15, 0, 12)
+    TitleLabel.Size = UDim2.new(1, -30, 0, 22)
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.Text = title
+    TitleLabel.TextColor3 = Library.Theme.Text
+    TitleLabel.TextSize = 18
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Subtitle
+    local SubLabel = Instance.new("TextLabel", Card)
+    SubLabel.BackgroundTransparency = 1
+    SubLabel.Position = UDim2.new(0, 15, 0, 36)
+    SubLabel.Size = UDim2.new(1, -30, 0, 16)
+    SubLabel.Font = Enum.Font.Gotham
+    SubLabel.Text = subtitle
+    SubLabel.TextColor3 = Library.Theme.TextDark
+    SubLabel.TextSize = 11
+    SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Input
+    local InputBox = Instance.new("TextBox", Card)
+    InputBox.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    InputBox.Position = UDim2.new(0, 15, 0, 62)
+    InputBox.Size = UDim2.new(1, -30, 0, 32)
+    InputBox.Font = Enum.Font.Gotham
+    InputBox.PlaceholderText = "Enter key..."
+    InputBox.Text = ""
+    InputBox.TextColor3 = Library.Theme.Text
+    InputBox.TextSize = 13
+    InputBox.ClearTextOnFocus = false
+    Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 5)
+    AddStroke(InputBox, Color3.fromRGB(50, 50, 50), 0.8)
+    local inputPad = Instance.new("UIPadding", InputBox)
+    inputPad.PaddingLeft = UDim.new(0, 8)
+
+    -- Buttons row
+    local ConfirmBtn = Instance.new("TextButton", Card)
+    ConfirmBtn.BackgroundColor3 = accentColor
+    ConfirmBtn.Position = UDim2.new(0, 15, 0, 105)
+    ConfirmBtn.Size = UDim2.new(0.5, -20, 0, 30)
+    ConfirmBtn.Font = Enum.Font.GothamBold
+    ConfirmBtn.Text = "Confirm"
+    ConfirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ConfirmBtn.TextSize = 13
+    Instance.new("UICorner", ConfirmBtn).CornerRadius = UDim.new(0, 5)
+
+    local GetKeyBtn = Instance.new("TextButton", Card)
+    GetKeyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    GetKeyBtn.Position = UDim2.new(0.5, 5, 0, 105)
+    GetKeyBtn.Size = UDim2.new(0.5, -20, 0, 30)
+    GetKeyBtn.Font = Enum.Font.GothamSemibold
+    GetKeyBtn.Text = keyLink and "Get Key" or "Copy Link"
+    GetKeyBtn.TextColor3 = Library.Theme.TextDark
+    GetKeyBtn.TextSize = 13
+    Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 5)
+    AddStroke(GetKeyBtn, Color3.fromRGB(50, 50, 50), 0.8)
+
+    -- Status
+    local StatusLabel = Instance.new("TextLabel", Card)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Position = UDim2.new(0, 15, 0, 145)
+    StatusLabel.Size = UDim2.new(1, -30, 0, 20)
+    StatusLabel.Font = Enum.Font.Gotham
+    StatusLabel.Text = ""
+    StatusLabel.TextColor3 = Library.Theme.TextDark
+    StatusLabel.TextSize = 11
+    StatusLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+    -- Hover effects
+    ConfirmBtn.MouseEnter:Connect(function()
+        Tween(ConfirmBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.new(
+            math.clamp(accentColor.R + 0.1, 0, 1),
+            math.clamp(accentColor.G + 0.1, 0, 1),
+            math.clamp(accentColor.B + 0.1, 0, 1)
+        )})
+    end)
+    ConfirmBtn.MouseLeave:Connect(function()
+        Tween(ConfirmBtn, TweenInfo.new(0.15), {BackgroundColor3 = accentColor})
+    end)
+    GetKeyBtn.MouseEnter:Connect(function()
+        Tween(GetKeyBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(45, 45, 45)})
+    end)
+    GetKeyBtn.MouseLeave:Connect(function()
+        Tween(GetKeyBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
+    end)
+
+    local attempts = 0
+    local validated = false
+
+    -- Get Key button
+    GetKeyBtn.MouseButton1Click:Connect(function()
+        if keyLink then
+            if setclipboard then setclipboard(keyLink) end
+            StatusLabel.Text = "Link copied to clipboard!"
+            StatusLabel.TextColor3 = accentColor
+            task.delay(2, function() if not validated then StatusLabel.Text = "" end end)
+        end
+    end)
+
+    -- Confirm button
+    ConfirmBtn.MouseButton1Click:Connect(function()
+        local entered = InputBox.Text
+        if entered == "" then
+            StatusLabel.Text = "Please enter a key."
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            return
+        end
+
+        local valid = false
+        for _, k in pairs(keys) do
+            if entered == k then valid = true; break end
+        end
+
+        if valid then
+            validated = true
+            StatusLabel.Text = "✓ Key accepted!"
+            StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+            Tween(ConfirmBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 200, 80)})
+            task.delay(0.8, function()
+                Tween(BG, TweenInfo.new(0.3), {BackgroundTransparency = 1})
+                Tween(Card, TweenInfo.new(0.3), {BackgroundTransparency = 1})
+                Tween(TitleLabel, TweenInfo.new(0.3), {TextTransparency = 1})
+                Tween(SubLabel, TweenInfo.new(0.3), {TextTransparency = 1})
+                Tween(StatusLabel, TweenInfo.new(0.3), {TextTransparency = 1})
+                Tween(InputBox, TweenInfo.new(0.3), {BackgroundTransparency = 1, TextTransparency = 1})
+                Tween(ConfirmBtn, TweenInfo.new(0.3), {BackgroundTransparency = 1, TextTransparency = 1})
+                Tween(GetKeyBtn, TweenInfo.new(0.3), {BackgroundTransparency = 1, TextTransparency = 1})
+                task.wait(0.3)
+                KeyGui:Destroy()
+                if onSuccess then onSuccess() end
+            end)
+        else
+            attempts = attempts + 1
+            StatusLabel.Text = "✗ Invalid key!"
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+            Tween(Card, TweenInfo.new(0.05), {Position = UDim2.new(0.5, 5, 0.5, 0)})
+            task.wait(0.05)
+            Tween(Card, TweenInfo.new(0.05), {Position = UDim2.new(0.5, -5, 0.5, 0)})
+            task.wait(0.05)
+            Tween(Card, TweenInfo.new(0.1), {Position = UDim2.new(0.5, 0, 0.5, 0)})
+
+            if maxAttempts > 0 and attempts >= maxAttempts then
+                StatusLabel.Text = "Too many attempts!"
+                task.delay(1.5, function()
+                    KeyGui:Destroy()
+                    if onFail then onFail() end
+                end)
+            end
+        end
+    end)
+
+    -- Block until validated or destroyed
+    while KeyGui.Parent and not validated do
+        task.wait(0.1)
+    end
+    return validated
+end
+
+-- ══════════════════════════════════════
 -- Loading Screen System
 -- ══════════════════════════════════════
 
