@@ -1020,16 +1020,46 @@ function Library:CreateWindow(hubName)
                 lbl.Font = Enum.Font.Gotham; lbl.Text = text; lbl.TextColor3 = Library.Theme.Text; lbl.TextSize = 13; lbl.TextXAlignment = Enum.TextXAlignment.Left
 
                 local keyLbl = Instance.new("TextLabel", kbd)
-                keyLbl.BackgroundTransparency = 1; keyLbl.Position = UDim2.new(1, -70, 0, 0); keyLbl.Size = UDim2.new(0, 60, 1, 0)
-                keyLbl.Font = Enum.Font.GothamBold; keyLbl.Text = defaultKey.Name; keyLbl.TextColor3 = Library.Theme.Accent; keyLbl.TextSize = 13; keyLbl.TextXAlignment = Enum.TextXAlignment.Right
+                keyLbl.BackgroundTransparency = 1; keyLbl.Position = UDim2.new(1, -90, 0, 0); keyLbl.Size = UDim2.new(0, 80, 1, 0)
+                keyLbl.Font = Enum.Font.GothamBold; keyLbl.TextColor3 = Library.Theme.Accent; keyLbl.TextSize = 13; keyLbl.TextXAlignment = Enum.TextXAlignment.Right
 
                 local currentKey = defaultKey
+                local currentKeyType = nil -- "keyboard" oder "mouse"
                 local binding = false
 
-                local function applyKey(newKey)
-                    currentKey = newKey
-                    keyLbl.Text = currentKey.Name
+                -- Hilfsfunktion: Gibt einen lesbaren Namen für die Taste zurück
+                local function getKeyName(key)
+                    if typeof(key) == "EnumItem" then
+                        if key.EnumType == Enum.KeyCode then
+                            return key.Name
+                        elseif key.EnumType == Enum.UserInputType then
+                            if key == Enum.UserInputType.MouseButton2 then
+                                return "RMB" -- Right Mouse Button
+                            elseif key == Enum.UserInputType.MouseButton3 then
+                                return "MMB" -- Middle Mouse Button
+                            else
+                                return tostring(key):gsub("Enum.UserInputType.", "")
+                            end
+                        end
+                    end
+                    return "None"
                 end
+
+                local function applyKey(newKey, keyType)
+                    currentKey = newKey
+                    currentKeyType = keyType
+                    keyLbl.Text = getKeyName(newKey)
+                end
+
+                -- Initialisierung
+                if typeof(defaultKey) == "EnumItem" then
+                    if defaultKey.EnumType == Enum.KeyCode then
+                        currentKeyType = "keyboard"
+                    elseif defaultKey.EnumType == Enum.UserInputType then
+                        currentKeyType = "mouse"
+                    end
+                end
+                keyLbl.Text = getKeyName(defaultKey)
 
                 kbd.InputBegan:Connect(function(i)
                     if i.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -1043,20 +1073,28 @@ function Library:CreateWindow(hubName)
                     if binding then
                         if i.UserInputType == Enum.UserInputType.Keyboard then
                             binding = false
-                            applyKey(i.KeyCode)
-                        elseif i.UserInputType == Enum.UserInputType.MouseButton2 or 
-                               i.UserInputType == Enum.UserInputType.MouseButton3 then
+                            applyKey(i.KeyCode, "keyboard")
+                        elseif i.UserInputType == Enum.UserInputType.MouseButton2 then
                             binding = false
-                            applyKey(i.UserInputType)
+                            applyKey(Enum.UserInputType.MouseButton2, "mouse")
+                        elseif i.UserInputType == Enum.UserInputType.MouseButton3 then
+                            binding = false
+                            applyKey(Enum.UserInputType.MouseButton3, "mouse")
                         end
                     -- Trigger-Modus: Prüfe ob die gebundene Taste gedrückt wurde
                     elseif not gpe then
+                        local triggered = false
+                        
                         -- Tastatur-Taste
-                        if typeof(currentKey) == "EnumItem" and currentKey.EnumType == Enum.KeyCode and i.KeyCode == currentKey then
-                            if callback then callback(currentKey) end
+                        if currentKeyType == "keyboard" and i.UserInputType == Enum.UserInputType.Keyboard and i.KeyCode == currentKey then
+                            triggered = true
                         -- Maustaste
-                        elseif typeof(currentKey) == "EnumItem" and currentKey.EnumType == Enum.UserInputType and i.UserInputType == currentKey then
-                            if callback then callback(currentKey) end
+                        elseif currentKeyType == "mouse" and i.UserInputType == currentKey then
+                            triggered = true
+                        end
+                        
+                        if triggered and callback then
+                            callback(currentKey)
                         end
                     end
                 end)
@@ -1064,7 +1102,13 @@ function Library:CreateWindow(hubName)
                 table.insert(Refresher, function() kbd.BackgroundColor3 = Library.Theme.ElementBackground; keyLbl.TextColor3 = Library.Theme.Accent end)
 
                 return {
-                    Set = function(self, newKey) applyKey(newKey) end,
+                    Set = function(self, newKey) 
+                        local keyType = "keyboard"
+                        if typeof(newKey) == "EnumItem" and newKey.EnumType == Enum.UserInputType then
+                            keyType = "mouse"
+                        end
+                        applyKey(newKey, keyType)
+                    end,
                     Get = function(self) return currentKey end
                 }
             end
