@@ -1039,11 +1039,25 @@ function Library:CreateWindow(hubName)
                 end)
 
                 UserInputService.InputBegan:Connect(function(i, gpe)
-                    if binding and i.UserInputType == Enum.UserInputType.Keyboard then
-                        binding = false
-                        applyKey(i.KeyCode)
-                    elseif not binding and not gpe and i.KeyCode == currentKey then
-                        if callback then callback(currentKey) end
+                    -- Binding-Modus: Tastatur oder Maustasten akzeptieren
+                    if binding then
+                        if i.UserInputType == Enum.UserInputType.Keyboard then
+                            binding = false
+                            applyKey(i.KeyCode)
+                        elseif i.UserInputType == Enum.UserInputType.MouseButton2 or 
+                               i.UserInputType == Enum.UserInputType.MouseButton3 then
+                            binding = false
+                            applyKey(i.UserInputType)
+                        end
+                    -- Trigger-Modus: Prüfe ob die gebundene Taste gedrückt wurde
+                    elseif not gpe then
+                        -- Tastatur-Taste
+                        if typeof(currentKey) == "EnumItem" and currentKey.EnumType == Enum.KeyCode and i.KeyCode == currentKey then
+                            if callback then callback(currentKey) end
+                        -- Maustaste
+                        elseif typeof(currentKey) == "EnumItem" and currentKey.EnumType == Enum.UserInputType and i.UserInputType == currentKey then
+                            if callback then callback(currentKey) end
+                        end
                     end
                 end)
 
