@@ -33,11 +33,6 @@ A professional, feature-rich UI library for Roblox exploit scripting. Built for 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/Libary/firstStyle.lua"))()
 ```
 
-Or load locally inside an executor:
-```lua
-local Library = loadstring(readfile("AmbaniLibrary.lua"))()
-```
-
 ---
 
 ## 🔑 Key System
