@@ -6,9 +6,7 @@
 -- ============================================
 -- SECRET KEY CHECK - NICHT ENTFERNEN!
 -- ============================================
-local SECRET_KEY = "NexusLoader_X7k9$mP2#vL4@nQ8"
-
-if not getgenv().NexusLoaderActive or getgenv().NexusLoaderKey ~= SECRET_KEY then
+if not getgenv().NexusLoaderActive then
     warn("Access Denied: Use the official Nexus Loader!")
     pcall(function()
         local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/Libary/firstStyle.lua"))()
@@ -29,15 +27,15 @@ local LocalPlayer = Players.LocalPlayer
 -- Library laden
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexusSelling/Scripts/refs/heads/main/Libary/firstStyle.lua"))()
 
--- Theme (Clean Rot-Schwarz)
+-- Theme (Exact wie im Bild - Dunkel Rot/Schwarz)
 Library:SetTheme({
-    Accent = Color3.fromRGB(200, 30, 30),
-    MainBackground = Color3.fromRGB(10, 10, 10),
-    SidebarBackground = Color3.fromRGB(15, 15, 15),
-    ElementBackground = Color3.fromRGB(18, 18, 18),
-    ButtonBackground = Color3.fromRGB(25, 25, 25),
+    Accent = Color3.fromRGB(170, 35, 35),
+    MainBackground = Color3.fromRGB(18, 18, 18),
+    SidebarBackground = Color3.fromRGB(22, 22, 22),
+    ElementBackground = Color3.fromRGB(28, 28, 28),
+    ButtonBackground = Color3.fromRGB(35, 35, 35),
     Text = Color3.fromRGB(255, 255, 255),
-    TextDark = Color3.fromRGB(140, 140, 140),
+    TextDark = Color3.fromRGB(160, 160, 160),
 })
 
 -- Settings
