@@ -113,6 +113,43 @@ local function CreateGradient(parent, colors)
     return gradient
 end
 
+local function CreateRipple(parent, x, y, color)
+    local Ripple = Instance.new("Frame")
+    Ripple.Parent = parent
+    Ripple.BackgroundColor3 = color or Color3.fromRGB(255, 255, 255)
+    Ripple.BackgroundTransparency = 0.8
+    Ripple.BorderSizePixel = 0
+    Ripple.AnchorPoint = Vector2.new(0.5, 0.5)
+    Ripple.Position = UDim2.new(0, x, 0, y)
+    Ripple.Size = UDim2.new(0, 0, 0, 0)
+    Ripple.ZIndex = 10
+
+    Instance.new("UICorner", Ripple).CornerRadius = UDim.new(1, 0)
+
+    Tween(Ripple, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, parent.AbsoluteSize.X * 2, 0, parent.AbsoluteSize.X * 2),
+        BackgroundTransparency = 1
+    })
+    task.delay(0.4, function()
+        if Ripple then Ripple:Destroy() end
+    end)
+
+    return Ripple
+end
+
+local function HoverAnimate(obj, enterProps, leaveProps, duration)
+    duration = duration or 0.2
+    obj.MouseEnter:Connect(function()
+        for prop, val in pairs(enterProps) do
+            SpringTween(obj, prop, val, duration)
+        end
+    end)
+    obj.MouseLeave:Connect(function()
+        for prop, val in pairs(leaveProps) do
+            SpringTween(obj, prop, val, duration)
+        end
+    end)
+end
 
 local function CreateParticleSystem(parent)
     if not Library.Config.EnableParticles then return end
@@ -460,19 +497,21 @@ function Library:Notify(title, text, duration, notifType)
     end
 
     table.insert(ActiveNotifications, Notif)
-    UpdatePositions()
-
+    Notif.Size = UDim2.new(0, 0, 0, 0)
     Notif.Position = UDim2.new(1, 10, 1, -80)
     task.wait(0.05)
     UpdatePositions()
+
+    SpringTween(Notif, "Size", UDim2.new(0, 300, 0, 70), 0.4)
 
     task.delay(duration or 4, function()
         local index = table.find(ActiveNotifications, Notif)
         if index then
             table.remove(ActiveNotifications, index)
-            Tween(Notif, TweenInfo.new(0.5, Enum.EasingStyle.Quart),
+            SpringTween(Notif, "Size", UDim2.new(0, 0, 0, 0), 0.3)
+            Tween(Notif, TweenInfo.new(0.4, Enum.EasingStyle.Quart),
                 {Position = UDim2.new(1, 10, Notif.Position.Y.Scale, Notif.Position.Y.Offset)})
-            task.delay(0.5, function()
+            task.delay(0.4, function()
                 if Notif then Notif:Destroy() end
             end)
             UpdatePositions()
@@ -828,6 +867,25 @@ function Library:CreateLoadingScreen(config)
     CreateGradient(BarFill)
     AddGlow(BarFill, Library.Theme.AccentGlow, 20)
 
+    local Shimmer = Instance.new("Frame", BarFill)
+    Shimmer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Shimmer.BackgroundTransparency = 0.85
+    Shimmer.Size = UDim2.new(0, 30, 1, 0)
+    Shimmer.Position = UDim2.new(0, -30, 0, 0)
+    Shimmer.BorderSizePixel = 0
+    Instance.new("UICorner", Shimmer).CornerRadius = UDim.new(1, 0)
+
+    task.spawn(function()
+        while Shimmer and Shimmer.Parent do
+            Tween(Shimmer, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+                Position = UDim2.new(1, 0, 0, 0)
+            })
+            task.wait(1.5)
+            if not Shimmer then break end
+            Shimmer.Position = UDim2.new(0, -30, 0, 0)
+        end
+    end)
+
     local StepLabel = Instance.new("TextLabel", Card)
     StepLabel.BackgroundTransparency = 1
     StepLabel.AnchorPoint = Vector2.new(0.5, 0)
@@ -994,8 +1052,10 @@ function Library:CreateWindow(hubName)
     end)
 
     MainFrame.Size = UDim2.new(0, 0, 0, 0)
+    MainFrame.GroupTransparency = 1
     task.wait(0.1)
-    SpringTween(MainFrame, "Size", UDim2.new(0, windowSize.X, 0, windowSize.Y), 0.6)
+    SpringTween(MainFrame, "Size", UDim2.new(0, windowSize.X, 0, windowSize.Y), 0.5)
+    SpringTween(MainFrame, "GroupTransparency", 0.05, 0.4)
 
     Library:LogActivity("Window Created", hubName or "SecondStyle")
 
@@ -1076,15 +1136,17 @@ function Library:CreateWindow(hubName)
         TabButton.MouseButton1Click:Connect(function()
             for _, t in pairs(Library.Tabs) do
                 t.Page.Visible = false
-                Tween(t.Page, TweenInfo.new(0.2), {GroupTransparency = 1})
-                Tween(t.Label, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark})
-                Tween(t.Icon, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.TextDark})
-                Tween(t.Button, TweenInfo.new(0.2), {BackgroundTransparency = 1})
-                Tween(t.Indicator, TweenInfo.new(0.2), {Transparency = 1})
+                Tween(t.Page, TweenInfo.new(0.15), {GroupTransparency = 1})
+                Tween(t.Label, TweenInfo.new(0.15), {TextColor3 = Library.Theme.TextDark})
+                Tween(t.Icon, TweenInfo.new(0.15), {ImageColor3 = Library.Theme.TextDark})
+                Tween(t.Button, TweenInfo.new(0.15), {BackgroundTransparency = 1})
+                Tween(t.Indicator, TweenInfo.new(0.15), {Transparency = 1})
             end
 
             Page.Visible = true
-            SpringTween(Page, "GroupTransparency", 0, 0.3)
+            Page.Position = UDim2.new(0, 20, 0, 0)
+            SpringTween(Page, "GroupTransparency", 0, 0.25)
+            SpringTween(Page, "Position", UDim2.new(0, 0, 0, 0), 0.3)
             SpringTween(TabLabel, "TextColor3", Library.Theme.Text, 0.3)
             SpringTween(Icon, "ImageColor3", Library.Theme.Accent, 0.3)
             SpringTween(TabButton, "BackgroundTransparency", 0, 0.3)
@@ -1177,17 +1239,20 @@ function Library:CreateWindow(hubName)
             SubTabButton.MouseButton1Click:Connect(function()
                 for _, st in pairs(SubTabs) do
                     st.Page.Visible = false
-                    Tween(st.Btn, TweenInfo.new(0.2), {
+                    st.Page.Position = UDim2.new(0, 0, 0, 0)
+                    Tween(st.Btn, TweenInfo.new(0.15), {
                         TextColor3 = Library.Theme.TextDark,
                         BackgroundTransparency = 1
                     })
-                    Tween(st.Underline, TweenInfo.new(0.2), {Transparency = 1})
+                    Tween(st.Underline, TweenInfo.new(0.15), {Transparency = 1})
                 end
 
                 SubPage.Visible = true
+                SubPage.Position = UDim2.new(0, 0, 0.05, 10)
                 SpringTween(SubTabButton, "TextColor3", Library.Theme.Text, 0.2)
                 SpringTween(SubTabButton, "BackgroundTransparency", 0, 0.2)
                 SpringTween(Underline, "Transparency", 0, 0.2)
+                SpringTween(SubPage, "Position", UDim2.new(0, 0, 0, 0), 0.25)
 
                 Library:LogActivity("Section Changed", name .. " > " .. sectionName)
             end)
@@ -1234,6 +1299,7 @@ function Library:CreateWindow(hubName)
                 Button.TextColor3 = Library.Theme.Text
                 Button.TextSize = 14
                 Button.BorderSizePixel = 0
+                Button.ClipsDescendants = true
 
                 Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 8)
                 local btnStroke = AddStroke(Button, Library.Theme.Accent, 1)
@@ -1243,9 +1309,10 @@ function Library:CreateWindow(hubName)
                 btnGlow.ImageTransparency = 1
 
                 Button.MouseEnter:Connect(function()
-                    SpringTween(Button, "BackgroundColor3", Library.Theme.ElementBackground, 0.2)
-                    SpringTween(btnStroke, "Transparency", 0.2, 0.2)
-                    SpringTween(btnGlow, "ImageTransparency", 0.7, 0.2)
+                    SpringTween(Button, "BackgroundColor3", Library.Theme.ElementBackground, 0.15)
+                    SpringTween(btnStroke, "Transparency", 0.2, 0.15)
+                    SpringTween(btnGlow, "ImageTransparency", 0.7, 0.15)
+                    SpringTween(Button, "Size", UDim2.new(1, -6, 0, 42), 0.15)
                     if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
                 end)
 
@@ -1253,13 +1320,21 @@ function Library:CreateWindow(hubName)
                     SpringTween(Button, "BackgroundColor3", Library.Theme.ButtonBackground, 0.2)
                     SpringTween(btnStroke, "Transparency", 0.7, 0.2)
                     SpringTween(btnGlow, "ImageTransparency", 1, 0.2)
+                    SpringTween(Button, "Size", UDim2.new(1, -10, 0, 40), 0.2)
                     HideTooltip()
                 end)
 
+                Button.MouseButton1Down:Connect(function()
+                    local mousePos = UserInputService:GetMouseLocation()
+                    local relX = mousePos.X - Button.AbsolutePosition.X
+                    local relY = mousePos.Y - Button.AbsolutePosition.Y
+                    CreateRipple(Button, relX, relY, Library.Theme.AccentLight)
+
+                    SpringTween(Button, "BackgroundColor3", Library.Theme.Accent, 0.08)
+                end)
+
                 Button.MouseButton1Click:Connect(function()
-                    SpringTween(Button, "BackgroundColor3", Library.Theme.Accent, 0.1)
-                    task.wait(0.15)
-                    SpringTween(Button, "BackgroundColor3", Library.Theme.ButtonBackground, 0.2)
+                    SpringTween(Button, "BackgroundColor3", Library.Theme.ElementBackground, 0.2)
 
                     if callback then
                         task.spawn(callback)
@@ -1327,9 +1402,12 @@ function Library:CreateWindow(hubName)
                 local function UpdateToggle(animate)
                     if state then
                         if animate then
-                            SpringTween(SwitchContainer, "BackgroundColor3", Library.Theme.Accent, 0.3)
+                            SpringTween(SwitchContainer, "BackgroundColor3", Library.Theme.Accent, 0.25)
                             SpringTween(SwitchKnob, "Position", UDim2.new(1, -21, 0.5, -9), 0.3)
-                            SpringTween(SwitchKnob, "BackgroundColor3", Color3.fromRGB(255, 255, 255), 0.3)
+                            SpringTween(SwitchKnob, "BackgroundColor3", Color3.fromRGB(255, 255, 255), 0.25)
+                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 20, 0, 20), 0.1)
+                            task.wait(0.1)
+                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 18, 0, 18), 0.2)
                         else
                             SwitchContainer.BackgroundColor3 = Library.Theme.Accent
                             SwitchKnob.Position = UDim2.new(1, -21, 0.5, -9)
@@ -1337,9 +1415,12 @@ function Library:CreateWindow(hubName)
                         end
                     else
                         if animate then
-                            SpringTween(SwitchContainer, "BackgroundColor3", Color3.fromRGB(40, 38, 50), 0.3)
+                            SpringTween(SwitchContainer, "BackgroundColor3", Color3.fromRGB(40, 38, 50), 0.25)
                             SpringTween(SwitchKnob, "Position", UDim2.new(0, 3, 0.5, -9), 0.3)
-                            SpringTween(SwitchKnob, "BackgroundColor3", Color3.fromRGB(200, 200, 200), 0.3)
+                            SpringTween(SwitchKnob, "BackgroundColor3", Color3.fromRGB(200, 200, 200), 0.25)
+                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 20, 0, 20), 0.1)
+                            task.wait(0.1)
+                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 18, 0, 18), 0.2)
                         else
                             SwitchContainer.BackgroundColor3 = Color3.fromRGB(40, 38, 50)
                             SwitchKnob.Position = UDim2.new(0, 3, 0.5, -9)
@@ -1355,6 +1436,14 @@ function Library:CreateWindow(hubName)
                 ToggleButton.Size = UDim2.new(1, 0, 1, 0)
                 ToggleButton.Text = ""
                 ToggleButton.ZIndex = 2
+                ToggleButton.ClipsDescendants = true
+
+                ToggleButton.MouseButton1Down:Connect(function()
+                    local mousePos = UserInputService:GetMouseLocation()
+                    local relX = mousePos.X - SwitchContainer.AbsolutePosition.X
+                    local relY = mousePos.Y - SwitchContainer.AbsolutePosition.Y
+                    CreateRipple(SwitchContainer, relX, relY, Library.Theme.AccentLight)
+                end)
 
                 ToggleButton.MouseButton1Click:Connect(function()
                     state = not state
@@ -1368,12 +1457,14 @@ function Library:CreateWindow(hubName)
                 end)
 
                 ToggleFrame.MouseEnter:Connect(function()
-                    SpringTween(tglStroke, "Transparency", 0.3, 0.2)
+                    SpringTween(tglStroke, "Transparency", 0.2, 0.15)
+                    SpringTween(ToggleFrame, "BackgroundColor3", Library.Theme.ButtonBackground, 0.15)
                     if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
                 end)
 
                 ToggleFrame.MouseLeave:Connect(function()
                     SpringTween(tglStroke, "Transparency", 0.7, 0.2)
+                    SpringTween(ToggleFrame, "BackgroundColor3", Library.Theme.ElementBackground, 0.2)
                     HideTooltip()
                 end)
 
@@ -1472,10 +1563,16 @@ function Library:CreateWindow(hubName)
                     local relativeX = math.clamp((input.Position.X - SliderTrack.AbsolutePosition.X) / SliderTrack.AbsoluteSize.X, 0, 1)
                     value = math.floor(min + (relativeX * (max - min)))
 
-                    SpringTween(SliderFill, "Size", UDim2.new(relativeX, 0, 1, 0), 0.1)
-                    SpringTween(SliderKnob, "Position", UDim2.new(relativeX, 0, 0.5, 0), 0.1)
+                    SpringTween(SliderFill, "Size", UDim2.new(relativeX, 0, 1, 0), 0.08)
+                    SpringTween(SliderKnob, "Position", UDim2.new(relativeX, 0, 0.5, 0), 0.08)
 
                     ValueLabel.Text = tostring(value)
+                    SpringTween(ValueLabel, "BackgroundColor3", Library.Theme.Accent, 0.1)
+                    task.delay(0.3, function()
+                        if ValueLabel then
+                            SpringTween(ValueLabel, "BackgroundColor3", Library.Theme.ButtonBackground, 0.3)
+                        end
+                    end)
 
                     if callback then
                         task.spawn(callback, value)
@@ -1485,6 +1582,8 @@ function Library:CreateWindow(hubName)
                 SliderTrack.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         dragging = true
+                        SpringTween(SliderKnob, "Size", UDim2.new(0, 22, 0, 22), 0.15)
+                        SpringTween(SliderTrack, "Size", UDim2.new(1, -30, 0, 8), 0.15)
                         UpdateSlider(input)
                         Library:LogActivity("Slider", text .. " = " .. tostring(value))
                     end
@@ -1493,6 +1592,8 @@ function Library:CreateWindow(hubName)
                 SliderTrack.InputEnded:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         dragging = false
+                        SpringTween(SliderKnob, "Size", UDim2.new(0, 16, 0, 16), 0.2)
+                        SpringTween(SliderTrack, "Size", UDim2.new(1, -30, 0, 6), 0.2)
                     end
                 end)
 
@@ -1617,8 +1718,19 @@ function Library:CreateWindow(hubName)
                     OptionsList.Visible = true
                     local listHeight = math.min(#options * 28, 120)
                     SpringTween(OptionsList, "Size", UDim2.new(1, -20, 0, listHeight), 0.3)
-                    SpringTween(Arrow, "Rotation", 180, 0.2)
+                    SpringTween(Arrow, "Rotation", 180, 0.25)
                     DropdownFrame.Size = UDim2.new(1, -10, 0, 45 + listHeight + 5)
+
+                    local delay = 0
+                    for _, child in ipairs(OptionsList:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            child.Size = UDim2.new(1, -4, 0, 0)
+                            task.delay(delay, function()
+                                SpringTween(child, "Size", UDim2.new(1, -4, 0, 26), 0.15)
+                            end)
+                            delay = delay + 0.03
+                        end
+                    end
                 end
 
                 SelectedButton.MouseButton1Click:Connect(function()
