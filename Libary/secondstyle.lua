@@ -390,8 +390,6 @@ function Library:Notify(title, text, duration, notifType)
     Instance.new("UICorner", Notif).CornerRadius = Library.Theme.CornerRadius
     AddStroke(Notif, accentColor, 2)
 
-    CreateGlowLine(Notif)
-
     if Library.Config.EnableBlur then
         local BlurEffect = Instance.new("ImageLabel", Notif)
         BlurEffect.BackgroundTransparency = 1
@@ -756,13 +754,6 @@ function Library:CreateLoadingScreen(config)
     LoadGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     LoadGui.DisplayOrder = 999
 
-    local BG = Instance.new("Frame", LoadGui)
-    BG.BackgroundColor3 = Library.Theme.MainBackground
-    BG.Size = UDim2.new(1, 0, 1, 0)
-    BG.BorderSizePixel = 0
-
-    CreateParticleSystem(BG)
-
     local Card = Instance.new("CanvasGroup", LoadGui)
     Card.BackgroundColor3 = Library.Theme.SidebarBackground
     Card.GroupTransparency = 0.1
@@ -864,7 +855,6 @@ function Library:CreateLoadingScreen(config)
         task.wait(duration)
     end
 
-    Tween(BG, TweenInfo.new(0.5), {BackgroundTransparency = 1})
     Tween(Card, TweenInfo.new(0.5), {GroupTransparency = 1})
     task.wait(0.5)
     LoadGui:Destroy()
