@@ -1229,16 +1229,6 @@ function Library:CreateWindow(hubName)
 
             local SectionLogic = {}
 
-            return SectionLogic
-        end
-
-        return PageLogic
-    end
-
-    return WindowLogic
-end
-
-
             function SectionLogic:CreateButton(text, tooltip, callback)
                 if type(tooltip) == "function" then
                     callback = tooltip
