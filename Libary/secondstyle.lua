@@ -1,4 +1,3 @@
-
 local Library = {
     CurrentTab = nil,
     Tabs = {},
@@ -352,7 +351,7 @@ local function ShowTooltip(text, pos)
 
     TipGui:ClearAllChildren()
 
-    local Tooltip = Instance.new("Frame", TipGui)
+    local Tooltip = Instance.new("CanvasGroup", TipGui)
     Tooltip.BackgroundColor3 = Library.Theme.ElementBackground
     Tooltip.AutomaticSize = Enum.AutomaticSize.XY
     Tooltip.Position = UDim2.new(0, pos.X + 15, 0, pos.Y + 15)
