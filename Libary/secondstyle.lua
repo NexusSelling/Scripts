@@ -1,3 +1,4 @@
+
 local Library = {
     CurrentTab = nil,
     Tabs = {},
@@ -5,19 +6,22 @@ local Library = {
     ToggleKey = Enum.KeyCode.RightControl,
 
     Theme = {
-        MainBackground = Color3.fromRGB(16, 14, 26),
-        SidebarBackground = Color3.fromRGB(14, 12, 22),
-        ElementBackground = Color3.fromRGB(20, 18, 30),
-        ButtonBackground = Color3.fromRGB(25, 22, 35),
+        MainBackground = Color3.fromRGB(13, 11, 23),
+        SidebarBackground = Color3.fromRGB(11, 9, 19),
+        ElementBackground = Color3.fromRGB(18, 16, 28),
+        ButtonBackground = Color3.fromRGB(23, 20, 33),
 
-        Accent = Color3.fromRGB(124, 58, 237),
-        AccentDark = Color3.fromRGB(100, 45, 200),
-        AccentLight = Color3.fromRGB(150, 80, 255),
-        AccentGlow = Color3.fromRGB(160, 100, 255),
+        Accent = Color3.fromRGB(120, 60, 230),
+        AccentDark = Color3.fromRGB(95, 42, 195),
+        AccentLight = Color3.fromRGB(148, 88, 255),
+        AccentGlow = Color3.fromRGB(155, 100, 255),
+        AccentSoft = Color3.fromRGB(30, 24, 50),
 
-        Text = Color3.fromRGB(255, 255, 255),
-        TextDark = Color3.fromRGB(150, 145, 165),
-        TextMuted = Color3.fromRGB(100, 95, 115),
+        Text = Color3.fromRGB(240, 240, 245),
+        TextDark = Color3.fromRGB(140, 135, 158),
+        TextMuted = Color3.fromRGB(90, 85, 108),
+
+        Divider = Color3.fromRGB(35, 30, 55),
 
         CornerRadius = UDim.new(0, 10),
         TitleSize = 24,
@@ -25,8 +29,8 @@ local Library = {
 
         GlowIntensity = 0.6,
         BlurSize = 15,
-        ParticleCount = 30,
-        AnimationSpeed = 0.4
+        ParticleCount = 25,
+        AnimationSpeed = 0.35
     },
 
     Config = {
@@ -39,7 +43,10 @@ local Library = {
         AvatarInitials = "NS",
         WindowSize = Vector2.new(700, 450),
         AnimationStyle = "Spring"
-    }
+    },
+
+    _connections = {},
+    _guis = {}
 }
 
 local TweenService = game:GetService("TweenService")
@@ -48,6 +55,11 @@ local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
+
+local function TrackConnection(conn)
+    table.insert(Library._connections, conn)
+    return conn
+end
 
 local function SpringTween(obj, property, goal, speed)
     speed = speed or Library.Theme.AnimationSpeed
@@ -62,6 +74,13 @@ local function SpringTween(obj, property, goal, speed)
 end
 
 local function Tween(obj, info, goal)
+    local tween = TweenService:Create(obj, info, goal)
+    tween:Play()
+    return tween
+end
+
+local function SmoothTween(obj, duration, goal)
+    local info = TweenInfo.new(duration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
     local tween = TweenService:Create(obj, info, goal)
     tween:Play()
     return tween
@@ -87,7 +106,7 @@ local function AddGlow(parent, color, size)
     glow.Size = UDim2.new(1, size or 40, 1, size or 40)
     glow.Image = "rbxassetid://5028857084"
     glow.ImageColor3 = color or Library.Theme.AccentGlow
-    glow.ImageTransparency = 0.7
+    glow.ImageTransparency = 0.75
     glow.ZIndex = 0
     return glow
 end
@@ -116,7 +135,7 @@ local function CreateRipple(parent, x, y, color)
     local Ripple = Instance.new("Frame")
     Ripple.Parent = parent
     Ripple.BackgroundColor3 = color or Color3.fromRGB(255, 255, 255)
-    Ripple.BackgroundTransparency = 0.8
+    Ripple.BackgroundTransparency = 0.85
     Ripple.BorderSizePixel = 0
     Ripple.AnchorPoint = Vector2.new(0.5, 0.5)
     Ripple.Position = UDim2.new(0, x, 0, y)
@@ -125,11 +144,11 @@ local function CreateRipple(parent, x, y, color)
 
     Instance.new("UICorner", Ripple).CornerRadius = UDim.new(1, 0)
 
-    Tween(Ripple, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, parent.AbsoluteSize.X * 2, 0, parent.AbsoluteSize.X * 2),
+    Tween(Ripple, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, parent.AbsoluteSize.X * 2.5, 0, parent.AbsoluteSize.X * 2.5),
         BackgroundTransparency = 1
     })
-    task.delay(0.4, function()
+    task.delay(0.5, function()
         if Ripple then Ripple:Destroy() end
     end)
 
@@ -159,6 +178,7 @@ local function CreateParticleSystem(parent)
     ParticleContainer.BackgroundTransparency = 1
     ParticleContainer.Size = UDim2.new(1, 0, 1, 0)
     ParticleContainer.ZIndex = 0
+    ParticleContainer.ClipsDescendants = true
 
     local particles = {}
 
@@ -167,7 +187,7 @@ local function CreateParticleSystem(parent)
         particle.Name = "Particle_" .. i
         particle.Parent = ParticleContainer
         particle.BackgroundColor3 = Library.Theme.Accent
-        particle.BackgroundTransparency = math.random(70, 90) / 100
+        particle.BackgroundTransparency = math.random(75, 92) / 100
         particle.BorderSizePixel = 0
 
         local size = math.random(2, 4)
@@ -183,13 +203,18 @@ local function CreateParticleSystem(parent)
 
         table.insert(particles, {
             frame = particle,
-            velocityX = (math.random(-10, 10) / 100),
-            velocityY = (math.random(-10, 10) / 100),
-            life = 0
+            velocityX = (math.random(-8, 8) / 100),
+            velocityY = (math.random(-8, 8) / 100),
+            life = math.random(0, 100) / 10
         })
     end
 
-    RunService.RenderStepped:Connect(function(dt)
+    local conn
+    conn = RunService.RenderStepped:Connect(function(dt)
+        if not ParticleContainer or not ParticleContainer.Parent then
+            conn:Disconnect()
+            return
+        end
         if not Library.Config.EnableParticles then return end
 
         for _, p in ipairs(particles) do
@@ -206,11 +231,12 @@ local function CreateParticleSystem(parent)
 
             p.frame.Position = UDim2.new(newX, 0, newY, 0)
 
-            local pulse = 0.7 + (math.sin(p.life * 2) * 0.2)
+            local pulse = 0.75 + (math.sin(p.life * 1.5) * 0.15)
             p.frame.BackgroundTransparency = pulse
         end
     end)
 
+    TrackConnection(conn)
     return ParticleContainer
 end
 
@@ -227,23 +253,30 @@ local function CreateGlowLine(parent)
     GlowLine.Position = UDim2.new(0, 0, 0, 0)
 
     Instance.new("UICorner", GlowLine).CornerRadius = UDim.new(1, 0)
+    CreateGradient(GlowLine, {Library.Theme.AccentLight, Library.Theme.Accent, Library.Theme.AccentDark})
 
-    local Glow = AddGlow(GlowLine, Library.Theme.AccentGlow, 30)
+    local Glow = AddGlow(GlowLine, Library.Theme.AccentGlow, 25)
     Glow.Size = UDim2.new(3, 0, 1, 20)
     Glow.ImageTransparency = 0.5
 
+    local running = true
     local function pulse()
-        while GlowLine and GlowLine.Parent do
-            Tween(Glow, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
-                {ImageTransparency = 0.2})
-            task.wait(1)
-            Tween(Glow, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+        while running and GlowLine and GlowLine.Parent do
+            Tween(Glow, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {ImageTransparency = 0.25})
+            task.wait(1.2)
+            if not running then break end
+            Tween(Glow, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
                 {ImageTransparency = 0.6})
-            task.wait(1)
+            task.wait(1.2)
         end
     end
 
     task.spawn(pulse)
+
+    GlowLine.Destroying:Connect(function()
+        running = false
+    end)
 
     return GlowLine
 end
@@ -255,15 +288,15 @@ local function CreateBadge(parent, text, color)
     local Badge = Instance.new("Frame")
     Badge.Parent = parent
     Badge.BackgroundColor3 = color or Library.Theme.Accent
-    Badge.Size = UDim2.new(0, 0, 0, 18)
+    Badge.Size = UDim2.new(0, 0, 0, 16)
     Badge.AutomaticSize = Enum.AutomaticSize.X
     Badge.BorderSizePixel = 0
 
-    Instance.new("UICorner", Badge).CornerRadius = UDim.new(0, 9)
+    Instance.new("UICorner", Badge).CornerRadius = UDim.new(0, 8)
 
     local Padding = Instance.new("UIPadding", Badge)
-    Padding.PaddingLeft = UDim.new(0, 8)
-    Padding.PaddingRight = UDim.new(0, 8)
+    Padding.PaddingLeft = UDim.new(0, 7)
+    Padding.PaddingRight = UDim.new(0, 7)
 
     local Label = Instance.new("TextLabel", Badge)
     Label.BackgroundTransparency = 1
@@ -271,15 +304,21 @@ local function CreateBadge(parent, text, color)
     Label.Font = Enum.Font.GothamBold
     Label.Text = text
     Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.TextSize = 10
+    Label.TextSize = 9
 
+    local running = true
     task.spawn(function()
-        while Badge and Badge.Parent do
-            Tween(Badge, TweenInfo.new(2, Enum.EasingStyle.Sine), {BackgroundTransparency = 0.2})
-            task.wait(2)
-            Tween(Badge, TweenInfo.new(2, Enum.EasingStyle.Sine), {BackgroundTransparency = 0})
-            task.wait(2)
+        while running and Badge and Badge.Parent do
+            Tween(Badge, TweenInfo.new(2.5, Enum.EasingStyle.Sine), {BackgroundTransparency = 0.25})
+            task.wait(2.5)
+            if not running then break end
+            Tween(Badge, TweenInfo.new(2.5, Enum.EasingStyle.Sine), {BackgroundTransparency = 0})
+            task.wait(2.5)
         end
+    end)
+
+    Badge.Destroying:Connect(function()
+        running = false
     end)
 
     return Badge
@@ -291,11 +330,15 @@ local function CreateAvatarCircle(parent, initials)
     Avatar.Name = "Avatar"
     Avatar.Parent = parent
     Avatar.BackgroundColor3 = Library.Theme.Accent
-    Avatar.Size = UDim2.new(0, 35, 0, 35)
+    Avatar.Size = UDim2.new(0, 36, 0, 36)
     Avatar.BorderSizePixel = 0
 
     Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
-    AddStroke(Avatar, Library.Theme.AccentLight, 2)
+    
+    local stroke = AddStroke(Avatar, Library.Theme.AccentLight, 2)
+    stroke.Transparency = 0.3
+
+    CreateGradient(Avatar, {Library.Theme.AccentLight, Library.Theme.Accent})
 
     local Initials = Instance.new("TextLabel", Avatar)
     Initials.BackgroundTransparency = 1
@@ -303,17 +346,19 @@ local function CreateAvatarCircle(parent, initials)
     Initials.Font = Enum.Font.GothamBold
     Initials.Text = initials or Library.Config.AvatarInitials
     Initials.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Initials.TextSize = 14
+    Initials.TextSize = 13
 
-    local Glow = AddGlow(Avatar, Library.Theme.AccentGlow, 20)
+    local Glow = AddGlow(Avatar, Library.Theme.AccentGlow, 18)
     Glow.ImageTransparency = 1
 
     Avatar.MouseEnter:Connect(function()
         Tween(Glow, TweenInfo.new(0.3), {ImageTransparency = 0.4})
+        SpringTween(Avatar, "Size", UDim2.new(0, 38, 0, 38), 0.2)
     end)
 
     Avatar.MouseLeave:Connect(function()
         Tween(Glow, TweenInfo.new(0.3), {ImageTransparency = 1})
+        SpringTween(Avatar, "Size", UDim2.new(0, 36, 0, 36), 0.2)
     end)
 
     return Avatar
@@ -351,24 +396,27 @@ local function ShowTooltip(text, pos)
 
     TipGui:ClearAllChildren()
 
+    local viewportSize = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
+    local tipX = pos.X + 15
+    local tipY = pos.Y + 15
+
+    if tipX > viewportSize.X - 200 then
+        tipX = pos.X - 200
+    end
+    if tipY > viewportSize.Y - 60 then
+        tipY = pos.Y - 50
+    end
+
     local Tooltip = Instance.new("CanvasGroup", TipGui)
     Tooltip.BackgroundColor3 = Library.Theme.ElementBackground
     Tooltip.AutomaticSize = Enum.AutomaticSize.XY
-    Tooltip.Position = UDim2.new(0, pos.X + 15, 0, pos.Y + 15)
+    Tooltip.Position = UDim2.new(0, tipX, 0, tipY)
     Tooltip.BorderSizePixel = 0
-    Tooltip.BackgroundTransparency = 0.1
+    Tooltip.BackgroundTransparency = 0.05
 
     Instance.new("UICorner", Tooltip).CornerRadius = UDim.new(0, 8)
-    AddStroke(Tooltip, Library.Theme.Accent, 1.5)
-
-    if Library.Config.EnableBlur then
-        local Blur = Instance.new("ImageLabel", Tooltip)
-        Blur.BackgroundTransparency = 1
-        Blur.Size = UDim2.new(1, 0, 1, 0)
-        Blur.Image = "rbxassetid://5028857084"
-        Blur.ImageTransparency = 0.9
-        Blur.ZIndex = 0
-    end
+    local tipStroke = AddStroke(Tooltip, Library.Theme.Accent, 1)
+    tipStroke.Transparency = 0.4
 
     local Padding = Instance.new("UIPadding", Tooltip)
     Padding.PaddingBottom = UDim.new(0, 8)
@@ -381,11 +429,11 @@ local function ShowTooltip(text, pos)
     Label.Font = Enum.Font.GothamSemibold
     Label.Text = text
     Label.TextColor3 = Library.Theme.Text
-    Label.TextSize = 13
+    Label.TextSize = 12
     Label.AutomaticSize = Enum.AutomaticSize.XY
 
     Tooltip.GroupTransparency = 1
-    SpringTween(Tooltip, "GroupTransparency", 0, 0.2)
+    SmoothTween(Tooltip, 0.2, {GroupTransparency = 0})
 end
 
 local function HideTooltip()
@@ -407,48 +455,73 @@ function Library:Notify(title, text, duration, notifType)
     end
 
     local typeColors = {
-        success = Color3.fromRGB(50, 200, 120),
-        error = Color3.fromRGB(240, 80, 80),
-        warning = Color3.fromRGB(255, 180, 60),
+        success = Color3.fromRGB(45, 200, 115),
+        error = Color3.fromRGB(235, 75, 75),
+        warning = Color3.fromRGB(245, 175, 55),
         info = Library.Theme.Accent
     }
 
+    local typeIcons = {
+        success = "✓",
+        error = "✕",
+        warning = "⚠",
+        info = "ℹ"
+    }
+
     local accentColor = typeColors[notifType] or Library.Theme.Accent
+    local iconText = typeIcons[notifType] or "ℹ"
 
     local Notif = Instance.new("CanvasGroup")
     Notif.Parent = NotifyGui
     Notif.BackgroundColor3 = Library.Theme.SidebarBackground
     Notif.GroupTransparency = 0
-    Notif.Size = UDim2.new(0, 300, 0, 70)
-    Notif.Position = UDim2.new(1, 10, 1, -80)
+    Notif.Size = UDim2.new(0, 310, 0, 72)
+    Notif.Position = UDim2.new(1, 10, 1, -82)
     Notif.BorderSizePixel = 0
 
-    Instance.new("UICorner", Notif).CornerRadius = Library.Theme.CornerRadius
-    AddStroke(Notif, accentColor, 2)
+    Instance.new("UICorner", Notif).CornerRadius = UDim.new(0, 10)
+    local notifStroke = AddStroke(Notif, Library.Theme.Divider, 1)
+    notifStroke.Transparency = 0.3
 
-    if Library.Config.EnableBlur then
-        local BlurEffect = Instance.new("ImageLabel", Notif)
-        BlurEffect.BackgroundTransparency = 1
-        BlurEffect.Size = UDim2.new(1, 0, 1, 0)
-        BlurEffect.Image = "rbxassetid://5028857084"
-        BlurEffect.ImageTransparency = 0.95
-        BlurEffect.ZIndex = 0
-    end
+    -- Accent stripe on the left
+    local AccentStripe = Instance.new("Frame", Notif)
+    AccentStripe.BackgroundColor3 = accentColor
+    AccentStripe.Size = UDim2.new(0, 3, 1, -8)
+    AccentStripe.Position = UDim2.new(0, 4, 0, 4)
+    AccentStripe.BorderSizePixel = 0
+    Instance.new("UICorner", AccentStripe).CornerRadius = UDim.new(1, 0)
+
+    -- Icon circle
+    local IconCircle = Instance.new("Frame", Notif)
+    IconCircle.BackgroundColor3 = accentColor
+    IconCircle.BackgroundTransparency = 0.85
+    IconCircle.Position = UDim2.new(0, 14, 0, 14)
+    IconCircle.Size = UDim2.new(0, 28, 0, 28)
+    IconCircle.BorderSizePixel = 0
+    Instance.new("UICorner", IconCircle).CornerRadius = UDim.new(1, 0)
+
+    local IconLabel = Instance.new("TextLabel", IconCircle)
+    IconLabel.BackgroundTransparency = 1
+    IconLabel.Size = UDim2.new(1, 0, 1, 0)
+    IconLabel.Font = Enum.Font.GothamBold
+    IconLabel.Text = iconText
+    IconLabel.TextColor3 = accentColor
+    IconLabel.TextSize = 14
 
     local Title = Instance.new("TextLabel", Notif)
     Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0, 15, 0, 10)
-    Title.Size = UDim2.new(1, -30, 0, 22)
+    Title.Position = UDim2.new(0, 48, 0, 12)
+    Title.Size = UDim2.new(1, -80, 0, 20)
     Title.Font = Enum.Font.GothamBold
     Title.Text = title
     Title.TextColor3 = Library.Theme.Text
-    Title.TextSize = 15
+    Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
 
     local Desc = Instance.new("TextLabel", Notif)
     Desc.BackgroundTransparency = 1
-    Desc.Position = UDim2.new(0, 15, 0, 32)
-    Desc.Size = UDim2.new(1, -30, 0, 28)
+    Desc.Position = UDim2.new(0, 48, 0, 34)
+    Desc.Size = UDim2.new(1, -65, 0, 28)
     Desc.Font = Enum.Font.Gotham
     Desc.Text = text
     Desc.TextColor3 = Library.Theme.TextDark
@@ -456,40 +529,69 @@ function Library:Notify(title, text, duration, notifType)
     Desc.TextXAlignment = Enum.TextXAlignment.Left
     Desc.TextWrapped = true
 
-    local Icon = Instance.new("ImageLabel", Notif)
-    Icon.BackgroundTransparency = 1
-    Icon.Position = UDim2.new(1, -35, 0, 10)
-    Icon.Size = UDim2.new(0, 20, 0, 20)
-    Icon.ImageColor3 = accentColor
+    -- Close button
+    local CloseBtn = Instance.new("TextButton", Notif)
+    CloseBtn.BackgroundTransparency = 1
+    CloseBtn.Position = UDim2.new(1, -28, 0, 6)
+    CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+    CloseBtn.Font = Enum.Font.GothamBold
+    CloseBtn.Text = "×"
+    CloseBtn.TextColor3 = Library.Theme.TextMuted
+    CloseBtn.TextSize = 16
 
-    if notifType == "success" then
-        Icon.Image = "rbxassetid://3926305904"
-    elseif notifType == "error" then
-        Icon.Image = "rbxassetid://3926307971"
-    elseif notifType == "warning" then
-        Icon.Image = "rbxassetid://3926305904"
-    else
-        Icon.Image = "rbxassetid://3926305904"
-    end
+    CloseBtn.MouseEnter:Connect(function()
+        SmoothTween(CloseBtn, 0.15, {TextColor3 = Library.Theme.Text})
+    end)
+    CloseBtn.MouseLeave:Connect(function()
+        SmoothTween(CloseBtn, 0.15, {TextColor3 = Library.Theme.TextMuted})
+    end)
+
+    -- Progress bar at bottom
+    local ProgressBg = Instance.new("Frame", Notif)
+    ProgressBg.BackgroundColor3 = Library.Theme.Divider
+    ProgressBg.Position = UDim2.new(0, 8, 1, -5)
+    ProgressBg.Size = UDim2.new(1, -16, 0, 2)
+    ProgressBg.BorderSizePixel = 0
+    Instance.new("UICorner", ProgressBg).CornerRadius = UDim.new(1, 0)
+
+    local ProgressFill = Instance.new("Frame", ProgressBg)
+    ProgressFill.BackgroundColor3 = accentColor
+    ProgressFill.Size = UDim2.new(1, 0, 1, 0)
+    ProgressFill.BorderSizePixel = 0
+    Instance.new("UICorner", ProgressFill).CornerRadius = UDim.new(1, 0)
 
     local function UpdatePositions()
         local count = 0
         for i = #ActiveNotifications, 1, -1 do
             local notif = ActiveNotifications[i]
             if notif and notif.Parent then
-                local targetY = -80 - (count * 80)
-                SpringTween(notif, "Position", UDim2.new(1, -310, 1, targetY), 0.4)
+                local targetY = -82 - (count * 82)
+                SmoothTween(notif, 0.4, {Position = UDim2.new(1, -320, 1, targetY)})
                 count = count + 1
             end
         end
     end
 
+    local function DismissNotif()
+        local index = table.find(ActiveNotifications, Notif)
+        if index then
+            table.remove(ActiveNotifications, index)
+            SmoothTween(Notif, 0.3, {GroupTransparency = 1})
+            SmoothTween(Notif, 0.35, {Position = UDim2.new(1, 10, Notif.Position.Y.Scale, Notif.Position.Y.Offset)})
+            task.delay(0.35, function()
+                if Notif then Notif:Destroy() end
+            end)
+            UpdatePositions()
+        end
+    end
+
+    CloseBtn.MouseButton1Click:Connect(DismissNotif)
+
     if #ActiveNotifications >= MAX_NOTIFICATIONS then
         local oldest = table.remove(ActiveNotifications, 1)
         if oldest and oldest.Parent then
-            Tween(oldest, TweenInfo.new(0.4, Enum.EasingStyle.Quart),
-                {Position = UDim2.new(1, 10, oldest.Position.Y.Scale, oldest.Position.Y.Offset)})
-            task.delay(0.4, function()
+            SmoothTween(oldest, 0.3, {GroupTransparency = 1})
+            task.delay(0.3, function()
                 if oldest then oldest:Destroy() end
             end)
         end
@@ -497,24 +599,20 @@ function Library:Notify(title, text, duration, notifType)
 
     table.insert(ActiveNotifications, Notif)
     Notif.Size = UDim2.new(0, 0, 0, 0)
-    Notif.Position = UDim2.new(1, 10, 1, -80)
-    task.wait(0.05)
+    Notif.Position = UDim2.new(1, 10, 1, -82)
+    Notif.GroupTransparency = 1
+    task.wait(0.03)
     UpdatePositions()
 
-    SpringTween(Notif, "Size", UDim2.new(0, 300, 0, 70), 0.4)
+    SpringTween(Notif, "Size", UDim2.new(0, 310, 0, 72), 0.4)
+    SmoothTween(Notif, 0.3, {GroupTransparency = 0})
 
-    task.delay(duration or 4, function()
-        local index = table.find(ActiveNotifications, Notif)
-        if index then
-            table.remove(ActiveNotifications, index)
-            SpringTween(Notif, "Size", UDim2.new(0, 0, 0, 0), 0.3)
-            Tween(Notif, TweenInfo.new(0.4, Enum.EasingStyle.Quart),
-                {Position = UDim2.new(1, 10, Notif.Position.Y.Scale, Notif.Position.Y.Offset)})
-            task.delay(0.4, function()
-                if Notif then Notif:Destroy() end
-            end)
-            UpdatePositions()
-        end
+    -- Animate progress bar
+    local dur = duration or 4
+    Tween(ProgressFill, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)})
+
+    task.delay(dur, function()
+        DismissNotif()
     end)
 
     Library:LogActivity("Notification", title .. ": " .. text)
@@ -556,6 +654,29 @@ function Library:SetToggleKey(key)
     end
 end
 
+function Library:Destroy()
+    for _, conn in ipairs(Library._connections) do
+        pcall(function() conn:Disconnect() end)
+    end
+    Library._connections = {}
+
+    for _, gui in ipairs(Library._guis) do
+        pcall(function() gui:Destroy() end)
+    end
+    Library._guis = {}
+
+    pcall(function()
+        local n = CoreGui:FindFirstChild("SecondStyleNotifications")
+        if n then n:Destroy() end
+    end)
+    pcall(function()
+        if TipGui then TipGui:Destroy() TipGui = nil end
+    end)
+
+    Library.Tabs = {}
+    ActiveNotifications = {}
+end
+
 
 function Library:CreateKeySystem(config)
     config = config or {}
@@ -571,6 +692,7 @@ function Library:CreateKeySystem(config)
     KeyGui.Name = "SecondStyleKeySystem"
     KeyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     KeyGui.DisplayOrder = 998
+    table.insert(Library._guis, KeyGui)
 
     local BG = Instance.new("Frame", KeyGui)
     BG.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -580,24 +702,24 @@ function Library:CreateKeySystem(config)
 
     local Card = Instance.new("CanvasGroup", KeyGui)
     Card.BackgroundColor3 = Library.Theme.MainBackground
-    Card.GroupTransparency = 0.05
+    Card.GroupTransparency = 0.02
     Card.AnchorPoint = Vector2.new(0.5, 0.5)
     Card.Position = UDim2.new(0.5, 0, 0.5, 0)
-    Card.Size = UDim2.new(0, 380, 0, 240)
+    Card.Size = UDim2.new(0, 390, 0, 250)
     Card.BorderSizePixel = 0
 
-    Instance.new("UICorner", Card).CornerRadius = Library.Theme.CornerRadius
-    AddStroke(Card, Library.Theme.Accent, 2)
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 12)
+    local cardStroke = AddStroke(Card, Library.Theme.Accent, 1.5)
+    cardStroke.Transparency = 0.3
     AddGlow(Card, Library.Theme.AccentGlow, 60)
 
     CreateParticleSystem(Card)
-
     CreateGlowLine(Card)
 
     local TitleLabel = Instance.new("TextLabel", Card)
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Position = UDim2.new(0, 20, 0, 20)
-    TitleLabel.Size = UDim2.new(1, -40, 0, 28)
+    TitleLabel.Position = UDim2.new(0, 22, 0, 22)
+    TitleLabel.Size = UDim2.new(1, -44, 0, 28)
     TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.Text = title
     TitleLabel.TextColor3 = Library.Theme.Text
@@ -608,8 +730,8 @@ function Library:CreateKeySystem(config)
 
     local SubLabel = Instance.new("TextLabel", Card)
     SubLabel.BackgroundTransparency = 1
-    SubLabel.Position = UDim2.new(0, 20, 0, 52)
-    SubLabel.Size = UDim2.new(1, -40, 0, 18)
+    SubLabel.Position = UDim2.new(0, 22, 0, 54)
+    SubLabel.Size = UDim2.new(1, -44, 0, 18)
     SubLabel.Font = Enum.Font.Gotham
     SubLabel.Text = subtitle
     SubLabel.TextColor3 = Library.Theme.TextDark
@@ -618,17 +740,18 @@ function Library:CreateKeySystem(config)
 
     local InputContainer = Instance.new("Frame", Card)
     InputContainer.BackgroundColor3 = Library.Theme.ElementBackground
-    InputContainer.Position = UDim2.new(0, 20, 0, 85)
-    InputContainer.Size = UDim2.new(1, -40, 0, 40)
+    InputContainer.Position = UDim2.new(0, 22, 0, 88)
+    InputContainer.Size = UDim2.new(1, -44, 0, 42)
     InputContainer.BorderSizePixel = 0
 
     Instance.new("UICorner", InputContainer).CornerRadius = UDim.new(0, 8)
     local inputStroke = AddStroke(InputContainer, Library.Theme.TextMuted, 1)
+    inputStroke.Transparency = 0.4
 
     local InputBox = Instance.new("TextBox", InputContainer)
     InputBox.BackgroundTransparency = 1
-    InputBox.Size = UDim2.new(1, -20, 1, 0)
-    InputBox.Position = UDim2.new(0, 10, 0, 0)
+    InputBox.Size = UDim2.new(1, -24, 1, 0)
+    InputBox.Position = UDim2.new(0, 12, 0, 0)
     InputBox.Font = Enum.Font.GothamSemibold
     InputBox.PlaceholderText = "Enter key..."
     InputBox.PlaceholderColor3 = Library.Theme.TextMuted
@@ -639,18 +762,19 @@ function Library:CreateKeySystem(config)
     InputBox.ClearTextOnFocus = false
 
     InputBox.Focused:Connect(function()
-        SpringTween(inputStroke, "Color", Library.Theme.Accent, 0.3)
-        SpringTween(inputStroke, "Transparency", 0.2, 0.3)
+        SmoothTween(inputStroke, 0.25, {Color = Library.Theme.Accent, Transparency = 0.15})
+        SmoothTween(InputContainer, 0.25, {BackgroundColor3 = Library.Theme.AccentSoft})
     end)
 
     InputBox.FocusLost:Connect(function()
-        Tween(inputStroke, TweenInfo.new(0.3), {Color = Library.Theme.TextMuted, Transparency = 0.5})
+        SmoothTween(inputStroke, 0.25, {Color = Library.Theme.TextMuted, Transparency = 0.4})
+        SmoothTween(InputContainer, 0.25, {BackgroundColor3 = Library.Theme.ElementBackground})
     end)
 
     local ConfirmBtn = Instance.new("TextButton", Card)
     ConfirmBtn.BackgroundColor3 = Library.Theme.Accent
-    ConfirmBtn.Position = UDim2.new(0, 20, 0, 140)
-    ConfirmBtn.Size = UDim2.new(0.5, -25, 0, 38)
+    ConfirmBtn.Position = UDim2.new(0, 22, 0, 146)
+    ConfirmBtn.Size = UDim2.new(0.5, -27, 0, 40)
     ConfirmBtn.Font = Enum.Font.GothamBold
     ConfirmBtn.Text = "Confirm"
     ConfirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -658,13 +782,12 @@ function Library:CreateKeySystem(config)
     ConfirmBtn.BorderSizePixel = 0
 
     Instance.new("UICorner", ConfirmBtn).CornerRadius = UDim.new(0, 8)
-    AddGlow(ConfirmBtn, Library.Theme.AccentGlow, 30)
     CreateGradient(ConfirmBtn)
 
     local GetKeyBtn = Instance.new("TextButton", Card)
     GetKeyBtn.BackgroundColor3 = Library.Theme.ElementBackground
-    GetKeyBtn.Position = UDim2.new(0.5, 5, 0, 140)
-    GetKeyBtn.Size = UDim2.new(0.5, -25, 0, 38)
+    GetKeyBtn.Position = UDim2.new(0.5, 5, 0, 146)
+    GetKeyBtn.Size = UDim2.new(0.5, -27, 0, 40)
     GetKeyBtn.Font = Enum.Font.GothamSemibold
     GetKeyBtn.Text = keyLink and "Get Key" or "Copy Link"
     GetKeyBtn.TextColor3 = Library.Theme.Text
@@ -672,12 +795,13 @@ function Library:CreateKeySystem(config)
     GetKeyBtn.BorderSizePixel = 0
 
     Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 8)
-    AddStroke(GetKeyBtn, Library.Theme.Accent, 1)
+    local getKeyStroke = AddStroke(GetKeyBtn, Library.Theme.Accent, 1)
+    getKeyStroke.Transparency = 0.4
 
     local StatusLabel = Instance.new("TextLabel", Card)
     StatusLabel.BackgroundTransparency = 1
-    StatusLabel.Position = UDim2.new(0, 20, 0, 190)
-    StatusLabel.Size = UDim2.new(1, -40, 0, 24)
+    StatusLabel.Position = UDim2.new(0, 22, 0, 198)
+    StatusLabel.Size = UDim2.new(1, -44, 0, 24)
     StatusLabel.Font = Enum.Font.GothamSemibold
     StatusLabel.Text = ""
     StatusLabel.TextColor3 = Library.Theme.TextDark
@@ -685,40 +809,27 @@ function Library:CreateKeySystem(config)
     StatusLabel.TextXAlignment = Enum.TextXAlignment.Center
 
     ConfirmBtn.MouseEnter:Connect(function()
-        SpringTween(ConfirmBtn, "Size", UDim2.new(0.5, -25, 0, 40), 0.2)
+        SmoothTween(ConfirmBtn, 0.2, {Size = UDim2.new(0.5, -27, 0, 42)})
     end)
     ConfirmBtn.MouseLeave:Connect(function()
-        SpringTween(ConfirmBtn, "Size", UDim2.new(0.5, -25, 0, 38), 0.2)
+        SmoothTween(ConfirmBtn, 0.2, {Size = UDim2.new(0.5, -27, 0, 40)})
     end)
 
     GetKeyBtn.MouseEnter:Connect(function()
-        SpringTween(GetKeyBtn, "BackgroundColor3", Library.Theme.ButtonBackground, 0.2)
+        SmoothTween(GetKeyBtn, 0.2, {BackgroundColor3 = Library.Theme.ButtonBackground})
     end)
     GetKeyBtn.MouseLeave:Connect(function()
-        SpringTween(GetKeyBtn, "BackgroundColor3", Library.Theme.ElementBackground, 0.2)
+        SmoothTween(GetKeyBtn, 0.2, {BackgroundColor3 = Library.Theme.ElementBackground})
     end)
 
     local attempts = 0
     local validated = false
 
-    GetKeyBtn.MouseButton1Click:Connect(function()
-        if keyLink then
-            if setclipboard then
-                setclipboard(keyLink)
-            end
-            StatusLabel.Text = "✓ Link copied to clipboard!"
-            StatusLabel.TextColor3 = Library.Theme.AccentLight
-            task.delay(2, function()
-                if not validated then StatusLabel.Text = "" end
-            end)
-        end
-    end)
-
-    ConfirmBtn.MouseButton1Click:Connect(function()
+    local function TryValidate()
         local entered = InputBox.Text
         if entered == "" then
             StatusLabel.Text = "⚠ Please enter a key"
-            StatusLabel.TextColor3 = Color3.fromRGB(255, 180, 60)
+            StatusLabel.TextColor3 = Color3.fromRGB(245, 175, 55)
             return
         end
 
@@ -733,13 +844,13 @@ function Library:CreateKeySystem(config)
         if valid then
             validated = true
             StatusLabel.Text = "✓ Access granted!"
-            StatusLabel.TextColor3 = Color3.fromRGB(50, 200, 120)
+            StatusLabel.TextColor3 = Color3.fromRGB(45, 200, 115)
 
-            SpringTween(ConfirmBtn, "BackgroundColor3", Color3.fromRGB(50, 200, 120), 0.3)
+            SmoothTween(ConfirmBtn, 0.3, {BackgroundColor3 = Color3.fromRGB(45, 200, 115)})
 
             task.delay(0.8, function()
-                Tween(BG, TweenInfo.new(0.4), {BackgroundTransparency = 1})
-                Tween(Card, TweenInfo.new(0.4), {GroupTransparency = 1})
+                SmoothTween(BG, 0.4, {BackgroundTransparency = 1})
+                SmoothTween(Card, 0.4, {GroupTransparency = 1})
                 task.wait(0.4)
                 KeyGui:Destroy()
                 if onSuccess then onSuccess() end
@@ -747,14 +858,17 @@ function Library:CreateKeySystem(config)
         else
             attempts = attempts + 1
             StatusLabel.Text = "✗ Invalid key! (" .. attempts .. " attempts)"
-            StatusLabel.TextColor3 = Color3.fromRGB(240, 80, 80)
+            StatusLabel.TextColor3 = Color3.fromRGB(235, 75, 75)
 
+            -- Smoother shake
             local original = Card.Position
-            SpringTween(Card, "Position", UDim2.new(0.5, 10, 0.5, 0), 0.05)
-            task.wait(0.05)
-            SpringTween(Card, "Position", UDim2.new(0.5, -10, 0.5, 0), 0.05)
-            task.wait(0.05)
-            SpringTween(Card, "Position", original, 0.1)
+            SmoothTween(Card, 0.06, {Position = UDim2.new(0.5, 8, 0.5, 0)})
+            task.wait(0.06)
+            SmoothTween(Card, 0.06, {Position = UDim2.new(0.5, -8, 0.5, 0)})
+            task.wait(0.06)
+            SmoothTween(Card, 0.06, {Position = UDim2.new(0.5, 4, 0.5, 0)})
+            task.wait(0.06)
+            SmoothTween(Card, 0.1, {Position = original})
 
             if maxAttempts > 0 and attempts >= maxAttempts then
                 StatusLabel.Text = "⛔ Too many failed attempts"
@@ -764,13 +878,35 @@ function Library:CreateKeySystem(config)
                 end)
             end
         end
+    end
+
+    GetKeyBtn.MouseButton1Click:Connect(function()
+        if keyLink then
+            if setclipboard then
+                setclipboard(keyLink)
+            end
+            StatusLabel.Text = "✓ Link copied to clipboard!"
+            StatusLabel.TextColor3 = Library.Theme.AccentLight
+            task.delay(2, function()
+                if not validated then StatusLabel.Text = "" end
+            end)
+        end
+    end)
+
+    ConfirmBtn.MouseButton1Click:Connect(TryValidate)
+
+    -- Enter key support
+    InputBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            TryValidate()
+        end
     end)
 
     Card.GroupTransparency = 1
     Card.Size = UDim2.new(0, 0, 0, 0)
     task.wait(0.1)
-    SpringTween(Card, "Size", UDim2.new(0, 380, 0, 240), 0.5)
-    SpringTween(Card, "GroupTransparency", 0.05, 0.5)
+    SpringTween(Card, "Size", UDim2.new(0, 390, 0, 250), 0.5)
+    SmoothTween(Card, 0.4, {GroupTransparency = 0.02})
 
     while KeyGui.Parent and not validated do
         task.wait(0.1)
@@ -792,36 +928,48 @@ function Library:CreateLoadingScreen(config)
     LoadGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     LoadGui.DisplayOrder = 999
 
+    -- Full-screen backdrop
+    local Backdrop = Instance.new("Frame", LoadGui)
+    Backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Backdrop.BackgroundTransparency = 0.4
+    Backdrop.Size = UDim2.new(1, 0, 1, 0)
+    Backdrop.BorderSizePixel = 0
+
     local Card = Instance.new("CanvasGroup", LoadGui)
     Card.BackgroundColor3 = Library.Theme.SidebarBackground
-    Card.GroupTransparency = 0.1
+    Card.GroupTransparency = 0.05
     Card.AnchorPoint = Vector2.new(0.5, 0.5)
     Card.Position = UDim2.new(0.5, 0, 0.5, 0)
-    Card.Size = UDim2.new(0, 350, 0, logoIcon and 180 or 150)
+    Card.Size = UDim2.new(0, 360, 0, logoIcon and 190 or 155)
     Card.BorderSizePixel = 0
 
-    Instance.new("UICorner", Card).CornerRadius = Library.Theme.CornerRadius
-    AddStroke(Card, Library.Theme.Accent, 2)
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 12)
+    local cardStroke = AddStroke(Card, Library.Theme.Accent, 1.5)
+    cardStroke.Transparency = 0.3
     AddGlow(Card, Library.Theme.AccentGlow, 80)
 
-    local yOffset = 20
+    local yOffset = 22
 
     if logoIcon then
         local Logo = Instance.new("ImageLabel", Card)
         Logo.BackgroundTransparency = 1
         Logo.AnchorPoint = Vector2.new(0.5, 0)
-        Logo.Position = UDim2.new(0.5, 0, 0, 15)
-        Logo.Size = UDim2.new(0, 40, 0, 40)
+        Logo.Position = UDim2.new(0.5, 0, 0, 18)
+        Logo.Size = UDim2.new(0, 38, 0, 38)
         Logo.Image = "rbxassetid://" .. tostring(logoIcon)
         Logo.ImageColor3 = Library.Theme.Accent
 
+        local running = true
         task.spawn(function()
-            while Logo and Logo.Parent do
+            while running and Logo and Logo.Parent do
                 Tween(Logo, TweenInfo.new(2, Enum.EasingStyle.Linear), {Rotation = 360})
                 task.wait(2)
+                if not running then break end
                 Logo.Rotation = 0
             end
         end)
+
+        Logo.Destroying:Connect(function() running = false end)
 
         yOffset = 65
     end
@@ -833,8 +981,8 @@ function Library:CreateLoadingScreen(config)
     TitleLabel.Size = UDim2.new(1, -40, 0, 26)
     TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.Text = title
-    TitleLabel.TextColor3 = Library.Theme.Text
     TitleLabel.TextSize = 20
+    TitleLabel.TextColor3 = Library.Theme.Text
 
     CreateGradient(TitleLabel)
 
@@ -852,7 +1000,7 @@ function Library:CreateLoadingScreen(config)
     BarBG.BackgroundColor3 = Library.Theme.ElementBackground
     BarBG.AnchorPoint = Vector2.new(0.5, 0)
     BarBG.Position = UDim2.new(0.5, 0, 0, yOffset + 58)
-    BarBG.Size = UDim2.new(0.85, 0, 0, 6)
+    BarBG.Size = UDim2.new(0.82, 0, 0, 5)
     BarBG.BorderSizePixel = 0
 
     Instance.new("UICorner", BarBG).CornerRadius = UDim.new(1, 0)
@@ -864,24 +1012,36 @@ function Library:CreateLoadingScreen(config)
 
     Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
     CreateGradient(BarFill)
-    AddGlow(BarFill, Library.Theme.AccentGlow, 20)
+
+    -- Percent label
+    local PercentLabel = Instance.new("TextLabel", Card)
+    PercentLabel.BackgroundTransparency = 1
+    PercentLabel.AnchorPoint = Vector2.new(1, 0)
+    PercentLabel.Position = UDim2.new(0.91, 0, 0, yOffset + 44)
+    PercentLabel.Size = UDim2.new(0, 40, 0, 14)
+    PercentLabel.Font = Enum.Font.GothamBold
+    PercentLabel.Text = "0%"
+    PercentLabel.TextColor3 = Library.Theme.Accent
+    PercentLabel.TextSize = 11
+    PercentLabel.TextXAlignment = Enum.TextXAlignment.Right
 
     local Shimmer = Instance.new("Frame", BarFill)
     Shimmer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Shimmer.BackgroundTransparency = 0.85
-    Shimmer.Size = UDim2.new(0, 30, 1, 0)
-    Shimmer.Position = UDim2.new(0, -30, 0, 0)
+    Shimmer.BackgroundTransparency = 0.88
+    Shimmer.Size = UDim2.new(0, 25, 1, 0)
+    Shimmer.Position = UDim2.new(0, -25, 0, 0)
     Shimmer.BorderSizePixel = 0
     Instance.new("UICorner", Shimmer).CornerRadius = UDim.new(1, 0)
 
+    local shimmerRunning = true
     task.spawn(function()
-        while Shimmer and Shimmer.Parent do
-            Tween(Shimmer, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+        while shimmerRunning and Shimmer and Shimmer.Parent do
+            Tween(Shimmer, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                 Position = UDim2.new(1, 0, 0, 0)
             })
-            task.wait(1.5)
-            if not Shimmer then break end
-            Shimmer.Position = UDim2.new(0, -30, 0, 0)
+            task.wait(1.2)
+            if not shimmerRunning then break end
+            Shimmer.Position = UDim2.new(0, -25, 0, 0)
         end
     end)
 
@@ -894,26 +1054,53 @@ function Library:CreateLoadingScreen(config)
     StepLabel.Text = ""
     StepLabel.TextColor3 = Library.Theme.TextDark
     StepLabel.TextSize = 11
+    StepLabel.TextTransparency = 0
 
     Card.Size = UDim2.new(0, 0, 0, 0)
-    SpringTween(Card, "Size", UDim2.new(0, 350, 0, logoIcon and 180 or 150), 0.6)
+    Card.GroupTransparency = 1
+    SpringTween(Card, "Size", UDim2.new(0, 360, 0, logoIcon and 190 or 155), 0.6)
+    SmoothTween(Card, 0.4, {GroupTransparency = 0.05})
 
     if #steps > 0 then
         local stepDur = duration / #steps
         for i, stepText in ipairs(steps) do
+            -- Fade out old text
+            if i > 1 then
+                SmoothTween(StepLabel, 0.15, {TextTransparency = 1})
+                task.wait(0.15)
+            end
             StepLabel.Text = stepText
-            Tween(BarFill, TweenInfo.new(stepDur, Enum.EasingStyle.Quad),
-                {Size = UDim2.new(i / #steps, 0, 1, 0)})
+            SmoothTween(StepLabel, 0.15, {TextTransparency = 0})
+
+            local progress = i / #steps
+            PercentLabel.Text = math.floor(progress * 100) .. "%"
+            Tween(BarFill, TweenInfo.new(stepDur * 0.8, Enum.EasingStyle.Quint),
+                {Size = UDim2.new(progress, 0, 1, 0)})
             task.wait(stepDur)
         end
     else
-        Tween(BarFill, TweenInfo.new(duration, Enum.EasingStyle.Quad),
+        Tween(BarFill, TweenInfo.new(duration, Enum.EasingStyle.Quint),
             {Size = UDim2.new(1, 0, 1, 0)})
+        -- Animate percent
+        task.spawn(function()
+            local startTime = tick()
+            while tick() - startTime < duration and PercentLabel and PercentLabel.Parent do
+                local elapsed = tick() - startTime
+                local pct = math.clamp(math.floor((elapsed / duration) * 100), 0, 100)
+                PercentLabel.Text = pct .. "%"
+                task.wait(0.05)
+            end
+            if PercentLabel and PercentLabel.Parent then
+                PercentLabel.Text = "100%"
+            end
+        end)
         task.wait(duration)
     end
 
-    Tween(Card, TweenInfo.new(0.5), {GroupTransparency = 1})
-    task.wait(0.5)
+    shimmerRunning = false
+    SmoothTween(Card, 0.4, {GroupTransparency = 1})
+    SmoothTween(Backdrop, 0.4, {BackgroundTransparency = 1})
+    task.wait(0.4)
     LoadGui:Destroy()
 end
 
@@ -924,6 +1111,7 @@ function Library:CreateWindow(hubName)
     ScreenGui.Parent = CoreGui
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    table.insert(Library._guis, ScreenGui)
 
     local windowSize = Library.Config.WindowSize
 
@@ -931,99 +1119,126 @@ function Library:CreateWindow(hubName)
     MainFrame.Name = "MainFrame"
     MainFrame.Parent = ScreenGui
     MainFrame.BackgroundColor3 = Library.Theme.MainBackground
-    MainFrame.GroupTransparency = 0.05
+    MainFrame.GroupTransparency = 0.02
     MainFrame.BorderSizePixel = 0
     MainFrame.Position = UDim2.new(0.5, -windowSize.X/2, 0.5, -windowSize.Y/2)
     MainFrame.Size = UDim2.new(0, windowSize.X, 0, windowSize.Y)
     MainFrame.ClipsDescendants = true
 
-    Instance.new("UICorner", MainFrame).CornerRadius = Library.Theme.CornerRadius
-    AddStroke(MainFrame, Library.Theme.Accent, 2)
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+    local mainStroke = AddStroke(MainFrame, Library.Theme.Accent, 1.5)
+    mainStroke.Transparency = 0.35
     AddGlow(MainFrame, Library.Theme.AccentGlow, 100)
 
     CreateParticleSystem(MainFrame)
 
-    UserInputService.InputBegan:Connect(function(input, gpe)
+    TrackConnection(UserInputService.InputBegan:Connect(function(input, gpe)
         if not gpe and input.KeyCode == Library.ToggleKey then
             Library.Enabled = not Library.Enabled
             MainFrame.Visible = Library.Enabled
 
             if Library.Enabled then
                 MainFrame.Size = UDim2.new(0, 0, 0, 0)
-                SpringTween(MainFrame, "Size", UDim2.new(0, windowSize.X, 0, windowSize.Y), 0.5)
+                MainFrame.GroupTransparency = 1
+                SpringTween(MainFrame, "Size", UDim2.new(0, windowSize.X, 0, windowSize.Y), 0.45)
+                SmoothTween(MainFrame, 0.35, {GroupTransparency = 0.02})
             end
 
             Library:LogActivity("UI Toggle", Library.Enabled and "Opened" or "Closed")
         end
-    end)
+    end))
 
+    -- Sidebar
+    local sidebarWidth = 210
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Parent = MainFrame
     Sidebar.BackgroundColor3 = Library.Theme.SidebarBackground
-    Sidebar.Size = UDim2.new(0, 200, 1, 0)
+    Sidebar.Size = UDim2.new(0, sidebarWidth, 1, 0)
     Sidebar.BorderSizePixel = 0
 
-    Instance.new("UICorner", Sidebar).CornerRadius = Library.Theme.CornerRadius
+    Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 12)
 
     CreateGlowLine(Sidebar)
 
+    -- Sidebar right edge separator
+    local SidebarSep = Instance.new("Frame", Sidebar)
+    SidebarSep.BackgroundColor3 = Library.Theme.Divider
+    SidebarSep.Position = UDim2.new(1, -1, 0, 10)
+    SidebarSep.Size = UDim2.new(0, 1, 1, -20)
+    SidebarSep.BorderSizePixel = 0
+    SidebarSep.BackgroundTransparency = 0.5
+
+    -- Header
     local Header = Instance.new("Frame", Sidebar)
     Header.BackgroundTransparency = 1
-    Header.Position = UDim2.new(0, 15, 0, 15)
-    Header.Size = UDim2.new(1, -30, 0, 50)
+    Header.Position = UDim2.new(0, 16, 0, 16)
+    Header.Size = UDim2.new(1, -32, 0, 50)
 
     local Avatar = CreateAvatarCircle(Header, Library.Config.AvatarInitials)
     Avatar.Position = UDim2.new(0, 0, 0, 0)
 
     local NameLabel = Instance.new("TextLabel", Header)
     NameLabel.BackgroundTransparency = 1
-    NameLabel.Position = UDim2.new(0, 45, 0, 0)
-    NameLabel.Size = UDim2.new(1, -45, 0, 25)
+    NameLabel.Position = UDim2.new(0, 46, 0, 2)
+    NameLabel.Size = UDim2.new(1, -46, 0, 22)
     NameLabel.Font = Enum.Font.GothamBold
     NameLabel.Text = hubName or "SecondStyle"
     NameLabel.TextColor3 = Library.Theme.Text
-    NameLabel.TextSize = 16
+    NameLabel.TextSize = 15
     NameLabel.TextXAlignment = Enum.TextXAlignment.Left
 
     local StatusLabel = Instance.new("TextLabel", Header)
     StatusLabel.BackgroundTransparency = 1
-    StatusLabel.Position = UDim2.new(0, 45, 0, 25)
-    StatusLabel.Size = UDim2.new(1, -45, 0, 16)
+    StatusLabel.Position = UDim2.new(0, 46, 0, 24)
+    StatusLabel.Size = UDim2.new(1, -46, 0, 16)
     StatusLabel.Font = Enum.Font.Gotham
     StatusLabel.Text = "● Online"
-    StatusLabel.TextColor3 = Color3.fromRGB(50, 200, 120)
+    StatusLabel.TextColor3 = Color3.fromRGB(45, 200, 115)
     StatusLabel.TextSize = 11
     StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+    -- Smoother status pulse
+    local statusRunning = true
     task.spawn(function()
-        while StatusLabel and StatusLabel.Parent do
-            StatusLabel.TextColor3 = Color3.fromRGB(50, 200, 120)
-            task.wait(1)
-            StatusLabel.TextColor3 = Color3.fromRGB(30, 150, 80)
-            task.wait(1)
+        while statusRunning and StatusLabel and StatusLabel.Parent do
+            SmoothTween(StatusLabel, 1.5, {TextColor3 = Color3.fromRGB(35, 160, 90)})
+            task.wait(1.5)
+            if not statusRunning then break end
+            SmoothTween(StatusLabel, 1.5, {TextColor3 = Color3.fromRGB(45, 200, 115)})
+            task.wait(1.5)
         end
     end)
 
+    -- Header separator
+    local HeaderSep = Instance.new("Frame", Sidebar)
+    HeaderSep.BackgroundColor3 = Library.Theme.Divider
+    HeaderSep.Position = UDim2.new(0, 16, 0, 74)
+    HeaderSep.Size = UDim2.new(1, -32, 0, 1)
+    HeaderSep.BorderSizePixel = 0
+    HeaderSep.BackgroundTransparency = 0.3
+
     local TabContainer = Instance.new("ScrollingFrame", Sidebar)
     TabContainer.BackgroundTransparency = 1
-    TabContainer.Position = UDim2.new(0, 10, 0, 80)
-    TabContainer.Size = UDim2.new(1, -20, 1, -95)
+    TabContainer.Position = UDim2.new(0, 12, 0, 84)
+    TabContainer.Size = UDim2.new(1, -24, 1, -100)
     TabContainer.ScrollBarThickness = 2
     TabContainer.ScrollBarImageColor3 = Library.Theme.Accent
+    TabContainer.ScrollBarImageTransparency = 0.5
     TabContainer.BorderSizePixel = 0
 
     local TabList = Instance.new("UIListLayout", TabContainer)
-    TabList.Padding = UDim.new(0, 5)
+    TabList.Padding = UDim.new(0, 4)
     TabList.SortOrder = Enum.SortOrder.LayoutOrder
 
     local PageContainer = Instance.new("Frame")
     PageContainer.Parent = MainFrame
     PageContainer.BackgroundTransparency = 1
-    PageContainer.Position = UDim2.new(0, 200, 0, 0)
-    PageContainer.Size = UDim2.new(1, -200, 1, 0)
+    PageContainer.Position = UDim2.new(0, sidebarWidth, 0, 0)
+    PageContainer.Size = UDim2.new(1, -sidebarWidth, 1, 0)
     PageContainer.ClipsDescendants = true
 
+    -- Drag
     local dragging, dragStart, startPos
 
     Sidebar.InputBegan:Connect(function(input)
@@ -1034,7 +1249,7 @@ function Library:CreateWindow(hubName)
         end
     end)
 
-    UserInputService.InputChanged:Connect(function(input)
+    TrackConnection(UserInputService.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = input.Position - dragStart
             MainFrame.Position = UDim2.new(
@@ -1042,19 +1257,20 @@ function Library:CreateWindow(hubName)
                 startPos.Y.Scale, startPos.Y.Offset + delta.Y
             )
         end
-    end)
+    end))
 
-    UserInputService.InputEnded:Connect(function(input)
+    TrackConnection(UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
-    end)
+    end))
 
+    -- Intro animation
     MainFrame.Size = UDim2.new(0, 0, 0, 0)
     MainFrame.GroupTransparency = 1
     task.wait(0.1)
     SpringTween(MainFrame, "Size", UDim2.new(0, windowSize.X, 0, windowSize.Y), 0.5)
-    SpringTween(MainFrame, "GroupTransparency", 0.05, 0.4)
+    SmoothTween(MainFrame, 0.4, {GroupTransparency = 0.02})
 
     Library:LogActivity("Window Created", hubName or "SecondStyle")
 
@@ -1066,7 +1282,7 @@ function Library:CreateWindow(hubName)
         TabButton.Name = name
         TabButton.BackgroundColor3 = Library.Theme.ElementBackground
         TabButton.BackgroundTransparency = 1
-        TabButton.Size = UDim2.new(1, 0, 0, 45)
+        TabButton.Size = UDim2.new(1, 0, 0, 42)
         TabButton.Text = ""
         TabButton.BorderSizePixel = 0
 
@@ -1074,35 +1290,36 @@ function Library:CreateWindow(hubName)
 
         local Icon = Instance.new("ImageLabel", TabButton)
         Icon.BackgroundTransparency = 1
-        Icon.Position = UDim2.new(0, 12, 0.5, -10)
+        Icon.Position = UDim2.new(0, 14, 0.5, -10)
         Icon.Size = UDim2.new(0, 20, 0, 20)
         Icon.Image = iconID and "rbxassetid://" .. tostring(iconID) or "rbxassetid://3926305904"
         Icon.ImageColor3 = Library.Theme.TextDark
 
         local TabLabel = Instance.new("TextLabel", TabButton)
         TabLabel.BackgroundTransparency = 1
-        TabLabel.Position = UDim2.new(0, 42, 0, 0)
+        TabLabel.Position = UDim2.new(0, 44, 0, 0)
         TabLabel.Size = UDim2.new(1, -70, 1, 0)
         TabLabel.Font = Enum.Font.GothamSemibold
         TabLabel.Text = name
         TabLabel.TextColor3 = Library.Theme.TextDark
-        TabLabel.TextSize = 14
+        TabLabel.TextSize = 13
         TabLabel.TextXAlignment = Enum.TextXAlignment.Left
 
         local Badge = CreateBadge(TabButton, "NEW", Library.Theme.Accent)
         if Badge then
-            Badge.Position = UDim2.new(1, -45, 0.5, -9)
+            Badge.Position = UDim2.new(1, -45, 0.5, -8)
             Badge.Visible = false
         end
 
         local Indicator = Instance.new("Frame", TabButton)
         Indicator.BackgroundColor3 = Library.Theme.Accent
-        Indicator.Position = UDim2.new(0, 0, 0, 10)
-        Indicator.Size = UDim2.new(0, 3, 1, -20)
+        Indicator.Position = UDim2.new(0, 0, 0, 8)
+        Indicator.Size = UDim2.new(0, 4, 1, -16)
         Indicator.BorderSizePixel = 0
         Indicator.Transparency = 1
 
         Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
+        CreateGradient(Indicator, {Library.Theme.AccentLight, Library.Theme.Accent})
 
         local Page = Instance.new("CanvasGroup", PageContainer)
         Page.Name = name .. "_Page"
@@ -1113,8 +1330,8 @@ function Library:CreateWindow(hubName)
 
         local TopBar = Instance.new("ScrollingFrame", Page)
         TopBar.BackgroundTransparency = 1
-        TopBar.Position = UDim2.new(0, 15, 0, 15)
-        TopBar.Size = UDim2.new(1, -30, 0, 40)
+        TopBar.Position = UDim2.new(0, 16, 0, 16)
+        TopBar.Size = UDim2.new(1, -32, 0, 38)
         TopBar.ScrollBarThickness = 0
         TopBar.CanvasSize = UDim2.new(0, 0, 0, 0)
         TopBar.ScrollingDirection = Enum.ScrollingDirection.X
@@ -1122,49 +1339,46 @@ function Library:CreateWindow(hubName)
 
         local TopBarList = Instance.new("UIListLayout", TopBar)
         TopBarList.FillDirection = Enum.FillDirection.Horizontal
-        TopBarList.Padding = UDim.new(0, 10)
+        TopBarList.Padding = UDim.new(0, 8)
         TopBarList.SortOrder = Enum.SortOrder.LayoutOrder
 
         local ContentContainer = Instance.new("Frame", Page)
         ContentContainer.BackgroundTransparency = 1
-        ContentContainer.Position = UDim2.new(0, 15, 0, 65)
-        ContentContainer.Size = UDim2.new(1, -30, 1, -80)
+        ContentContainer.Position = UDim2.new(0, 16, 0, 62)
+        ContentContainer.Size = UDim2.new(1, -32, 1, -78)
 
         local SubTabs = {}
 
         TabButton.MouseButton1Click:Connect(function()
             for _, t in pairs(Library.Tabs) do
                 t.Page.Visible = false
-                Tween(t.Page, TweenInfo.new(0.15), {GroupTransparency = 1})
-                Tween(t.Label, TweenInfo.new(0.15), {TextColor3 = Library.Theme.TextDark})
-                Tween(t.Icon, TweenInfo.new(0.15), {ImageColor3 = Library.Theme.TextDark})
-                Tween(t.Button, TweenInfo.new(0.15), {BackgroundTransparency = 1})
-                Tween(t.Indicator, TweenInfo.new(0.15), {Transparency = 1})
+                SmoothTween(t.Page, 0.15, {GroupTransparency = 1})
+                SmoothTween(t.Label, 0.2, {TextColor3 = Library.Theme.TextDark})
+                SmoothTween(t.Icon, 0.2, {ImageColor3 = Library.Theme.TextDark})
+                SmoothTween(t.Button, 0.2, {BackgroundTransparency = 1})
+                SmoothTween(t.Indicator, 0.2, {Transparency = 1})
             end
 
             Page.Visible = true
-            Page.Position = UDim2.new(0, 20, 0, 0)
-            SpringTween(Page, "GroupTransparency", 0, 0.25)
-            SpringTween(Page, "Position", UDim2.new(0, 0, 0, 0), 0.3)
-            SpringTween(TabLabel, "TextColor3", Library.Theme.Text, 0.3)
-            SpringTween(Icon, "ImageColor3", Library.Theme.Accent, 0.3)
-            SpringTween(TabButton, "BackgroundTransparency", 0, 0.3)
-            SpringTween(TabButton, "BackgroundColor3", Library.Theme.ElementBackground, 0.3)
-            SpringTween(Indicator, "Transparency", 0, 0.3)
+            Page.Position = UDim2.new(0.02, 0, 0, 0)
+            SmoothTween(Page, 0.3, {GroupTransparency = 0, Position = UDim2.new(0, 0, 0, 0)})
+            SmoothTween(TabLabel, 0.25, {TextColor3 = Library.Theme.Text})
+            SmoothTween(Icon, 0.25, {ImageColor3 = Library.Theme.Accent})
+            SmoothTween(TabButton, 0.25, {BackgroundTransparency = 0, BackgroundColor3 = Library.Theme.ElementBackground})
+            SmoothTween(Indicator, 0.25, {Transparency = 0})
 
             Library:LogActivity("Tab Changed", name)
         end)
 
         TabButton.MouseEnter:Connect(function()
             if not Page.Visible then
-                SpringTween(TabButton, "BackgroundTransparency", 0.3, 0.2)
-                SpringTween(TabButton, "BackgroundColor3", Library.Theme.ElementBackground, 0.2)
+                SmoothTween(TabButton, 0.2, {BackgroundTransparency = 0.4, BackgroundColor3 = Library.Theme.ElementBackground})
             end
         end)
 
         TabButton.MouseLeave:Connect(function()
             if not Page.Visible then
-                SpringTween(TabButton, "BackgroundTransparency", 1, 0.2)
+                SmoothTween(TabButton, 0.2, {BackgroundTransparency = 1})
             end
         end)
 
@@ -1205,17 +1419,18 @@ function Library:CreateWindow(hubName)
             Instance.new("UICorner", SubTabButton).CornerRadius = UDim.new(0, 8)
 
             local btnPadding = Instance.new("UIPadding", SubTabButton)
-            btnPadding.PaddingLeft = UDim.new(0, 15)
-            btnPadding.PaddingRight = UDim.new(0, 15)
+            btnPadding.PaddingLeft = UDim.new(0, 14)
+            btnPadding.PaddingRight = UDim.new(0, 14)
 
             local Underline = Instance.new("Frame", SubTabButton)
             Underline.BackgroundColor3 = Library.Theme.Accent
-            Underline.Position = UDim2.new(0, 0, 1, -3)
-            Underline.Size = UDim2.new(1, 0, 0, 3)
+            Underline.Position = UDim2.new(0.1, 0, 1, -3)
+            Underline.Size = UDim2.new(0.8, 0, 0, 3)
             Underline.BorderSizePixel = 0
             Underline.Transparency = 1
 
             Instance.new("UICorner", Underline).CornerRadius = UDim.new(1, 0)
+            CreateGradient(Underline)
 
             local SubPage = Instance.new("ScrollingFrame", ContentContainer)
             SubPage.Name = sectionName .. "_SubPage"
@@ -1224,11 +1439,12 @@ function Library:CreateWindow(hubName)
             SubPage.Visible = false
             SubPage.ScrollBarThickness = 3
             SubPage.ScrollBarImageColor3 = Library.Theme.Accent
+            SubPage.ScrollBarImageTransparency = 0.4
             SubPage.BorderSizePixel = 0
             SubPage.CanvasSize = UDim2.new(0, 0, 0, 0)
 
             local SubPageList = Instance.new("UIListLayout", SubPage)
-            SubPageList.Padding = UDim.new(0, 10)
+            SubPageList.Padding = UDim.new(0, 8)
             SubPageList.SortOrder = Enum.SortOrder.LayoutOrder
 
             SubPageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -1239,32 +1455,31 @@ function Library:CreateWindow(hubName)
                 for _, st in pairs(SubTabs) do
                     st.Page.Visible = false
                     st.Page.Position = UDim2.new(0, 0, 0, 0)
-                    Tween(st.Btn, TweenInfo.new(0.15), {
+                    SmoothTween(st.Btn, 0.2, {
                         TextColor3 = Library.Theme.TextDark,
                         BackgroundTransparency = 1
                     })
-                    Tween(st.Underline, TweenInfo.new(0.15), {Transparency = 1})
+                    SmoothTween(st.Underline, 0.2, {Transparency = 1})
                 end
 
                 SubPage.Visible = true
-                SubPage.Position = UDim2.new(0, 0, 0.05, 10)
-                SpringTween(SubTabButton, "TextColor3", Library.Theme.Text, 0.2)
-                SpringTween(SubTabButton, "BackgroundTransparency", 0, 0.2)
-                SpringTween(Underline, "Transparency", 0, 0.2)
-                SpringTween(SubPage, "Position", UDim2.new(0, 0, 0, 0), 0.25)
+                SubPage.Position = UDim2.new(0, 0, 0.02, 0)
+                SmoothTween(SubTabButton, 0.2, {TextColor3 = Library.Theme.Text, BackgroundTransparency = 0})
+                SmoothTween(Underline, 0.2, {Transparency = 0})
+                SmoothTween(SubPage, 0.25, {Position = UDim2.new(0, 0, 0, 0)})
 
                 Library:LogActivity("Section Changed", name .. " > " .. sectionName)
             end)
 
             SubTabButton.MouseEnter:Connect(function()
                 if not SubPage.Visible then
-                    SpringTween(SubTabButton, "BackgroundTransparency", 0.5, 0.2)
+                    SmoothTween(SubTabButton, 0.15, {BackgroundTransparency = 0.5})
                 end
             end)
 
             SubTabButton.MouseLeave:Connect(function()
                 if not SubPage.Visible then
-                    SpringTween(SubTabButton, "BackgroundTransparency", 1, 0.2)
+                    SmoothTween(SubTabButton, 0.15, {BackgroundTransparency = 1})
                 end
             end)
 
@@ -1292,34 +1507,49 @@ function Library:CreateWindow(hubName)
                 local Button = Instance.new("TextButton", SubPage)
                 Button.Name = text
                 Button.BackgroundColor3 = Library.Theme.ButtonBackground
-                Button.Size = UDim2.new(1, -10, 0, 40)
+                Button.Size = UDim2.new(1, -8, 0, 40)
                 Button.Font = Enum.Font.GothamSemibold
-                Button.Text = text
+                Button.Text = ""
                 Button.TextColor3 = Library.Theme.Text
                 Button.TextSize = 14
                 Button.BorderSizePixel = 0
                 Button.ClipsDescendants = true
 
                 Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 8)
-                local btnStroke = AddStroke(Button, Library.Theme.Accent, 1)
-                btnStroke.Transparency = 0.7
 
-                local btnGlow = AddGlow(Button, Library.Theme.AccentGlow, 40)
-                btnGlow.ImageTransparency = 1
+                -- Left accent bar
+                local LeftAccent = Instance.new("Frame", Button)
+                LeftAccent.BackgroundColor3 = Library.Theme.Accent
+                LeftAccent.Size = UDim2.new(0, 3, 0.6, 0)
+                LeftAccent.Position = UDim2.new(0, 0, 0.2, 0)
+                LeftAccent.BorderSizePixel = 0
+                LeftAccent.BackgroundTransparency = 0.6
+                Instance.new("UICorner", LeftAccent).CornerRadius = UDim.new(1, 0)
+
+                local BtnLabel = Instance.new("TextLabel", Button)
+                BtnLabel.BackgroundTransparency = 1
+                BtnLabel.Position = UDim2.new(0, 14, 0, 0)
+                BtnLabel.Size = UDim2.new(1, -28, 1, 0)
+                BtnLabel.Font = Enum.Font.GothamSemibold
+                BtnLabel.Text = text
+                BtnLabel.TextColor3 = Library.Theme.Text
+                BtnLabel.TextSize = 13
+                BtnLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+                local btnStroke = AddStroke(Button, Library.Theme.Divider, 1)
+                btnStroke.Transparency = 0.5
 
                 Button.MouseEnter:Connect(function()
-                    SpringTween(Button, "BackgroundColor3", Library.Theme.ElementBackground, 0.15)
-                    SpringTween(btnStroke, "Transparency", 0.2, 0.15)
-                    SpringTween(btnGlow, "ImageTransparency", 0.7, 0.15)
-                    SpringTween(Button, "Size", UDim2.new(1, -6, 0, 42), 0.15)
+                    SmoothTween(Button, 0.2, {BackgroundColor3 = Library.Theme.ElementBackground})
+                    SmoothTween(btnStroke, 0.2, {Transparency = 0.2, Color = Library.Theme.Accent})
+                    SmoothTween(LeftAccent, 0.2, {BackgroundTransparency = 0, Size = UDim2.new(0, 3, 0.7, 0)})
                     if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
                 end)
 
                 Button.MouseLeave:Connect(function()
-                    SpringTween(Button, "BackgroundColor3", Library.Theme.ButtonBackground, 0.2)
-                    SpringTween(btnStroke, "Transparency", 0.7, 0.2)
-                    SpringTween(btnGlow, "ImageTransparency", 1, 0.2)
-                    SpringTween(Button, "Size", UDim2.new(1, -10, 0, 40), 0.2)
+                    SmoothTween(Button, 0.25, {BackgroundColor3 = Library.Theme.ButtonBackground})
+                    SmoothTween(btnStroke, 0.25, {Transparency = 0.5, Color = Library.Theme.Divider})
+                    SmoothTween(LeftAccent, 0.25, {BackgroundTransparency = 0.6, Size = UDim2.new(0, 3, 0.6, 0)})
                     HideTooltip()
                 end)
 
@@ -1328,23 +1558,20 @@ function Library:CreateWindow(hubName)
                     local relX = mousePos.X - Button.AbsolutePosition.X
                     local relY = mousePos.Y - Button.AbsolutePosition.Y
                     CreateRipple(Button, relX, relY, Library.Theme.AccentLight)
-
-                    SpringTween(Button, "BackgroundColor3", Library.Theme.Accent, 0.08)
+                    SmoothTween(Button, 0.08, {BackgroundColor3 = Library.Theme.AccentSoft})
                 end)
 
                 Button.MouseButton1Click:Connect(function()
-                    SpringTween(Button, "BackgroundColor3", Library.Theme.ElementBackground, 0.2)
-
+                    SmoothTween(Button, 0.25, {BackgroundColor3 = Library.Theme.ElementBackground})
                     if callback then
                         task.spawn(callback)
                     end
-
                     Library:LogActivity("Button Click", text)
                 end)
 
                 table.insert(Refresher, function()
                     Button.BackgroundColor3 = Library.Theme.ButtonBackground
-                    Button.TextColor3 = Library.Theme.Text
+                    BtnLabel.TextColor3 = Library.Theme.Text
                 end)
 
                 return Button
@@ -1362,68 +1589,81 @@ function Library:CreateWindow(hubName)
                 local ToggleFrame = Instance.new("Frame", SubPage)
                 ToggleFrame.Name = text
                 ToggleFrame.BackgroundColor3 = Library.Theme.ElementBackground
-                ToggleFrame.Size = UDim2.new(1, -10, 0, 45)
+                ToggleFrame.Size = UDim2.new(1, -8, 0, 44)
                 ToggleFrame.BorderSizePixel = 0
 
                 Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 8)
-                local tglStroke = AddStroke(ToggleFrame, Library.Theme.Accent, 1)
-                tglStroke.Transparency = 0.7
+                local tglStroke = AddStroke(ToggleFrame, Library.Theme.Divider, 1)
+                tglStroke.Transparency = 0.5
 
                 local Label = Instance.new("TextLabel", ToggleFrame)
                 Label.BackgroundTransparency = 1
-                Label.Position = UDim2.new(0, 15, 0, 0)
+                Label.Position = UDim2.new(0, 14, 0, 0)
                 Label.Size = UDim2.new(1, -80, 1, 0)
                 Label.Font = Enum.Font.GothamSemibold
                 Label.Text = text
                 Label.TextColor3 = Library.Theme.Text
-                Label.TextSize = 14
+                Label.TextSize = 13
                 Label.TextXAlignment = Enum.TextXAlignment.Left
 
+                -- Modern pill switch (48x26)
                 local SwitchContainer = Instance.new("Frame", ToggleFrame)
-                SwitchContainer.BackgroundColor3 = Color3.fromRGB(40, 38, 50)
-                SwitchContainer.Position = UDim2.new(1, -55, 0.5, -12)
-                SwitchContainer.Size = UDim2.new(0, 45, 0, 24)
+                SwitchContainer.BackgroundColor3 = Color3.fromRGB(38, 35, 50)
+                SwitchContainer.Position = UDim2.new(1, -58, 0.5, -13)
+                SwitchContainer.Size = UDim2.new(0, 48, 0, 26)
                 SwitchContainer.BorderSizePixel = 0
 
                 Instance.new("UICorner", SwitchContainer).CornerRadius = UDim.new(1, 0)
+                local switchStroke = AddStroke(SwitchContainer, Color3.fromRGB(50, 48, 65), 1)
+                switchStroke.Transparency = 0.3
 
                 local SwitchKnob = Instance.new("Frame", SwitchContainer)
-                SwitchKnob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-                SwitchKnob.Position = UDim2.new(0, 3, 0.5, -9)
-                SwitchKnob.Size = UDim2.new(0, 18, 0, 18)
+                SwitchKnob.BackgroundColor3 = Color3.fromRGB(180, 180, 190)
+                SwitchKnob.Position = UDim2.new(0, 3, 0.5, -10)
+                SwitchKnob.Size = UDim2.new(0, 20, 0, 20)
                 SwitchKnob.BorderSizePixel = 0
 
                 Instance.new("UICorner", SwitchKnob).CornerRadius = UDim.new(1, 0)
-                AddGlow(SwitchKnob, Color3.fromRGB(255, 255, 255), 10)
 
                 local state = startState
 
                 local function UpdateToggle(animate)
                     if state then
                         if animate then
-                            SpringTween(SwitchContainer, "BackgroundColor3", Library.Theme.Accent, 0.25)
-                            SpringTween(SwitchKnob, "Position", UDim2.new(1, -21, 0.5, -9), 0.3)
-                            SpringTween(SwitchKnob, "BackgroundColor3", Color3.fromRGB(255, 255, 255), 0.25)
-                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 20, 0, 20), 0.1)
-                            task.wait(0.1)
-                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 18, 0, 18), 0.2)
+                            SmoothTween(SwitchContainer, 0.3, {BackgroundColor3 = Library.Theme.Accent})
+                            SmoothTween(switchStroke, 0.3, {Color = Library.Theme.AccentDark})
+                            SmoothTween(SwitchKnob, 0.25, {Position = UDim2.new(1, -23, 0.5, -10)})
+                            SmoothTween(SwitchKnob, 0.25, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
+                            -- Elastic pop
+                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 22, 0, 22), 0.12)
+                            task.delay(0.12, function()
+                                if SwitchKnob and SwitchKnob.Parent then
+                                    SmoothTween(SwitchKnob, 0.15, {Size = UDim2.new(0, 20, 0, 20)})
+                                end
+                            end)
                         else
                             SwitchContainer.BackgroundColor3 = Library.Theme.Accent
-                            SwitchKnob.Position = UDim2.new(1, -21, 0.5, -9)
+                            switchStroke.Color = Library.Theme.AccentDark
+                            SwitchKnob.Position = UDim2.new(1, -23, 0.5, -10)
                             SwitchKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                         end
                     else
                         if animate then
-                            SpringTween(SwitchContainer, "BackgroundColor3", Color3.fromRGB(40, 38, 50), 0.25)
-                            SpringTween(SwitchKnob, "Position", UDim2.new(0, 3, 0.5, -9), 0.3)
-                            SpringTween(SwitchKnob, "BackgroundColor3", Color3.fromRGB(200, 200, 200), 0.25)
-                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 20, 0, 20), 0.1)
-                            task.wait(0.1)
-                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 18, 0, 18), 0.2)
+                            SmoothTween(SwitchContainer, 0.3, {BackgroundColor3 = Color3.fromRGB(38, 35, 50)})
+                            SmoothTween(switchStroke, 0.3, {Color = Color3.fromRGB(50, 48, 65)})
+                            SmoothTween(SwitchKnob, 0.25, {Position = UDim2.new(0, 3, 0.5, -10)})
+                            SmoothTween(SwitchKnob, 0.25, {BackgroundColor3 = Color3.fromRGB(180, 180, 190)})
+                            SpringTween(SwitchKnob, "Size", UDim2.new(0, 22, 0, 22), 0.12)
+                            task.delay(0.12, function()
+                                if SwitchKnob and SwitchKnob.Parent then
+                                    SmoothTween(SwitchKnob, 0.15, {Size = UDim2.new(0, 20, 0, 20)})
+                                end
+                            end)
                         else
-                            SwitchContainer.BackgroundColor3 = Color3.fromRGB(40, 38, 50)
-                            SwitchKnob.Position = UDim2.new(0, 3, 0.5, -9)
-                            SwitchKnob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+                            SwitchContainer.BackgroundColor3 = Color3.fromRGB(38, 35, 50)
+                            switchStroke.Color = Color3.fromRGB(50, 48, 65)
+                            SwitchKnob.Position = UDim2.new(0, 3, 0.5, -10)
+                            SwitchKnob.BackgroundColor3 = Color3.fromRGB(180, 180, 190)
                         end
                     end
                 end
@@ -1437,13 +1677,6 @@ function Library:CreateWindow(hubName)
                 ToggleButton.ZIndex = 2
                 ToggleButton.ClipsDescendants = true
 
-                ToggleButton.MouseButton1Down:Connect(function()
-                    local mousePos = UserInputService:GetMouseLocation()
-                    local relX = mousePos.X - SwitchContainer.AbsolutePosition.X
-                    local relY = mousePos.Y - SwitchContainer.AbsolutePosition.Y
-                    CreateRipple(SwitchContainer, relX, relY, Library.Theme.AccentLight)
-                end)
-
                 ToggleButton.MouseButton1Click:Connect(function()
                     state = not state
                     UpdateToggle(true)
@@ -1456,14 +1689,14 @@ function Library:CreateWindow(hubName)
                 end)
 
                 ToggleFrame.MouseEnter:Connect(function()
-                    SpringTween(tglStroke, "Transparency", 0.2, 0.15)
-                    SpringTween(ToggleFrame, "BackgroundColor3", Library.Theme.ButtonBackground, 0.15)
+                    SmoothTween(tglStroke, 0.2, {Transparency = 0.2, Color = Library.Theme.Accent})
+                    SmoothTween(ToggleFrame, 0.2, {BackgroundColor3 = Library.Theme.ButtonBackground})
                     if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
                 end)
 
                 ToggleFrame.MouseLeave:Connect(function()
-                    SpringTween(tglStroke, "Transparency", 0.7, 0.2)
-                    SpringTween(ToggleFrame, "BackgroundColor3", Library.Theme.ElementBackground, 0.2)
+                    SmoothTween(tglStroke, 0.25, {Transparency = 0.5, Color = Library.Theme.Divider})
+                    SmoothTween(ToggleFrame, 0.25, {BackgroundColor3 = Library.Theme.ElementBackground})
                     HideTooltip()
                 end)
 
@@ -1500,15 +1733,16 @@ function Library:CreateWindow(hubName)
                 local SliderFrame = Instance.new("Frame", SubPage)
                 SliderFrame.Name = text
                 SliderFrame.BackgroundColor3 = Library.Theme.ElementBackground
-                SliderFrame.Size = UDim2.new(1, -10, 0, 55)
+                SliderFrame.Size = UDim2.new(1, -8, 0, 54)
                 SliderFrame.BorderSizePixel = 0
 
                 Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 8)
-                AddStroke(SliderFrame, Library.Theme.Accent, 1).Transparency = 0.7
+                local sliderStroke = AddStroke(SliderFrame, Library.Theme.Divider, 1)
+                sliderStroke.Transparency = 0.5
 
                 local Label = Instance.new("TextLabel", SliderFrame)
                 Label.BackgroundTransparency = 1
-                Label.Position = UDim2.new(0, 15, 0, 8)
+                Label.Position = UDim2.new(0, 14, 0, 7)
                 Label.Size = UDim2.new(1, -80, 0, 18)
                 Label.Font = Enum.Font.GothamSemibold
                 Label.Text = text
@@ -1518,19 +1752,19 @@ function Library:CreateWindow(hubName)
 
                 local ValueLabel = Instance.new("TextLabel", SliderFrame)
                 ValueLabel.BackgroundColor3 = Library.Theme.ButtonBackground
-                ValueLabel.Position = UDim2.new(1, -60, 0, 6)
-                ValueLabel.Size = UDim2.new(0, 45, 0, 22)
+                ValueLabel.Position = UDim2.new(1, -58, 0, 6)
+                ValueLabel.Size = UDim2.new(0, 44, 0, 20)
                 ValueLabel.Font = Enum.Font.GothamBold
                 ValueLabel.Text = tostring(default)
                 ValueLabel.TextColor3 = Library.Theme.Accent
-                ValueLabel.TextSize = 12
+                ValueLabel.TextSize = 11
 
                 Instance.new("UICorner", ValueLabel).CornerRadius = UDim.new(0, 6)
 
                 local SliderTrack = Instance.new("Frame", SliderFrame)
-                SliderTrack.BackgroundColor3 = Color3.fromRGB(40, 38, 50)
-                SliderTrack.Position = UDim2.new(0, 15, 1, -18)
-                SliderTrack.Size = UDim2.new(1, -30, 0, 6)
+                SliderTrack.BackgroundColor3 = Color3.fromRGB(35, 33, 48)
+                SliderTrack.Position = UDim2.new(0, 14, 1, -17)
+                SliderTrack.Size = UDim2.new(1, -28, 0, 5)
                 SliderTrack.BorderSizePixel = 0
 
                 Instance.new("UICorner", SliderTrack).CornerRadius = UDim.new(1, 0)
@@ -1542,36 +1776,29 @@ function Library:CreateWindow(hubName)
 
                 Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
                 CreateGradient(SliderFill)
-                AddGlow(SliderFill, Library.Theme.AccentGlow, 15)
 
                 local SliderKnob = Instance.new("Frame", SliderTrack)
                 SliderKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 SliderKnob.AnchorPoint = Vector2.new(0.5, 0.5)
                 SliderKnob.Position = UDim2.new((default - min) / (max - min), 0, 0.5, 0)
-                SliderKnob.Size = UDim2.new(0, 16, 0, 16)
+                SliderKnob.Size = UDim2.new(0, 14, 0, 14)
                 SliderKnob.BorderSizePixel = 0
 
                 Instance.new("UICorner", SliderKnob).CornerRadius = UDim.new(1, 0)
-                AddStroke(SliderKnob, Library.Theme.Accent, 2)
-                AddGlow(SliderKnob, Library.Theme.AccentGlow, 20)
+                local knobStroke = AddStroke(SliderKnob, Library.Theme.Accent, 2)
+                knobStroke.Transparency = 0.1
 
                 local value = default
-                local dragging = false
+                local isDragging = false
 
                 local function UpdateSlider(input)
                     local relativeX = math.clamp((input.Position.X - SliderTrack.AbsolutePosition.X) / SliderTrack.AbsoluteSize.X, 0, 1)
                     value = math.floor(min + (relativeX * (max - min)))
 
-                    SpringTween(SliderFill, "Size", UDim2.new(relativeX, 0, 1, 0), 0.08)
-                    SpringTween(SliderKnob, "Position", UDim2.new(relativeX, 0, 0.5, 0), 0.08)
+                    SmoothTween(SliderFill, 0.06, {Size = UDim2.new(relativeX, 0, 1, 0)})
+                    SmoothTween(SliderKnob, 0.06, {Position = UDim2.new(relativeX, 0, 0.5, 0)})
 
                     ValueLabel.Text = tostring(value)
-                    SpringTween(ValueLabel, "BackgroundColor3", Library.Theme.Accent, 0.1)
-                    task.delay(0.3, function()
-                        if ValueLabel then
-                            SpringTween(ValueLabel, "BackgroundColor3", Library.Theme.ButtonBackground, 0.3)
-                        end
-                    end)
 
                     if callback then
                         task.spawn(callback, value)
@@ -1580,9 +1807,9 @@ function Library:CreateWindow(hubName)
 
                 SliderTrack.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = true
-                        SpringTween(SliderKnob, "Size", UDim2.new(0, 22, 0, 22), 0.15)
-                        SpringTween(SliderTrack, "Size", UDim2.new(1, -30, 0, 8), 0.15)
+                        isDragging = true
+                        SmoothTween(SliderKnob, 0.15, {Size = UDim2.new(0, 18, 0, 18)})
+                        SmoothTween(knobStroke, 0.15, {Transparency = 0})
                         UpdateSlider(input)
                         Library:LogActivity("Slider", text .. " = " .. tostring(value))
                     end
@@ -1590,23 +1817,33 @@ function Library:CreateWindow(hubName)
 
                 SliderTrack.InputEnded:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = false
-                        SpringTween(SliderKnob, "Size", UDim2.new(0, 16, 0, 16), 0.2)
-                        SpringTween(SliderTrack, "Size", UDim2.new(1, -30, 0, 6), 0.2)
+                        isDragging = false
+                        SmoothTween(SliderKnob, 0.2, {Size = UDim2.new(0, 14, 0, 14)})
+                        SmoothTween(knobStroke, 0.2, {Transparency = 0.1})
                     end
                 end)
 
-                UserInputService.InputChanged:Connect(function(input)
-                    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                TrackConnection(UserInputService.InputChanged:Connect(function(input)
+                    if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                         UpdateSlider(input)
                     end
-                end)
+                end))
+
+                TrackConnection(UserInputService.InputEnded:Connect(function(input)
+                    if isDragging and input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        isDragging = false
+                        SmoothTween(SliderKnob, 0.2, {Size = UDim2.new(0, 14, 0, 14)})
+                        SmoothTween(knobStroke, 0.2, {Transparency = 0.1})
+                    end
+                end))
 
                 SliderFrame.MouseEnter:Connect(function()
+                    SmoothTween(sliderStroke, 0.2, {Transparency = 0.2, Color = Library.Theme.Accent})
                     if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
                 end)
 
                 SliderFrame.MouseLeave:Connect(function()
+                    SmoothTween(sliderStroke, 0.25, {Transparency = 0.5, Color = Library.Theme.Divider})
                     HideTooltip()
                 end)
 
@@ -1644,17 +1881,18 @@ function Library:CreateWindow(hubName)
                 local DropdownFrame = Instance.new("Frame", SubPage)
                 DropdownFrame.Name = text
                 DropdownFrame.BackgroundColor3 = Library.Theme.ElementBackground
-                DropdownFrame.Size = UDim2.new(1, -10, 0, 45)
+                DropdownFrame.Size = UDim2.new(1, -8, 0, 44)
                 DropdownFrame.BorderSizePixel = 0
                 DropdownFrame.ClipsDescendants = false
                 DropdownFrame.ZIndex = 2
 
                 Instance.new("UICorner", DropdownFrame).CornerRadius = UDim.new(0, 8)
-                AddStroke(DropdownFrame, Library.Theme.Accent, 1).Transparency = 0.7
+                local ddStroke = AddStroke(DropdownFrame, Library.Theme.Divider, 1)
+                ddStroke.Transparency = 0.5
 
                 local Label = Instance.new("TextLabel", DropdownFrame)
                 Label.BackgroundTransparency = 1
-                Label.Position = UDim2.new(0, 15, 0, 0)
+                Label.Position = UDim2.new(0, 14, 0, 0)
                 Label.Size = UDim2.new(1, -40, 0, 20)
                 Label.Font = Enum.Font.GothamSemibold
                 Label.Text = text
@@ -1673,7 +1911,7 @@ function Library:CreateWindow(hubName)
                 SelectedButton.TextXAlignment = Enum.TextXAlignment.Left
                 SelectedButton.BorderSizePixel = 0
 
-                Instance.new("UICorner", SelectedButton).CornerRadius = UDim.new(0, 6)
+                Instance.new("UICorner", SelectedButton).CornerRadius = UDim.new(0, 5)
 
                 local Arrow = Instance.new("TextLabel", SelectedButton)
                 Arrow.BackgroundTransparency = 1
@@ -1682,7 +1920,7 @@ function Library:CreateWindow(hubName)
                 Arrow.Font = Enum.Font.GothamBold
                 Arrow.Text = "▼"
                 Arrow.TextColor3 = Library.Theme.TextDark
-                Arrow.TextSize = 10
+                Arrow.TextSize = 9
 
                 local OptionsList = Instance.new("ScrollingFrame", DropdownFrame)
                 OptionsList.BackgroundColor3 = Library.Theme.SidebarBackground
@@ -1695,7 +1933,8 @@ function Library:CreateWindow(hubName)
                 OptionsList.ZIndex = 10
 
                 Instance.new("UICorner", OptionsList).CornerRadius = UDim.new(0, 6)
-                AddStroke(OptionsList, Library.Theme.Accent, 2)
+                local optStroke = AddStroke(OptionsList, Library.Theme.Accent, 1)
+                optStroke.Transparency = 0.3
 
                 local OptionsLayout = Instance.new("UIListLayout", OptionsList)
                 OptionsLayout.Padding = UDim.new(0, 2)
@@ -1705,29 +1944,30 @@ function Library:CreateWindow(hubName)
 
                 local function CloseDropdown()
                     isOpen = false
-                    SpringTween(OptionsList, "Size", UDim2.new(1, -20, 0, 0), 0.3)
-                    SpringTween(Arrow, "Rotation", 0, 0.2)
-                    task.wait(0.3)
-                    OptionsList.Visible = false
-                    DropdownFrame.Size = UDim2.new(1, -10, 0, 45)
+                    SmoothTween(OptionsList, 0.25, {Size = UDim2.new(1, -20, 0, 0)})
+                    SmoothTween(Arrow, 0.2, {Rotation = 0})
+                    task.delay(0.25, function()
+                        OptionsList.Visible = false
+                        DropdownFrame.Size = UDim2.new(1, -8, 0, 44)
+                    end)
                 end
 
                 local function OpenDropdown()
                     isOpen = true
                     OptionsList.Visible = true
-                    local listHeight = math.min(#options * 28, 120)
-                    SpringTween(OptionsList, "Size", UDim2.new(1, -20, 0, listHeight), 0.3)
-                    SpringTween(Arrow, "Rotation", 180, 0.25)
-                    DropdownFrame.Size = UDim2.new(1, -10, 0, 45 + listHeight + 5)
+                    local listHeight = math.min(#options * 26, 140)
+                    SmoothTween(OptionsList, 0.25, {Size = UDim2.new(1, -20, 0, listHeight)})
+                    SmoothTween(Arrow, 0.2, {Rotation = 180})
+                    DropdownFrame.Size = UDim2.new(1, -8, 0, 44 + listHeight + 5)
 
                     local delay = 0
                     for _, child in ipairs(OptionsList:GetChildren()) do
                         if child:IsA("TextButton") then
                             child.Size = UDim2.new(1, -4, 0, 0)
                             task.delay(delay, function()
-                                SpringTween(child, "Size", UDim2.new(1, -4, 0, 26), 0.15)
+                                SmoothTween(child, 0.15, {Size = UDim2.new(1, -4, 0, 24)})
                             end)
-                            delay = delay + 0.03
+                            delay = delay + 0.025
                         end
                     end
                 end
@@ -1744,7 +1984,7 @@ function Library:CreateWindow(hubName)
                     local OptionButton = Instance.new("TextButton", OptionsList)
                     OptionButton.BackgroundColor3 = Library.Theme.ElementBackground
                     OptionButton.BackgroundTransparency = option == selected and 0 or 0.5
-                    OptionButton.Size = UDim2.new(1, -4, 0, 26)
+                    OptionButton.Size = UDim2.new(1, -4, 0, 24)
                     OptionButton.Font = Enum.Font.Gotham
                     OptionButton.Text = "  " .. option
                     OptionButton.TextColor3 = option == selected and Library.Theme.Accent or Library.Theme.Text
@@ -1779,13 +2019,13 @@ function Library:CreateWindow(hubName)
 
                     OptionButton.MouseEnter:Connect(function()
                         if option ~= selected then
-                            SpringTween(OptionButton, "BackgroundTransparency", 0.2, 0.1)
+                            SmoothTween(OptionButton, 0.1, {BackgroundTransparency = 0.2})
                         end
                     end)
 
                     OptionButton.MouseLeave:Connect(function()
                         if option ~= selected then
-                            SpringTween(OptionButton, "BackgroundTransparency", 0.5, 0.1)
+                            SmoothTween(OptionButton, 0.1, {BackgroundTransparency = 0.5})
                         end
                     end)
                 end
@@ -1795,10 +2035,12 @@ function Library:CreateWindow(hubName)
                 end)
 
                 DropdownFrame.MouseEnter:Connect(function()
+                    SmoothTween(ddStroke, 0.2, {Transparency = 0.2, Color = Library.Theme.Accent})
                     if tooltip and not isOpen then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
                 end)
 
                 DropdownFrame.MouseLeave:Connect(function()
+                    SmoothTween(ddStroke, 0.25, {Transparency = 0.5, Color = Library.Theme.Divider})
                     HideTooltip()
                 end)
 
@@ -1827,11 +2069,11 @@ function Library:CreateWindow(hubName)
                 local Label = Instance.new("TextLabel", SubPage)
                 Label.Name = text
                 Label.BackgroundTransparency = 1
-                Label.Size = UDim2.new(1, -10, 0, 28)
+                Label.Size = UDim2.new(1, -8, 0, 26)
                 Label.Font = Enum.Font.Gotham
                 Label.Text = text
                 Label.TextColor3 = Library.Theme.TextDark
-                Label.TextSize = 13
+                Label.TextSize = 12
                 Label.TextXAlignment = Enum.TextXAlignment.Left
                 Label.TextWrapped = true
 
@@ -1846,6 +2088,15 @@ function Library:CreateWindow(hubName)
                 }
             end
 
+            function SectionLogic:CreateSpacer(height)
+                height = height or 8
+                local Spacer = Instance.new("Frame", SubPage)
+                Spacer.BackgroundTransparency = 1
+                Spacer.Size = UDim2.new(1, 0, 0, height)
+                Spacer.BorderSizePixel = 0
+                return Spacer
+            end
+
             function SectionLogic:CreateTextbox(text, tooltip, placeholder, callback)
                 if type(tooltip) == "string" and not callback then
                     callback = placeholder
@@ -1858,20 +2109,21 @@ function Library:CreateWindow(hubName)
                 local TextboxFrame = Instance.new("Frame", SubPage)
                 TextboxFrame.Name = text
                 TextboxFrame.BackgroundColor3 = Library.Theme.ElementBackground
-                TextboxFrame.Size = UDim2.new(1, -10, 0, 55)
+                TextboxFrame.Size = UDim2.new(1, -8, 0, 54)
                 TextboxFrame.BorderSizePixel = 0
 
                 Instance.new("UICorner", TextboxFrame).CornerRadius = UDim.new(0, 8)
-                AddStroke(TextboxFrame, Library.Theme.Accent, 1).Transparency = 0.7
+                local tbStroke = AddStroke(TextboxFrame, Library.Theme.Divider, 1)
+                tbStroke.Transparency = 0.5
 
                 local Label = Instance.new("TextLabel", TextboxFrame)
                 Label.BackgroundTransparency = 1
-                Label.Position = UDim2.new(0, 15, 0, 8)
-                Label.Size = UDim2.new(1, -30, 0, 18)
+                Label.Position = UDim2.new(0, 14, 0, 7)
+                Label.Size = UDim2.new(1, -28, 0, 18)
                 Label.Font = Enum.Font.GothamSemibold
                 Label.Text = text
                 Label.TextColor3 = Library.Theme.Text
-                Label.TextSize = 13
+                Label.TextSize = 12
                 Label.TextXAlignment = Enum.TextXAlignment.Left
 
                 local Textbox = Instance.new("TextBox", TextboxFrame)
@@ -1888,21 +2140,22 @@ function Library:CreateWindow(hubName)
                 Textbox.ClearTextOnFocus = false
                 Textbox.BorderSizePixel = 0
 
-                Instance.new("UICorner", Textbox).CornerRadius = UDim.new(0, 6)
+                Instance.new("UICorner", Textbox).CornerRadius = UDim.new(0, 5)
                 local boxStroke = AddStroke(Textbox, Library.Theme.TextMuted, 1)
+                boxStroke.Transparency = 0.5
 
                 local padding = Instance.new("UIPadding", Textbox)
                 padding.PaddingLeft = UDim.new(0, 8)
                 padding.PaddingRight = UDim.new(0, 8)
 
                 Textbox.Focused:Connect(function()
-                    SpringTween(boxStroke, "Color", Library.Theme.Accent, 0.2)
-                    SpringTween(boxStroke, "Transparency", 0.2, 0.2)
+                    SmoothTween(boxStroke, 0.2, {Color = Library.Theme.Accent, Transparency = 0.15})
+                    SmoothTween(Textbox, 0.2, {BackgroundColor3 = Library.Theme.AccentSoft})
                 end)
 
                 Textbox.FocusLost:Connect(function(enterPressed)
-                    SpringTween(boxStroke, "Color", Library.Theme.TextMuted, 0.2)
-                    SpringTween(boxStroke, "Transparency", 0.5, 0.2)
+                    SmoothTween(boxStroke, 0.2, {Color = Library.Theme.TextMuted, Transparency = 0.5})
+                    SmoothTween(Textbox, 0.2, {BackgroundColor3 = Library.Theme.ButtonBackground})
 
                     if enterPressed and callback then
                         task.spawn(callback, Textbox.Text)
@@ -1911,10 +2164,12 @@ function Library:CreateWindow(hubName)
                 end)
 
                 TextboxFrame.MouseEnter:Connect(function()
+                    SmoothTween(tbStroke, 0.2, {Transparency = 0.2, Color = Library.Theme.Accent})
                     if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
                 end)
 
                 TextboxFrame.MouseLeave:Connect(function()
+                    SmoothTween(tbStroke, 0.25, {Transparency = 0.5, Color = Library.Theme.Divider})
                     HideTooltip()
                 end)
 
@@ -1947,26 +2202,27 @@ function Library:CreateWindow(hubName)
                 local KeybindFrame = Instance.new("Frame", SubPage)
                 KeybindFrame.Name = text
                 KeybindFrame.BackgroundColor3 = Library.Theme.ElementBackground
-                KeybindFrame.Size = UDim2.new(1, -10, 0, 45)
+                KeybindFrame.Size = UDim2.new(1, -8, 0, 44)
                 KeybindFrame.BorderSizePixel = 0
 
                 Instance.new("UICorner", KeybindFrame).CornerRadius = UDim.new(0, 8)
-                AddStroke(KeybindFrame, Library.Theme.Accent, 1).Transparency = 0.7
+                local kbStroke = AddStroke(KeybindFrame, Library.Theme.Divider, 1)
+                kbStroke.Transparency = 0.5
 
                 local Label = Instance.new("TextLabel", KeybindFrame)
                 Label.BackgroundTransparency = 1
-                Label.Position = UDim2.new(0, 15, 0, 0)
+                Label.Position = UDim2.new(0, 14, 0, 0)
                 Label.Size = UDim2.new(1, -100, 1, 0)
                 Label.Font = Enum.Font.GothamSemibold
                 Label.Text = text
                 Label.TextColor3 = Library.Theme.Text
-                Label.TextSize = 14
+                Label.TextSize = 13
                 Label.TextXAlignment = Enum.TextXAlignment.Left
 
                 local KeyButton = Instance.new("TextButton", KeybindFrame)
                 KeyButton.BackgroundColor3 = Library.Theme.ButtonBackground
-                KeyButton.Position = UDim2.new(1, -75, 0.5, -13)
-                KeyButton.Size = UDim2.new(0, 60, 0, 26)
+                KeyButton.Position = UDim2.new(1, -72, 0.5, -12)
+                KeyButton.Size = UDim2.new(0, 58, 0, 24)
                 KeyButton.Font = Enum.Font.GothamBold
                 KeyButton.Text = default.Name
                 KeyButton.TextColor3 = Library.Theme.Accent
@@ -1974,7 +2230,8 @@ function Library:CreateWindow(hubName)
                 KeyButton.BorderSizePixel = 0
 
                 Instance.new("UICorner", KeyButton).CornerRadius = UDim.new(0, 6)
-                AddStroke(KeyButton, Library.Theme.Accent, 1.5)
+                local keyStroke = AddStroke(KeyButton, Library.Theme.Accent, 1)
+                keyStroke.Transparency = 0.4
 
                 local currentKey = default
                 local listening = false
@@ -1982,15 +2239,17 @@ function Library:CreateWindow(hubName)
                 KeyButton.MouseButton1Click:Connect(function()
                     listening = true
                     KeyButton.Text = "..."
-                    SpringTween(KeyButton, "BackgroundColor3", Library.Theme.Accent, 0.2)
+                    SmoothTween(KeyButton, 0.2, {BackgroundColor3 = Library.Theme.AccentSoft})
+                    SmoothTween(keyStroke, 0.2, {Transparency = 0})
                 end)
 
-                UserInputService.InputBegan:Connect(function(input, gpe)
+                TrackConnection(UserInputService.InputBegan:Connect(function(input, gpe)
                     if listening and input.UserInputType == Enum.UserInputType.Keyboard then
                         listening = false
                         currentKey = input.KeyCode
                         KeyButton.Text = currentKey.Name
-                        SpringTween(KeyButton, "BackgroundColor3", Library.Theme.ButtonBackground, 0.2)
+                        SmoothTween(KeyButton, 0.2, {BackgroundColor3 = Library.Theme.ButtonBackground})
+                        SmoothTween(keyStroke, 0.2, {Transparency = 0.4})
 
                         Library:LogActivity("Keybind", text .. " = " .. currentKey.Name)
                     end
@@ -1998,13 +2257,15 @@ function Library:CreateWindow(hubName)
                     if not gpe and input.KeyCode == currentKey and callback then
                         task.spawn(callback)
                     end
-                end)
+                end))
 
                 KeybindFrame.MouseEnter:Connect(function()
+                    SmoothTween(kbStroke, 0.2, {Transparency = 0.2, Color = Library.Theme.Accent})
                     if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
                 end)
 
                 KeybindFrame.MouseLeave:Connect(function()
+                    SmoothTween(kbStroke, 0.25, {Transparency = 0.5, Color = Library.Theme.Divider})
                     HideTooltip()
                 end)
 
@@ -2027,9 +2288,9 @@ function Library:CreateWindow(hubName)
 
             function SectionLogic:CreateDivider()
                 local Divider = Instance.new("Frame", SubPage)
-                Divider.BackgroundColor3 = Library.Theme.Accent
-                Divider.BackgroundTransparency = 0.8
-                Divider.Size = UDim2.new(1, -10, 0, 2)
+                Divider.BackgroundColor3 = Library.Theme.Divider
+                Divider.BackgroundTransparency = 0.3
+                Divider.Size = UDim2.new(1, -8, 0, 1)
                 Divider.BorderSizePixel = 0
 
                 Instance.new("UICorner", Divider).CornerRadius = UDim.new(1, 0)
@@ -2049,31 +2310,32 @@ function Library:CreateWindow(hubName)
                 local ColorFrame = Instance.new("Frame", SubPage)
                 ColorFrame.Name = text
                 ColorFrame.BackgroundColor3 = Library.Theme.ElementBackground
-                ColorFrame.Size = UDim2.new(1, -10, 0, 45)
+                ColorFrame.Size = UDim2.new(1, -8, 0, 44)
                 ColorFrame.BorderSizePixel = 0
 
                 Instance.new("UICorner", ColorFrame).CornerRadius = UDim.new(0, 8)
-                AddStroke(ColorFrame, Library.Theme.Accent, 1).Transparency = 0.7
+                local cpStroke = AddStroke(ColorFrame, Library.Theme.Divider, 1)
+                cpStroke.Transparency = 0.5
 
                 local Label = Instance.new("TextLabel", ColorFrame)
                 Label.BackgroundTransparency = 1
-                Label.Position = UDim2.new(0, 15, 0, 0)
+                Label.Position = UDim2.new(0, 14, 0, 0)
                 Label.Size = UDim2.new(1, -80, 1, 0)
                 Label.Font = Enum.Font.GothamSemibold
                 Label.Text = text
                 Label.TextColor3 = Library.Theme.Text
-                Label.TextSize = 14
+                Label.TextSize = 13
                 Label.TextXAlignment = Enum.TextXAlignment.Left
 
                 local ColorPreview = Instance.new("Frame", ColorFrame)
                 ColorPreview.BackgroundColor3 = defaultColor
-                ColorPreview.Position = UDim2.new(1, -55, 0.5, -13)
-                ColorPreview.Size = UDim2.new(0, 40, 0, 26)
+                ColorPreview.Position = UDim2.new(1, -52, 0.5, -12)
+                ColorPreview.Size = UDim2.new(0, 38, 0, 24)
                 ColorPreview.BorderSizePixel = 0
 
                 Instance.new("UICorner", ColorPreview).CornerRadius = UDim.new(0, 6)
-                AddStroke(ColorPreview, Library.Theme.Accent, 2)
-                AddGlow(ColorPreview, defaultColor, 20)
+                local previewStroke = AddStroke(ColorPreview, defaultColor, 2)
+                previewStroke.Transparency = 0.3
 
                 local currentColor = defaultColor
 
@@ -2084,12 +2346,12 @@ function Library:CreateWindow(hubName)
 
                 ColorButton.MouseButton1Click:Connect(function()
                     local presets = {
-                        Color3.fromRGB(124, 58, 237),
-                        Color3.fromRGB(255, 100, 150),
-                        Color3.fromRGB(60, 180, 255),
-                        Color3.fromRGB(50, 200, 120),
-                        Color3.fromRGB(255, 180, 60),
-                        Color3.fromRGB(240, 80, 80)
+                        Color3.fromRGB(120, 60, 230),
+                        Color3.fromRGB(255, 95, 145),
+                        Color3.fromRGB(55, 175, 250),
+                        Color3.fromRGB(45, 200, 115),
+                        Color3.fromRGB(245, 175, 55),
+                        Color3.fromRGB(235, 75, 75)
                     }
 
                     local nextIndex = 1
@@ -2101,7 +2363,8 @@ function Library:CreateWindow(hubName)
                     end
 
                     currentColor = presets[nextIndex]
-                    SpringTween(ColorPreview, "BackgroundColor3", currentColor, 0.3)
+                    SmoothTween(ColorPreview, 0.3, {BackgroundColor3 = currentColor})
+                    SmoothTween(previewStroke, 0.3, {Color = currentColor})
 
                     if callback then
                         task.spawn(callback, currentColor)
@@ -2111,10 +2374,12 @@ function Library:CreateWindow(hubName)
                 end)
 
                 ColorFrame.MouseEnter:Connect(function()
+                    SmoothTween(cpStroke, 0.2, {Transparency = 0.2, Color = Library.Theme.Accent})
                     if tooltip then ShowTooltip(tooltip, UserInputService:GetMouseLocation()) end
                 end)
 
                 ColorFrame.MouseLeave:Connect(function()
+                    SmoothTween(cpStroke, 0.25, {Transparency = 0.5, Color = Library.Theme.Divider})
                     HideTooltip()
                 end)
 
@@ -2127,6 +2392,7 @@ function Library:CreateWindow(hubName)
                     SetColor = function(newColor)
                         currentColor = newColor
                         ColorPreview.BackgroundColor3 = newColor
+                        previewStroke.Color = newColor
                     end,
                     GetColor = function()
                         return currentColor
