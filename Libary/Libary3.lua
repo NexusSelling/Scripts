@@ -1030,29 +1030,25 @@ function ui_lib:NewGui()
 				
 				tween2:Play();
 				tween2.Completed:Wait();
-				toggled_image.Visible = false;
+			local set_state_event = Instance.new("BindableEvent", tab_btn)
+			set_state_event.Name = "SetStateEvent"
+			set_state_event.Event:Connect(function(state)
+				toggled = state
+				if state then
+					untoggled_image.Visible = false
+					untoggled_image.ImageTransparency = 1
+					toggled_image.Visible = true
+					toggled_image.ImageTransparency = 0
+				else
+					untoggled_image.Visible = true
+					untoggled_image.ImageTransparency = 0
+					toggled_image.Visible = false
+					toggled_image.ImageTransparency = 1
+				end
+				coroutine.resume(coroutine.create(function()
+					action(toggled)
+				end))
 			end)
-            
-            local checkbox_funcs = {}
-            function checkbox_funcs:SetState(state)
-                toggled = state
-                if state then
-                    untoggled_image.Visible = false
-                    untoggled_image.ImageTransparency = 1
-                    toggled_image.Visible = true
-                    toggled_image.ImageTransparency = 0
-                else
-                    untoggled_image.Visible = true
-                    untoggled_image.ImageTransparency = 0
-                    toggled_image.Visible = false
-                    toggled_image.ImageTransparency = 1
-                end
-                coroutine.resume(coroutine.create(function()
-                    action(toggled)
-                end))
-            end
-            
-            return checkbox_funcs
 		end
 		
 		function tab_funcs:NewSlider(name, min, max, precise, action)
