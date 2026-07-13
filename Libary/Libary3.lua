@@ -344,8 +344,6 @@ function ui_lib:NewGui()
 	local ui_c4 = Instance.new("UICorner", tabs_frame);
 	ui_c4.CornerRadius = UDim.new(0, 8);
 	
-	--[[ Settings ]]
-	
 	local settings_key_event_con1 = nil;
 	local settings_key_event_con2 = nil;
 	local settings_editing_key = false;
@@ -601,8 +599,6 @@ function ui_lib:NewGui()
 		end
 	end)
 	
-	--[[ Settings ]]
-
 	local gui_funcs = {}
 
 	function gui_funcs:NewTab(name)
@@ -1030,6 +1026,9 @@ function ui_lib:NewGui()
 				
 				tween2:Play();
 				tween2.Completed:Wait();
+				toggled_image.Visible = false;
+			end)
+            
 			local set_state_event = Instance.new("BindableEvent", tab_btn)
 			set_state_event.Name = "SetStateEvent"
 			set_state_event.Event:Connect(function(state)
@@ -2216,6 +2215,4 @@ function ui_lib:NewGui()
 	return gui_funcs;
 end
 
-
 return ui_lib
-
