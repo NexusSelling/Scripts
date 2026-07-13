@@ -1190,29 +1190,13 @@ task.delay(0.6, function()
             local configKey = checkboxMap[descendant.Name]
             if Config[configKey] == true then
                 local untoggled = descendant:FindFirstChild("untoggled")
-                if untoggled then
-                    local fired = false
-                    if firesignal then
-                        pcall(function()
-                            firesignal(untoggled.MouseButton1Click)
-                            fired = true
-                        end)
-                    end
-                    if not fired and fireclickdetector then
-                        pcall(function()
-                            fireclickdetector(untoggled)
-                            fired = true
-                        end)
-                    end
-                    if not fired then
-                        local toggled_img = descendant:FindFirstChild("toggled")
-                        if toggled_img then
-                            untoggled.Visible = false
-                            untoggled.ImageTransparency = 1
-                            toggled_img.Visible = true
-                            toggled_img.ImageTransparency = 0
-                        end
-                    end
+                local toggled_img = descendant:FindFirstChild("toggled")
+                
+                if untoggled and toggled_img then
+                    untoggled.Visible = false
+                    untoggled.ImageTransparency = 1
+                    toggled_img.Visible = true
+                    toggled_img.ImageTransparency = 0
                 end
             end
         end
