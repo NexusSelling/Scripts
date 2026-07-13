@@ -20,6 +20,9 @@ local Config = {
     HitboxEnabled = false,
     HitboxSize = 10,
     
+    TriggerBotEnabled = false,
+    TriggerBotDelay = 0.05,
+    
     GlobalVisCheck = false,
     
     ESPEnabled = false,
@@ -121,20 +124,20 @@ end
 
 local function IsVisible(targetPart)
     local origin = Camera.CFrame.Position
-    local direction = targetPart.Position - origin
+    local targetPos = targetPart.Position
     
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
-    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-    raycastParams.IgnoreWater = true
+    local ignoreList = {LocalPlayer.Character, targetPart.Parent}
     
-    local result = Workspace:Raycast(origin, direction, raycastParams)
-    if result and result.Instance then
-        if result.Instance:IsDescendantOf(targetPart.Parent) then
-            return true
+    local obscuringParts = Camera:GetPartsObscuringTarget({origin, targetPos}, ignoreList)
+    
+    for _, part in ipairs(obscuringParts) do
+        if part.Transparency >= 0.5 or not part.CanCollide then
+            continue
         end
+        
         return false
     end
+    
     return true
 end
 
@@ -584,6 +587,43 @@ local function UpdateHitboxes()
     end
 end
 
+local lastTrigger = 0
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local function UpdateTriggerBot()
+    if not Config.TriggerBotEnabled then return end
+    
+    if tick() - lastTrigger < Config.TriggerBotDelay then return end
+    
+    local mouse = LocalPlayer:GetMouse()
+    local target = mouse.Target
+    
+    if target and target.Parent then
+        local char = target.Parent
+        if char:IsA("Accessory") or char:IsA("Tool") then
+            char = char.Parent
+        end
+        
+        local player = Players:GetPlayerFromCharacter(char)
+        if player and IsEnemy(player) then
+            local hum = char:FindFirstChild("Humanoid")
+            if hum and hum.Health > 0 then
+                local shouldShoot = true
+                if Config.GlobalVisCheck and target then
+                    shouldShoot = IsVisible(target)
+                end
+                
+                if shouldShoot then
+                    VirtualInputManager:SendMouseButtonEvent(mouse.X, mouse.Y, 0, true, game, 1)
+                    task.wait(0.01)
+                    VirtualInputManager:SendMouseButtonEvent(mouse.X, mouse.Y, 0, false, game, 1)
+                    lastTrigger = tick()
+                end
+            end
+        end
+    end
+end
+
 local originalMinZoom = LocalPlayer.CameraMinZoomDistance
 local originalMaxZoom = LocalPlayer.CameraMaxZoomDistance
 
@@ -845,6 +885,7 @@ RunService.RenderStepped:Connect(function()
     UpdateESP()
     UpdateHitboxes()
     UpdateAimbot()
+    UpdateTriggerBot()
     UpdateNoclip()
     UpdateFly()
     UpdateChams()
@@ -931,6 +972,16 @@ end)
 
 combatTab:NewSlider("Hitbox Size", 2, 50, true, function(val)
     Config.HitboxSize = val
+end)
+
+combatTab:NewLabel("--- TriggerBot ---")
+
+combatTab:NewCheckbox("Enable TriggerBot", function(state)
+    Config.TriggerBotEnabled = state
+end)
+
+combatTab:NewSlider("Trigger Delay (ms)", 0, 500, true, function(val)
+    Config.TriggerBotDelay = val / 1000
 end)
 
 visualsTab:NewLabel("--- ESP Master ---")
@@ -1096,6 +1147,7 @@ task.delay(0.6, function()
         ["Enable Aimbot (Hold RMB)"] = "AimbotEnabled",
         ["Show FOV Circle"] = "ShowFOV",
         ["Enable Hitbox Expander (Head)"] = "HitboxEnabled",
+        ["Enable TriggerBot"] = "TriggerBotEnabled",
         ["Enable ESP"] = "ESPEnabled",
         ["Box ESP"] = "BoxESP",
         ["Skeleton ESP"] = "SkeletonESP",
@@ -1122,6 +1174,7 @@ task.delay(0.6, function()
         ["Aimbot FOV"] = {"AimbotFOV", 10, 500},
         ["Smoothing (1 = Snap)"] = {"AimbotSmoothing", 1, 20},
         ["Hitbox Size"] = {"HitboxSize", 2, 50},
+        ["Trigger Delay (ms)"] = {"TriggerBotDelay", 0, 500},
         ["WalkSpeed"] = {"WalkSpeed", 16, 200},
         ["JumpPower"] = {"JumpPower", 50, 300},
         ["Fly Speed"] = {"FlySpeed", 10, 300},
