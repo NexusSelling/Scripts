@@ -132,11 +132,9 @@ local function IsVisible(targetPart)
     local obscuringParts = Camera:GetPartsObscuringTarget({origin, targetPos}, ignoreList)
     
     for _, part in ipairs(obscuringParts) do
-        if part.Transparency >= 0.5 or not part.CanCollide then
-            continue
+        if part.Transparency < 0.5 and part.CanCollide then
+            return false
         end
-        
-        return false
     end
     
     return true
@@ -301,9 +299,8 @@ local function UpdateESP()
     end
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if player == LocalPlayer then continue end
-        
-        if not ESP_Cache[player] then CreateESP(player) end
+        if player ~= LocalPlayer then
+            if not ESP_Cache[player] then CreateESP(player) end
         local esp = ESP_Cache[player]
         
         local char = player.Character
@@ -467,6 +464,7 @@ local function UpdateESP()
         else
             HideAllESP(esp)
         end
+        end
     end
 end
 
@@ -517,22 +515,20 @@ local function GetClosestToMouse()
     local mousePos = UserInputService:GetMouseLocation()
     
     for _, player in ipairs(Players:GetPlayers()) do
-        if player == LocalPlayer or not IsEnemy(player) then continue end
-        
-        local char = player.Character
-        if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 and char:FindFirstChild("Head") then
-            local targetPart = char:FindFirstChild(Config.AimbotTarget) or char.Head
-            
-            if Config.GlobalVisCheck and not IsVisible(targetPart) then
-                continue
-            end
-            
-            local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
-            if onScreen then
-                local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                if dist < closestDist then
-                    closestDist = dist
-                    closestPlayer = player
+        if player ~= LocalPlayer and IsEnemy(player) then
+            local char = player.Character
+            if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 and char:FindFirstChild("Head") then
+                local targetPart = char:FindFirstChild(Config.AimbotTarget) or char.Head
+                
+                if not Config.GlobalVisCheck or IsVisible(targetPart) then
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                    if onScreen then
+                        local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                        if dist < closestDist then
+                            closestDist = dist
+                            closestPlayer = player
+                        end
+                    end
                 end
             end
         end
@@ -680,40 +676,41 @@ local ChamsCache = {}
 
 local function UpdateChams()
     for _, player in ipairs(Players:GetPlayers()) do
-        if player == LocalPlayer then continue end
-        local char = player.Character
-        if not char then
-            if ChamsCache[player] then
-                ChamsCache[player]:Destroy()
-                ChamsCache[player] = nil
-            end
-            continue
-        end
-        
-        if Config.ChamsEnabled and IsEnemy(player) and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
-            if not ChamsCache[player] or not ChamsCache[player].Parent then
-                local highlight = Instance.new("Highlight")
-                highlight.Name = "JB_Chams"
-                highlight.FillColor = Color3.fromRGB(255, 0, 80)
-                highlight.FillTransparency = 0.5
-                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                highlight.OutlineTransparency = 0
-                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                highlight.Adornee = char
-                highlight.Parent = CoreGui
-                ChamsCache[player] = highlight
-            end
-            if Config.ColorByVisibility and char:FindFirstChild("Head") then
-                if IsVisible(char.Head) then
-                    ChamsCache[player].FillColor = Color3.fromRGB(50, 255, 50)
-                else
-                    ChamsCache[player].FillColor = Color3.fromRGB(255, 50, 50)
+        if player ~= LocalPlayer then
+            local char = player.Character
+            if not char then
+                if ChamsCache[player] then
+                    ChamsCache[player]:Destroy()
+                    ChamsCache[player] = nil
                 end
-            end
-        else
-            if ChamsCache[player] then
-                ChamsCache[player]:Destroy()
-                ChamsCache[player] = nil
+            else
+                if Config.ChamsEnabled and IsEnemy(player) and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                    if not ChamsCache[player] or not ChamsCache[player].Parent then
+                        local highlight = Instance.new("Highlight")
+                        highlight.Name = "JB_Chams"
+                        highlight.FillColor = Color3.fromRGB(255, 0, 80)
+                        highlight.FillTransparency = 0.5
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.OutlineTransparency = 0
+                        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        highlight.Adornee = char
+                        highlight.Parent = CoreGui
+                        ChamsCache[player] = highlight
+                    end
+                    
+                    if Config.ColorByVisibility and Config.GlobalVisCheck then
+                        if IsVisible(char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Head")) then
+                            ChamsCache[player].FillColor = Color3.fromRGB(0, 255, 0)
+                        else
+                            ChamsCache[player].FillColor = Color3.fromRGB(255, 0, 80)
+                        end
+                    end
+                else
+                    if ChamsCache[player] then
+                        ChamsCache[player]:Destroy()
+                        ChamsCache[player] = nil
+                    end
+                end
             end
         end
     end
@@ -861,13 +858,14 @@ local function TeleportToClosest()
     if not myRoot then return end
     
     for _, player in ipairs(Players:GetPlayers()) do
-        if player == LocalPlayer then continue end
-        local char = player.Character
-        if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
-            local dist = (myRoot.Position - char.HumanoidRootPart.Position).Magnitude
-            if dist < closestDist then
-                closestDist = dist
-                closestChar = char
+        if player ~= LocalPlayer then
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                local dist = (myRoot.Position - char.HumanoidRootPart.Position).Magnitude
+                if dist < closestDist then
+                    closestDist = dist
+                    closestChar = char
+                end
             end
         end
     end
