@@ -106,7 +106,7 @@ function ui_lib:NewGui()
 	title.Size = UDim2.new(1, 0, 0.06, 0);
 	title.Position = UDim2.new(0, 0, 0.015, 0);
 	title.Visible = true;
-	title.Text = getgenv().Title;
+	title.Text = getgenv().Title or "Script Hub";
 	title.RichText = true;
 	title.Font = Enum.Font.GothamSemibold;
 	title.TextScaled = true;
