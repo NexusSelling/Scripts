@@ -2167,7 +2167,7 @@ function ui_lib:NewGui()
 			local tab_label = Instance.new("Frame", frame);
 			tab_label.Active = true;
 			tab_label.BackgroundColor3 = Color3.fromRGB(26, 26, 26);
-			tab_label.Name = tostring(name);
+			tab_label.Name = tostring(text);
 			tab_label.Position = UDim2.new(0.016, 0, 0, 0);
 			tab_label.Size = UDim2.new(0.935, 0, 0.063, 0);
 			tab_label.Transparency = 1;
