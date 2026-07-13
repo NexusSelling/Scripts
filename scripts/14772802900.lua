@@ -67,6 +67,7 @@ local Config = {
     
     KB_ThirdPerson = "T",
     KB_SpinBot = "X",
+    KB_Fly = "B",
 }
 
 local ConfigFileName = "Jailbird_Config.json"
@@ -492,6 +493,13 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             UpdateThirdPerson()
         elseif key == Config.KB_SpinBot then
             Config.SpinBot = not Config.SpinBot
+        elseif key == Config.KB_Fly then
+            Config.FlyEnabled = not Config.FlyEnabled
+            if not Config.FlyEnabled then
+                StopFly()
+            else
+                StartFly()
+            end
         end
     end
 end)
@@ -798,8 +806,8 @@ pcall(SetupAntiAFK)
 
 local function UpdateSpinBot()
     if Config.SpinBot and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame 
-            * CFrame.Angles(0, math.rad(Config.SpinSpeed), 0)
+        local root = LocalPlayer.Character.HumanoidRootPart
+        root.RotVelocity = Vector3.new(0, Config.SpinSpeed * 10, 0)
     end
 end
 
@@ -1058,7 +1066,7 @@ playerTab:NewCheckbox("Infinite Jump", function(state)
     Config.InfiniteJump = state
 end)
 
-playerTab:NewCheckbox("Fly (WASD + Space/Shift)", function(state)
+playerTab:NewCheckbox("Fly [" .. Config.KB_Fly .. "]", function(state)
     Config.FlyEnabled = state
     if not state then StopFly() end
 end)
@@ -1069,7 +1077,7 @@ end)
 
 playerTab:NewLabel("--- Combat Exploits ---")
 
-playerTab:NewCheckbox("Spin Bot (Troll)", function(state)
+playerTab:NewCheckbox("Spin Bot (Server Sided) [" .. Config.KB_SpinBot .. "]", function(state)
     Config.SpinBot = state
 end)
 
@@ -1159,8 +1167,8 @@ task.delay(0.6, function()
         ["Chams / Highlight ESP"] = "ChamsEnabled",
         ["Noclip (Walk Through Walls)"] = "Noclip",
         ["Infinite Jump"] = "InfiniteJump",
-        ["Fly (WASD + Space/Shift)"] = "FlyEnabled",
-        ["Spin Bot (Troll)"] = "SpinBot",
+        ["Fly [" .. Config.KB_Fly .. "]"] = "FlyEnabled",
+        ["Spin Bot (Server Sided) [" .. Config.KB_SpinBot .. "]"] = "SpinBot",
         ["Long Reach (Tool Range)"] = "LongReach",
         ["Auto Respawn"] = "AutoRespawn",
         ["Third Person [" .. Config.KB_ThirdPerson .. "]"] = "ThirdPerson",
@@ -1193,10 +1201,15 @@ task.delay(0.6, function()
                 local toggled_img = descendant:FindFirstChild("toggled")
                 
                 if untoggled and toggled_img then
-                    untoggled.Visible = false
-                    untoggled.ImageTransparency = 1
-                    toggled_img.Visible = true
-                    toggled_img.ImageTransparency = 0
+                    local set_state_event = descendant:FindFirstChild("SetStateEvent")
+                    if set_state_event and set_state_event:IsA("BindableEvent") then
+                        set_state_event:Fire(true)
+                    else
+                        untoggled.Visible = false
+                        untoggled.ImageTransparency = 1
+                        toggled_img.Visible = true
+                        toggled_img.ImageTransparency = 0
+                    end
                 end
             end
         end
