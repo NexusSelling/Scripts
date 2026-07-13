@@ -1,8 +1,3 @@
---https://v3rmillion.net/showthread.php?tid=1101621
---https://v3rmillion.net/member.php?action=profile&uid=1052423
-
-
-
 local Flux = {RainbowColorValue = 0, HueSelectionPosition = 0}
 local PresetColor = Color3.fromRGB(66, 134, 255)
 local UserInputService = game:GetService("UserInputService")
