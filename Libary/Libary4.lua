@@ -801,7 +801,11 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			end)
 			Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 		end
-		function ContainerContent:Toggle(text, desc,default, callback)
+		function ContainerContent:Toggle(text, desc, default, keybind, callback)
+			if type(keybind) == "function" then
+				callback = keybind
+				keybind = nil
+			end
 			local ToggleDescToggled = false
 			local Toggled = false
 			if desc == "" then
@@ -930,6 +934,64 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			ArrowIco.Image = "http://www.roblox.com/asset/?id=6034818372"
 			ArrowIco.ImageTransparency = .3
 			
+
+			local BindBtn = Instance.new("TextButton")
+			local BindCorner = Instance.new("UICorner")
+
+			BindBtn.Name = "BindBtn"
+			BindBtn.Parent = Toggle
+			BindBtn.BackgroundColor3 = Color3.fromRGB(36, 38, 44)
+			BindBtn.AnchorPoint = Vector2.new(1, 0.5)
+			BindBtn.Position = UDim2.new(1, -40, 0.5, 0)
+			BindBtn.Size = UDim2.new(0, 64, 0, 22)
+			BindBtn.Font = Enum.Font.Gotham
+			BindBtn.Text = keybind and "[" .. keybind.Name .. "]" or "[None]"
+			BindBtn.TextColor3 = Color3.fromRGB(160, 160, 160)
+			BindBtn.TextSize = 11
+			BindBtn.ZIndex = 3
+
+			BindCorner.CornerRadius = FireLib4.CornerRadius
+			BindCorner.Parent = BindBtn
+
+			local isListening = false
+			BindBtn.MouseButton1Click:Connect(function()
+				if not isListening then
+					isListening = true
+					BindBtn.Text = "[...]"
+					TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = PresetColor}):Play()
+				end
+			end)
+
+			local function TriggerToggle()
+				if Toggled == false then
+					ToggleCircle:TweenPosition(UDim2.new(0.37, 0,-0.273, 0), "Out", "Quart", .3, true)
+					TweenService:Create(
+						ToggleCircle,
+						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+						{BackgroundColor3 = PresetColor}
+					):Play()
+				else
+					ToggleCircle:TweenPosition(UDim2.new(0, 0,-0.273, 0), "Out", "Quart", .3, true)
+					TweenService:Create(
+						ToggleCircle,
+						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+						{BackgroundColor3 = Color3.fromRGB(255,255,255)}
+					):Play()
+				end
+				Toggled = not Toggled
+				pcall(callback, Toggled)
+			end
+
+			UserInputService.InputBegan:Connect(function(input, gp)
+				if isListening and input.UserInputType == Enum.UserInputType.Keyboard then
+					keybind = input.KeyCode
+					BindBtn.Text = "[" .. keybind.Name .. "]"
+					isListening = false
+					TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = Color3.fromRGB(36, 38, 44)}):Play()
+				elseif not gp and keybind and input.KeyCode == keybind then
+					TriggerToggle()
+				end
+			end)
 		    Toggle.MouseEnter:Connect(function()
 				TweenService:Create(
 					Title,
@@ -947,23 +1009,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			end)
 
 			Toggle.MouseButton1Click:Connect(function()
-				if Toggled == false then
-					ToggleCircle:TweenPosition(UDim2.new(0.37, 0,-0.273, 0), "Out", "Quart", .3, true)
-					TweenService:Create(
-						ToggleCircle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 =PresetColor}
-					):Play()
-				else
-					ToggleCircle:TweenPosition(UDim2.new(0, 0,-0.273, 0), "Out", "Quart", .3, true)
-					TweenService:Create(
-						ToggleCircle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-				end
-				Toggled = not Toggled
-				pcall(callback, Toggled)
+				TriggerToggle()
 			end)
 			
 			ArrowBtn.MouseButton1Click:Connect(function()
