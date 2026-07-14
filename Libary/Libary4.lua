@@ -313,21 +313,21 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 		TweenService:Create(SettingsGear, TweenInfo.new(0.35, Enum.EasingStyle.Cubic),
 			{Rotation = settingsOpen and 45 or 0,
 			 ImageColor3 = settingsOpen and PresetColor or Color3.fromRGB(160, 160, 160)}):Play()
-		SettingsPanel:TweenSize(UDim2.new(0, 240, 0, targetH), "Out", "Cubic", 0.35, true)
+		SettingsPanel:TweenSize(UDim2.new(0, 240, 0, targetH), "Out", "Quart", 0.35, true)
 	end)
-	MainFrame:TweenSize(UDim2.new(0, 706, 0, 484), "Out", "Cubic", .6, true)
+	MainFrame:TweenSize(UDim2.new(0, 706, 0, 484), "Out", "Quart", .6, true)
 	
 	local uitoggled = false
 	UserInputService.InputBegan:Connect(
 		function(io, p)
 			if io.KeyCode == CloseBind then
 				if uitoggled == false then
-					MainFrame:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Cubic", .6, true)
+					MainFrame:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Quart", .6, true)
 					uitoggled = true
 					wait(.5)
 					FireLib4_UI.Enabled = false
 				else
-					MainFrame:TweenSize(UDim2.new(0, 706, 0, 484), "Out", "Cubic", .6, true)
+					MainFrame:TweenSize(UDim2.new(0, 706, 0, 484), "Out", "Quart", .6, true)
 					FireLib4_UI.Enabled = true
 					uitoggled = false
 				end
@@ -709,7 +709,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			
 			ArrowBtn.MouseButton1Click:Connect(function()
 				if BtnDescToggled == false then
-					Button:TweenSize(UDim2.new(0, 457, 0, 74), "Out", "Cubic", .6, true)
+					Button:TweenSize(UDim2.new(0, 457, 0, 74), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -753,7 +753,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 				else
-					Button:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Button:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -948,14 +948,14 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 
 			Toggle.MouseButton1Click:Connect(function()
 				if Toggled == false then
-					ToggleCircle:TweenPosition(UDim2.new(0.37, 0,-0.273, 0), "Out", "Cubic", .3, true)
+					ToggleCircle:TweenPosition(UDim2.new(0.37, 0,-0.273, 0), "Out", "Quart", .3, true)
 					TweenService:Create(
 						ToggleCircle,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
 						{BackgroundColor3 =PresetColor}
 					):Play()
 				else
-					ToggleCircle:TweenPosition(UDim2.new(0, 0,-0.273, 0), "Out", "Cubic", .3, true)
+					ToggleCircle:TweenPosition(UDim2.new(0, 0,-0.273, 0), "Out", "Quart", .3, true)
 					TweenService:Create(
 						ToggleCircle,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -968,7 +968,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			
 			ArrowBtn.MouseButton1Click:Connect(function()
 				if ToggleDescToggled == false then
-					Toggle:TweenSize(UDim2.new(0, 457, 0, 74), "Out", "Cubic", .6, true)
+					Toggle:TweenSize(UDim2.new(0, 457, 0, 74), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1012,7 +1012,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 				else
-					Toggle:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Toggle:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1059,7 +1059,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				ToggleDescToggled = not ToggleDescToggled
 			end)
 			if default == true then
-				ToggleCircle:TweenPosition(UDim2.new(0.37, 0,-0.273, 0), "Out", "Cubic", .3, true)
+				ToggleCircle:TweenPosition(UDim2.new(0.37, 0,-0.273, 0), "Out", "Quart", .3, true)
 				TweenService:Create(
 					ToggleCircle,
 					TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1219,7 +1219,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			
 			ArrowBtn.MouseButton1Click:Connect(function()
 				if SliderDescToggled == false then
-					Slider:TweenSize(UDim2.new(0, 457, 0, 101), "Out", "Cubic", .6, true)
+					Slider:TweenSize(UDim2.new(0, 457, 0, 101), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1268,7 +1268,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 				else
-					Slider:TweenSize(UDim2.new(0, 457, 0, 60), "Out", "Cubic", .6, true)
+					Slider:TweenSize(UDim2.new(0, 457, 0, 60), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1490,7 +1490,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			Dropdown.MouseButton1Click:Connect(function()
 				if DropToggled == false then
 					Title.Text = Selected
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, FrameSize), "Out", "Cubic", .6, true)
+					Dropdown:TweenSize(UDim2.new(0, 457, 0, FrameSize), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1530,7 +1530,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 				else
 					Title.Text = Selected
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1623,7 +1623,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					Title.Text = text
 					Selected = v
 					DropToggled = not DropToggled
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1715,7 +1715,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					Title.Text = text
 					Selected = addtext
 					DropToggled = not DropToggled
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1756,7 +1756,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				end)
 				if DropToggled == true then
 					Title.Text = Selected
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -1807,7 +1807,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				end
 				if DropToggled == true then
 					Title.Text = Selected
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -2107,7 +2107,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				if ColorPickerToggled == false then
 					ColorSelection.Visible = true
 					HueSelection.Visible = true
-					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 138), "Out", "Cubic", .6, true)
+					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 138), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -2133,7 +2133,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				else
 					ColorSelection.Visible = false
 					HueSelection.Visible = false
-					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -2277,7 +2277,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					end
 
 					if RainbowColorPicker then
-						ToggleCircle:TweenPosition(UDim2.new(0.37, 0,-0.273, 0), "Out", "Cubic", .3, true)
+						ToggleCircle:TweenPosition(UDim2.new(0.37, 0,-0.273, 0), "Out", "Quart", .3, true)
 						TweenService:Create(
 							ToggleCircle,
 							TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -2300,7 +2300,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 							wait()
 						end
 					elseif not RainbowColorPicker then
-						ToggleCircle:TweenPosition(UDim2.new(0, 0,-0.273, 0), "Out", "Cubic", .3, true)
+						ToggleCircle:TweenPosition(UDim2.new(0, 0,-0.273, 0), "Out", "Quart", .3, true)
 						TweenService:Create(
 							ToggleCircle,
 							TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -2321,7 +2321,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			Confirm.MouseButton1Click:Connect(
 				function()
 					ColorPickerToggled = not ColorPickerToggled
-					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -2547,7 +2547,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			
 			ArrowBtn.MouseButton1Click:Connect(function()
 				if TextboxDescToggled == false then
-					Textbox:TweenSize(UDim2.new(0, 457, 0, 81), "Out", "Cubic", .6, true)
+					Textbox:TweenSize(UDim2.new(0, 457, 0, 81), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
@@ -2591,7 +2591,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 				else
-					Textbox:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Cubic", .6, true)
+					Textbox:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
