@@ -1098,6 +1098,18 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				end)
 			end
 
+			-- Apply default toggle state at startup
+			if default == true then
+				ToggleCircle.Position = UDim2.new(0.37, 0, -0.273, 0)
+				ToggleCircle.BackgroundColor3 = PresetColor
+				Toggled = true
+			else
+				ToggleCircle.Position = UDim2.new(0, 0, -0.273, 0)
+				ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				Toggled = false
+			end
+			pcall(callback, Toggled)
+
 			Toggle.MouseEnter:Connect(function()
 				TweenService:Create(
 					Title,
@@ -1325,13 +1337,13 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			CurrentValueFrame.Parent = SlideFrame
 			CurrentValueFrame.BackgroundColor3 = PresetColor
 			CurrentValueFrame.BorderSizePixel = 0
-			CurrentValueFrame.Size = UDim2.new((start or 0) / max, 0, 0, 3)
+			CurrentValueFrame.Size = UDim2.new(math.clamp((start - min) / (max - min), 0, 1), 0, 0, 3)
 
 			SlideCircle.Name = "SlideCircle"
 			SlideCircle.Parent = SlideFrame
 			SlideCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			SlideCircle.BackgroundTransparency = 1.000
-			SlideCircle.Position = UDim2.new((start or 0)/max, -6,-1.30499995, 0)
+			SlideCircle.Position = UDim2.new(math.clamp((start - min) / (max - min), 0, 1), -6, -1.30499995, 0)
 			SlideCircle.Size = UDim2.new(0, 11, 0, 11)
 			SlideCircle.Image = "rbxassetid://3570695787"
 			SlideCircle.ImageColor3 = PresetColor
@@ -1363,7 +1375,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			Value.Position = UDim2.new(2.27693367, 0, 0, 0)
 			Value.Size = UDim2.new(0, 113, 0, 41)
 			Value.Font = Enum.Font.Gotham
-			Value.Text = tostring(start and math.floor((start / max) * (max - min) + min) or 0)
+			Value.Text = tostring(start or min)
 			Value.TextColor3 = Color3.fromRGB(255, 255, 255)
 			Value.TextSize = 15.000
 			Value.TextTransparency = 0.300
@@ -1489,7 +1501,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 						)
 					CurrentValueFrame:TweenSize(pos1, "Out", "Sine", 0.1, true)
 					SlideCircle:TweenPosition(pos, "Out", "Sine", 0.1, true)
-					local value = math.floor(((pos.X.Scale * max) / max) * (max - min) + min)
+					local value = math.floor(pos.X.Scale * (max - min) + min)
 					Value.Text = tostring(value)
 					pcall(callback, value)
 				end
@@ -1516,10 +1528,11 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				)
 			Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 			function SliderFunc:Change(tochange)
-				CurrentValueFrame.Size = UDim2.new((tochange or 0) / max, 0, 0, 3)
-				SlideCircle.Position = UDim2.new((tochange or 0)/max, -6,-1.30499995, 0)
-				Value.Text = tostring(tochange and math.floor((tochange / max) * (max - min) + min) or 0)
-				pcall(callback,tochange)
+				local pct = math.clamp((tochange - min) / (max - min), 0, 1)
+				CurrentValueFrame.Size = UDim2.new(pct, 0, 0, 3)
+				SlideCircle.Position = UDim2.new(pct, -6, -1.30499995, 0)
+				Value.Text = tostring(tochange)
+				pcall(callback, tochange)
 			end
 			return SliderFunc
 		end
