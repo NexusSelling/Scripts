@@ -295,7 +295,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 	MakeDraggable(LeftFrame,MainFrame)
 
 	local UIScaleObj = Instance.new("UIScale")
-	UIScaleObj.Parent = MainFrame
+	UIScaleObj.Parent = FireLib4_UI
 
 	local SettingsGear = Instance.new("ImageButton")
 	SettingsGear.Name = "SettingsGear"
@@ -2534,8 +2534,8 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 		return SettingsContent
 	end
 
-	SettingsContent:Toggle("4K Monitor Mode (2x Scale)", "Enables 2x scaling for high-resolution/4K screens.", false, function(on)
-		UIScaleObj.Scale = on and 2 or 1
+	SettingsContent:Slider("GUI Scale (%)", "Scale the entire UI window and notifications.", 50, 250, 100, function(v)
+		UIScaleObj.Scale = v / 100
 	end)
 
 	SettingsGear.MouseEnter:Connect(function()
