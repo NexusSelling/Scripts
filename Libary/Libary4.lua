@@ -1,4 +1,4 @@
-local FireLib4 = {RainbowColorValue = 0, HueSelectionPosition = 0, CornerRadius = UDim.new(0, 4)}
+local FireLib4 = {RainbowColorValue = 0, HueSelectionPosition = 0, CornerRadius = FireLib4.CornerRadius}
 local PresetColor = Color3.fromRGB(66, 134, 255)
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -335,97 +335,195 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 		end
 	)
 	
-	function FireLib4:Notification(title_text, desc, duration)
-		duration = duration or 3
+	function FireLib4:Notification(desc,buttontitle)
+		for i, v in next, MainFrame:GetChildren() do
+			if v.Name == "NotificationBase" then
+				v:Destroy()
+			end
+		end
+		local NotificationBase = Instance.new("TextButton")
+		local NotificationBaseCorner = Instance.new("UICorner")
+		local NotificationFrame = Instance.new("Frame")
+		local NotificationFrameCorner = Instance.new("UICorner")
+		local NotificationFrameGlow = Instance.new("ImageLabel")
+		local NotificationTitle = Instance.new("TextLabel")
+		local CloseBtn = Instance.new("TextButton")
+		local CloseBtnCorner = Instance.new("UICorner")
+		local NotificationDesc = Instance.new("TextLabel")
 
-		local Card = Instance.new("Frame")
-		local CardCorner = Instance.new("UICorner")
-		local CardGlow = Instance.new("ImageLabel")
-		local Accent = Instance.new("Frame")
-		local AccentCorner = Instance.new("UICorner")
-		local CardTitle = Instance.new("TextLabel")
-		local CardDesc = Instance.new("TextLabel")
-		local ProgressBar = Instance.new("Frame")
+		NotificationBase.Name = "NotificationBase"
+		NotificationBase.Parent = MainFrame
+		NotificationBase.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		NotificationBase.BackgroundTransparency = 1
+		NotificationBase.Size = UDim2.new(0, 706, 0, 484)
+		NotificationBase.AutoButtonColor = false
+		NotificationBase.Font = Enum.Font.SourceSans
+		NotificationBase.Text = ""
+		NotificationBase.TextColor3 = Color3.fromRGB(0, 0, 0)
+		NotificationBase.TextSize = 14.000
+		NotificationBase.Visible = true
 
-		Card.Name = "NotifCard"
-		Card.Parent = NotifHolder
-		Card.BackgroundColor3 = Color3.fromRGB(42, 44, 51)
-		Card.BorderSizePixel = 0
-		Card.AnchorPoint = Vector2.new(0.5, 0)
-		Card.Size = UDim2.new(1, 0, 0, 84)
-		Card.Position = UDim2.new(0.5, 0, 0, -100)
-		Card.ClipsDescendants = true
-		Card.ZIndex = 200
+		NotificationBaseCorner.CornerRadius = FireLib4.CornerRadius
+		NotificationBaseCorner.Name = "NotificationBaseCorner"
+		NotificationBaseCorner.Parent = NotificationBase
 
-		CardCorner.CornerRadius = FireLib4.CornerRadius
-		CardCorner.Parent = Card
+		NotificationFrame.Name = "NotificationFrame"
+		NotificationFrame.Parent = NotificationBase
+		NotificationFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+		NotificationFrame.BackgroundColor3 = Color3.fromRGB(50, 53, 59)
+		NotificationFrame.ClipsDescendants = true
+		NotificationFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+		NotificationFrame.Size = UDim2.new(0, 0, 0, 0)
 
-		CardGlow.Parent = Card
-		CardGlow.BackgroundTransparency = 1
-		CardGlow.BorderSizePixel = 0
-		CardGlow.Position = UDim2.new(0, -15, 0, -15)
-		CardGlow.Size = UDim2.new(1, 30, 1, 30)
-		CardGlow.ZIndex = 0
-		CardGlow.Image = "rbxassetid://4996891970"
-		CardGlow.ImageColor3 = Color3.fromRGB(10, 10, 10)
-		CardGlow.ScaleType = Enum.ScaleType.Slice
-		CardGlow.SliceCenter = Rect.new(20, 20, 280, 280)
+		NotificationFrameCorner.CornerRadius = FireLib4.CornerRadius
+		NotificationFrameCorner.Name = "NotificationFrameCorner"
+		NotificationFrameCorner.Parent = NotificationFrame
 
-		Accent.Parent = Card
-		Accent.BackgroundColor3 = PresetColor
-		Accent.BorderSizePixel = 0
-		Accent.Position = UDim2.new(0, 0, 0, 0)
-		Accent.Size = UDim2.new(0, 4, 1, 0)
-		Accent.ZIndex = 201
+		NotificationFrameGlow.Name = "NotificationFrameGlow"
+		NotificationFrameGlow.Parent = NotificationFrame
+		NotificationFrameGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		NotificationFrameGlow.BackgroundTransparency = 1.000
+		NotificationFrameGlow.BorderSizePixel = 0
+		NotificationFrameGlow.Position = UDim2.new(0, -15, 0, -15)
+		NotificationFrameGlow.Size = UDim2.new(1, 30, 1, 30)
+		NotificationFrameGlow.ZIndex = 0
+		NotificationFrameGlow.Image = "rbxassetid://4996891970"
+		NotificationFrameGlow.ImageColor3 = Color3.fromRGB(15, 15, 15)
+		NotificationFrameGlow.ScaleType = Enum.ScaleType.Slice
+		NotificationFrameGlow.SliceCenter = Rect.new(20, 20, 280, 280)
 
-		AccentCorner.CornerRadius = FireLib4.CornerRadius
-		AccentCorner.Parent = Accent
+		NotificationTitle.Name = "NotificationTitle"
+		NotificationTitle.Parent = NotificationFrame
+		NotificationTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		NotificationTitle.BackgroundTransparency = 1.000
+		NotificationTitle.Position = UDim2.new(0.0400609747, 0, 0.0761325806, 0)
+		NotificationTitle.Size = UDim2.new(0, 111, 0, 34)
+		NotificationTitle.Font = Enum.Font.GothamBold
+		NotificationTitle.Text = Title.Text .. " | NOTIFICATION"
+		NotificationTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+		NotificationTitle.TextSize = 24.000
+		NotificationTitle.TextXAlignment = Enum.TextXAlignment.Left
+		NotificationTitle.TextTransparency = 1
 
-		CardTitle.Parent = Card
-		CardTitle.BackgroundTransparency = 1
-		CardTitle.Position = UDim2.new(0, 18, 0, 12)
-		CardTitle.Size = UDim2.new(1, -22, 0, 22)
-		CardTitle.Font = Enum.Font.GothamBold
-		CardTitle.Text = title_text
-		CardTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-		CardTitle.TextSize = 15
-		CardTitle.TextXAlignment = Enum.TextXAlignment.Left
-		CardTitle.ZIndex = 201
+		CloseBtn.Name = "CloseBtn"
+		CloseBtn.Parent = NotificationFrame
+		CloseBtn.BackgroundColor3 = Color3.fromRGB(64, 68, 75)
+		CloseBtn.ClipsDescendants = true
+		CloseBtn.Position = UDim2.new(0.0403124988, 0, 0.720855951, 0)
+		CloseBtn.Size = UDim2.new(0, 366, 0, 43)
+		CloseBtn.AutoButtonColor = false
+		CloseBtn.Font = Enum.Font.Gotham
+		CloseBtn.Text = buttontitle
+		CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		CloseBtn.TextSize = 15.000
+		CloseBtn.TextTransparency = 1
+		CloseBtn.BackgroundTransparency = 1
 
-		CardDesc.Parent = Card
-		CardDesc.BackgroundTransparency = 1
-		CardDesc.Position = UDim2.new(0, 18, 0, 36)
-		CardDesc.Size = UDim2.new(1, -22, 0, 34)
-		CardDesc.Font = Enum.Font.Gotham
-		CardDesc.Text = desc
-		CardDesc.TextColor3 = Color3.fromRGB(180, 180, 180)
-		CardDesc.TextSize = 13
-		CardDesc.TextWrapped = true
-		CardDesc.TextXAlignment = Enum.TextXAlignment.Left
-		CardDesc.ZIndex = 201
+		CloseBtnCorner.CornerRadius = FireLib4.CornerRadius
+		CloseBtnCorner.Name = "CloseBtnCorner"
+		CloseBtnCorner.Parent = CloseBtn
 
-		ProgressBar.Parent = Card
-		ProgressBar.BackgroundColor3 = PresetColor
-		ProgressBar.BorderSizePixel = 0
-		ProgressBar.Position = UDim2.new(0, 0, 1, -3)
-		ProgressBar.Size = UDim2.new(1, 0, 0, 3)
-		ProgressBar.ZIndex = 202
+		NotificationDesc.Name = "NotificationDesc"
+		NotificationDesc.Parent = NotificationFrame
+		NotificationDesc.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		NotificationDesc.BackgroundTransparency = 1.000
+		NotificationDesc.Position = UDim2.new(0.112499997, 0, 0.266355127, 0)
+		NotificationDesc.Size = UDim2.new(0, 309, 0, 82)
+		NotificationDesc.Font = Enum.Font.Gotham
+		NotificationDesc.Text = desc
+		NotificationDesc.TextColor3 = Color3.fromRGB(255, 255, 255)
+		NotificationDesc.TextSize = 15.000
+		NotificationDesc.TextWrapped = true
+		NotificationDesc.TextTransparency = 1
+		
+		CloseBtn.MouseEnter:Connect(function()
+			TweenService:Create(
+				CloseBtn,
+				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+				{TextTransparency = 0}
+			):Play()
+		end)
 
-		coroutine.wrap(function()
-			-- Slide in from top
-			TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-				{Position = UDim2.new(0.5, 0, 0, 10)}):Play()
-			wait(0.05)
-			-- Progress bar drains over duration
-			TweenService:Create(ProgressBar, TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.In),
-				{Size = UDim2.new(0, 0, 0, 3)}):Play()
-			wait(duration)
-			-- Slide back out to top
-			TweenService:Create(Card, TweenInfo.new(0.35, Enum.EasingStyle.Cubic, Enum.EasingDirection.In),
-				{Position = UDim2.new(0.5, 0, 0, -100)}):Play()
-			wait(0.4)
-			Card:Destroy()
-		end)()
+		CloseBtn.MouseLeave:Connect(function()
+			TweenService:Create(
+				CloseBtn,
+				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+				{TextTransparency = 0.3}
+			):Play()
+		end)
+		
+		CloseBtn.MouseButton1Click:Connect(function()
+			
+			TweenService:Create(
+				NotificationDesc,
+				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+				{TextTransparency = 1}
+			):Play()
+			TweenService:Create(
+				CloseBtn,
+				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+				{TextTransparency = 1}
+			):Play()
+			TweenService:Create(
+				NotificationTitle,
+				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+				{TextTransparency = 1}
+			):Play()
+			TweenService:Create(
+				CloseBtn,
+				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+				{BackgroundTransparency = 1}
+			):Play()
+			
+			wait(.4)
+			CloseBtn.Visible = false
+			NotificationFrame:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Quart", .6, true)
+
+			wait(.2)
+			
+			TweenService:Create(
+				NotificationBase,
+				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+				{BackgroundTransparency = 1}
+			):Play()
+			
+			wait(.2)
+			
+			NotificationBase.Visible = false
+		end)
+
+		
+		TweenService:Create(
+			NotificationBase,
+			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+			{BackgroundTransparency = 0.550}
+		):Play()
+		
+		wait(.1)
+		
+		NotificationFrame:TweenSize(UDim2.new(0, 400, 0, 214), "Out", "Quart", .6, true)
+		
+		wait(.4)
+		TweenService:Create(
+			NotificationDesc,
+			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+			{TextTransparency = .3}
+		):Play()
+		TweenService:Create(
+			CloseBtn,
+			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+			{TextTransparency = .3}
+		):Play()
+		TweenService:Create(
+			NotificationTitle,
+			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+			{TextTransparency = 0}
+		):Play()
+		TweenService:Create(
+			CloseBtn,
+			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+			{BackgroundTransparency = 0}
+		):Play()
 	end
 	local Tabs = {}
 	function Tabs:Tab(text,ico)
@@ -647,46 +745,48 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			ArrowIco.Size = UDim2.new(0, 28, 0, 24)
 			ArrowIco.Image = "http://www.roblox.com/asset/?id=6034818372"
 			ArrowIco.ImageTransparency = .3
-			
 
-			local BindBtn = Instance.new("TextButton")
-			local BindCorner = Instance.new("UICorner")
-
-			BindBtn.Name = "BindBtn"
-			BindBtn.Parent = Button
-			BindBtn.BackgroundColor3 = Color3.fromRGB(36, 38, 44)
-			BindBtn.AnchorPoint = Vector2.new(1, 0.5)
-			BindBtn.Position = UDim2.new(1, -40, 0.5, 0)
-			BindBtn.Size = UDim2.new(0, 64, 0, 22)
-			BindBtn.Font = Enum.Font.Gotham
-			BindBtn.Text = keybind and "[" .. keybind.Name .. "]" or "[None]"
-			BindBtn.TextColor3 = Color3.fromRGB(160, 160, 160)
-			BindBtn.TextSize = 11
-			BindBtn.ZIndex = 3
-
-			BindCorner.CornerRadius = FireLib4.CornerRadius
-			BindCorner.Parent = BindBtn
-
+			local BindBtn
 			local isListening = false
-			BindBtn.MouseButton1Click:Connect(function()
-				if not isListening then
-					isListening = true
-					BindBtn.Text = "[...]"
-					TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = PresetColor}):Play()
-				end
-			end)
+			if keybind then
+				BindBtn = Instance.new("TextButton")
+				local BindCorner = Instance.new("UICorner")
 
-			UserInputService.InputBegan:Connect(function(input, gp)
-				if isListening and input.UserInputType == Enum.UserInputType.Keyboard then
-					keybind = input.KeyCode
-					BindBtn.Text = "[" .. keybind.Name .. "]"
-					isListening = false
-					TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = Color3.fromRGB(36, 38, 44)}):Play()
-				elseif not gp and keybind and input.KeyCode == keybind then
-					pcall(callback)
-				end
-			end)
-			
+				BindBtn.Name = "BindBtn"
+				BindBtn.Parent = Button
+				BindBtn.BackgroundColor3 = Color3.fromRGB(36, 38, 44)
+				BindBtn.AnchorPoint = Vector2.new(1, 0.5)
+				BindBtn.Position = UDim2.new(1, -40, 0.5, 0)
+				BindBtn.Size = UDim2.new(0, 64, 0, 22)
+				BindBtn.Font = Enum.Font.Gotham
+				BindBtn.Text = "[" .. keybind.Name .. "]"
+				BindBtn.TextColor3 = Color3.fromRGB(160, 160, 160)
+				BindBtn.TextSize = 11
+				BindBtn.ZIndex = 3
+
+				BindCorner.CornerRadius = FireLib4.CornerRadius
+				BindCorner.Parent = BindBtn
+
+				BindBtn.MouseButton1Click:Connect(function()
+					if not isListening then
+						isListening = true
+						BindBtn.Text = "[...]"
+						TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = PresetColor}):Play()
+					end
+				end)
+
+				UserInputService.InputBegan:Connect(function(input, gp)
+					if isListening and input.UserInputType == Enum.UserInputType.Keyboard then
+						keybind = input.KeyCode
+						BindBtn.Text = "[" .. keybind.Name .. "]"
+						isListening = false
+						TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = Color3.fromRGB(36, 38, 44)}):Play()
+					elseif not gp and keybind and input.KeyCode == keybind then
+						pcall(callback)
+					end
+				end)
+			end
+
 			Button.MouseEnter:Connect(function()
 				TweenService:Create(
 					Title,
@@ -694,7 +794,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					{TextTransparency = 0}
 				):Play()
 			end)
-			
+
 			Button.MouseLeave:Connect(function()
 				TweenService:Create(
 					Title,
@@ -702,7 +802,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					{TextTransparency = 0.3}
 				):Play()
 			end)
-			
+
 			Button.MouseButton1Click:Connect(function()
 				pcall(callback)
 			end)
@@ -807,7 +907,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				keybind = nil
 			end
 			local ToggleDescToggled = false
-			local Toggled = false
+			local Toggled = default or false
 			if desc == "" then
 				desc = "There is no description for this toggle."
 			end
@@ -933,34 +1033,36 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			ArrowIco.Size = UDim2.new(0, 28, 0, 24)
 			ArrowIco.Image = "http://www.roblox.com/asset/?id=6034818372"
 			ArrowIco.ImageTransparency = .3
-			
 
-			local BindBtn = Instance.new("TextButton")
-			local BindCorner = Instance.new("UICorner")
-
-			BindBtn.Name = "BindBtn"
-			BindBtn.Parent = Toggle
-			BindBtn.BackgroundColor3 = Color3.fromRGB(36, 38, 44)
-			BindBtn.AnchorPoint = Vector2.new(1, 0.5)
-			BindBtn.Position = UDim2.new(1, -40, 0.5, 0)
-			BindBtn.Size = UDim2.new(0, 64, 0, 22)
-			BindBtn.Font = Enum.Font.Gotham
-			BindBtn.Text = keybind and "[" .. keybind.Name .. "]" or "[None]"
-			BindBtn.TextColor3 = Color3.fromRGB(160, 160, 160)
-			BindBtn.TextSize = 11
-			BindBtn.ZIndex = 3
-
-			BindCorner.CornerRadius = FireLib4.CornerRadius
-			BindCorner.Parent = BindBtn
-
+			local BindBtn
 			local isListening = false
-			BindBtn.MouseButton1Click:Connect(function()
-				if not isListening then
-					isListening = true
-					BindBtn.Text = "[...]"
-					TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = PresetColor}):Play()
-				end
-			end)
+			if keybind then
+				BindBtn = Instance.new("TextButton")
+				local BindCorner = Instance.new("UICorner")
+
+				BindBtn.Name = "BindBtn"
+				BindBtn.Parent = Toggle
+				BindBtn.BackgroundColor3 = Color3.fromRGB(36, 38, 44)
+				BindBtn.AnchorPoint = Vector2.new(1, 0.5)
+				BindBtn.Position = UDim2.new(1, -40, 0.5, 0)
+				BindBtn.Size = UDim2.new(0, 64, 0, 22)
+				BindBtn.Font = Enum.Font.Gotham
+				BindBtn.Text = "[" .. keybind.Name .. "]"
+				BindBtn.TextColor3 = Color3.fromRGB(160, 160, 160)
+				BindBtn.TextSize = 11
+				BindBtn.ZIndex = 3
+
+				BindCorner.CornerRadius = FireLib4.CornerRadius
+				BindCorner.Parent = BindBtn
+
+				BindBtn.MouseButton1Click:Connect(function()
+					if not isListening then
+						isListening = true
+						BindBtn.Text = "[...]"
+						TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = PresetColor}):Play()
+					end
+				end)
+			end
 
 			local function TriggerToggle()
 				if Toggled == false then
@@ -982,17 +1084,20 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				pcall(callback, Toggled)
 			end
 
-			UserInputService.InputBegan:Connect(function(input, gp)
-				if isListening and input.UserInputType == Enum.UserInputType.Keyboard then
-					keybind = input.KeyCode
-					BindBtn.Text = "[" .. keybind.Name .. "]"
-					isListening = false
-					TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = Color3.fromRGB(36, 38, 44)}):Play()
-				elseif not gp and keybind and input.KeyCode == keybind then
-					TriggerToggle()
-				end
-			end)
-		    Toggle.MouseEnter:Connect(function()
+			if keybind then
+				UserInputService.InputBegan:Connect(function(input, gp)
+					if isListening and input.UserInputType == Enum.UserInputType.Keyboard then
+						keybind = input.KeyCode
+						BindBtn.Text = "[" .. keybind.Name .. "]"
+						isListening = false
+						TweenService:Create(BindBtn, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = Color3.fromRGB(36, 38, 44)}):Play()
+					elseif not gp and keybind and input.KeyCode == keybind then
+						TriggerToggle()
+					end
+				end)
+			end
+
+			Toggle.MouseEnter:Connect(function()
 				TweenService:Create(
 					Title,
 					TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
