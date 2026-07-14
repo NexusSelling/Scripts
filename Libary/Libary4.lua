@@ -1,4 +1,5 @@
-local FireLib4 = {RainbowColorValue = 0, HueSelectionPosition = 0, CornerRadius = FireLib4.CornerRadius}
+local FireLib4 = {RainbowColorValue = 0, HueSelectionPosition = 0}
+FireLib4.CornerRadius = UDim.new(0, 4)
 local PresetColor = Color3.fromRGB(66, 134, 255)
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
