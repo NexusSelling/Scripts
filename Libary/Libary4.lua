@@ -27,6 +27,98 @@ NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
 NotifLayout.Padding = UDim.new(0, 8)
 NotifLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
+function FireLib4:Notification(title, desc, duration)
+	title = title or "Notification"
+	desc = desc or ""
+	duration = duration or 4
+
+	local NotifFrame = Instance.new("Frame")
+	local NotifCorner = Instance.new("UICorner")
+	local NotifGlow = Instance.new("ImageLabel")
+	local TitleLabel = Instance.new("TextLabel")
+	local DescLabel = Instance.new("TextLabel")
+	local AccentBar = Instance.new("Frame")
+	local AccentCorner = Instance.new("UICorner")
+
+	NotifFrame.Name = "Notification"
+	NotifFrame.Parent = NotifHolder
+	NotifFrame.BackgroundColor3 = Color3.fromRGB(36, 38, 44)
+	NotifFrame.BackgroundTransparency = 1
+	NotifFrame.BorderSizePixel = 0
+	NotifFrame.Size = UDim2.new(0, 340, 0, 60)
+	NotifFrame.ClipsDescendants = true
+
+	NotifCorner.CornerRadius = UDim.new(0, 6)
+	NotifCorner.Parent = NotifFrame
+
+	NotifGlow.Name = "Glow"
+	NotifGlow.Parent = NotifFrame
+	NotifGlow.BackgroundTransparency = 1
+	NotifGlow.Position = UDim2.new(0, -10, 0, -10)
+	NotifGlow.Size = UDim2.new(1, 20, 1, 20)
+	NotifGlow.Image = "rbxassetid://4996891970"
+	NotifGlow.ImageColor3 = Color3.fromRGB(10, 10, 10)
+	NotifGlow.ImageTransparency = 1
+	NotifGlow.ScaleType = Enum.ScaleType.Slice
+	NotifGlow.SliceCenter = Rect.new(20, 20, 280, 280)
+
+	AccentBar.Name = "AccentBar"
+	AccentBar.Parent = NotifFrame
+	AccentBar.BackgroundColor3 = PresetColor
+	AccentBar.BackgroundTransparency = 1
+	AccentBar.Position = UDim2.new(0, 0, 0, 0)
+	AccentBar.Size = UDim2.new(0, 4, 1, 0)
+
+	AccentCorner.CornerRadius = UDim.new(0, 2)
+	AccentCorner.Parent = AccentBar
+
+	TitleLabel.Name = "TitleLabel"
+	TitleLabel.Parent = NotifFrame
+	TitleLabel.BackgroundTransparency = 1
+	TitleLabel.Position = UDim2.new(0, 15, 0, 8)
+	TitleLabel.Size = UDim2.new(1, -30, 0, 20)
+	TitleLabel.Font = Enum.Font.GothamBold
+	TitleLabel.Text = title
+	TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	TitleLabel.TextSize = 13
+	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TitleLabel.TextTransparency = 1
+
+	DescLabel.Name = "DescLabel"
+	DescLabel.Parent = NotifFrame
+	DescLabel.BackgroundTransparency = 1
+	DescLabel.Position = UDim2.new(0, 15, 0, 28)
+	DescLabel.Size = UDim2.new(1, -30, 0, 26)
+	DescLabel.Font = Enum.Font.Gotham
+	DescLabel.Text = desc
+	DescLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	DescLabel.TextSize = 11
+	DescLabel.TextXAlignment = Enum.TextXAlignment.Left
+	DescLabel.TextYAlignment = Enum.TextYAlignment.Top
+	DescLabel.TextWrapped = true
+	DescLabel.TextTransparency = 1
+
+	local textHeight = math.clamp(math.ceil(#desc / 45) * 14, 14, 80)
+	NotifFrame.Size = UDim2.new(0, 340, 0, 36 + textHeight)
+	DescLabel.Size = UDim2.new(1, -30, 0, textHeight)
+
+	TweenService:Create(NotifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 0.1}):Play()
+	TweenService:Create(NotifGlow, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageTransparency = 0.6}):Play()
+	TweenService:Create(AccentBar, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+	TweenService:Create(TitleLabel, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+	TweenService:Create(DescLabel, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 0.15}):Play()
+
+	task.delay(duration, function()
+		TweenService:Create(NotifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+		TweenService:Create(NotifGlow, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.In), {ImageTransparency = 1}):Play()
+		TweenService:Create(AccentBar, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+		TweenService:Create(TitleLabel, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.In), {TextTransparency = 1}):Play()
+		TweenService:Create(DescLabel, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.In), {TextTransparency = 1}):Play()
+		task.wait(0.4)
+		NotifFrame:Destroy()
+	end)
+end
+
 coroutine.wrap(
 	function()
 		while wait() do
@@ -202,120 +294,22 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 	MakeDraggable(Drag,MainFrame)
 	MakeDraggable(LeftFrame,MainFrame)
 
-	-- Settings Gear (always on top, parented to the ScreenGui so it's never occluded)
 	local UIScaleObj = Instance.new("UIScale")
 	UIScaleObj.Parent = MainFrame
 
 	local SettingsGear = Instance.new("ImageButton")
 	SettingsGear.Name = "SettingsGear"
-	SettingsGear.Parent = FireLib4_UI
+	SettingsGear.Parent = MainFrame
 	SettingsGear.BackgroundTransparency = 1
 	SettingsGear.AnchorPoint = Vector2.new(1, 0)
-	SettingsGear.Position = UDim2.new(1, -14, 0, 10)
-	SettingsGear.Size = UDim2.new(0, 30, 0, 30)
+	SettingsGear.Position = UDim2.new(1, -12, 0, 10)
+	SettingsGear.Size = UDim2.new(0, 22, 0, 22)
 	SettingsGear.Image = "rbxassetid://6031280882"
 	SettingsGear.ImageColor3 = Color3.fromRGB(160, 160, 160)
-	SettingsGear.ZIndex = 500
+	SettingsGear.ZIndex = 501
 
-	-- Settings Panel
-	local SettingsPanel = Instance.new("Frame")
-	local SettingsPanelCorner = Instance.new("UICorner")
-	local SettingsPanelLayout = Instance.new("UIListLayout")
-	local SettingsPanelPad = Instance.new("UIPadding")
-
-	SettingsPanel.Name = "SettingsPanel"
-	SettingsPanel.Parent = FireLib4_UI
-	SettingsPanel.BackgroundColor3 = Color3.fromRGB(36, 38, 44)
-	SettingsPanel.AnchorPoint = Vector2.new(1, 0)
-	SettingsPanel.Position = UDim2.new(1, -14, 0, 50)
-	SettingsPanel.Size = UDim2.new(0, 240, 0, 0)
-	SettingsPanel.ClipsDescendants = true
-	SettingsPanel.ZIndex = 499
-	SettingsPanel.BorderSizePixel = 0
-
-	SettingsPanelCorner.CornerRadius = FireLib4.CornerRadius
-	SettingsPanelCorner.Parent = SettingsPanel
-
-	SettingsPanelPad.PaddingTop = UDim.new(0, 6)
-	SettingsPanelPad.PaddingBottom = UDim.new(0, 6)
-	SettingsPanelPad.PaddingLeft = UDim.new(0, 8)
-	SettingsPanelPad.PaddingRight = UDim.new(0, 8)
-	SettingsPanelPad.Parent = SettingsPanel
-
-	SettingsPanelLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	SettingsPanelLayout.Padding = UDim.new(0, 5)
-	SettingsPanelLayout.Parent = SettingsPanel
-
-	-- Helper: add a toggle row inside the settings panel
-	local function AddSettingRow(labelText, default, callback)
-		local Row = Instance.new("TextButton")
-		local RowCorner = Instance.new("UICorner")
-		local RowDot = Instance.new("Frame")
-		local RowDotCorner = Instance.new("UICorner")
-		Row.Parent = SettingsPanel
-		Row.BackgroundColor3 = Color3.fromRGB(50, 52, 60)
-		Row.BorderSizePixel = 0
-		Row.Size = UDim2.new(1, 0, 0, 36)
-		Row.AutoButtonColor = false
-		Row.Font = Enum.Font.Gotham
-		Row.Text = "  " .. labelText
-		Row.TextColor3 = Color3.fromRGB(200, 200, 200)
-		Row.TextSize = 13
-		Row.TextXAlignment = Enum.TextXAlignment.Left
-		Row.ZIndex = 500
-		RowCorner.CornerRadius = FireLib4.CornerRadius
-		RowCorner.Parent = Row
-		RowDot.Parent = Row
-		RowDot.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-		RowDot.AnchorPoint = Vector2.new(1, 0.5)
-		RowDot.Position = UDim2.new(1, -10, 0.5, 0)
-		RowDot.Size = UDim2.new(0, 12, 0, 12)
-		RowDot.ZIndex = 501
-		RowDotCorner.CornerRadius = UDim.new(1, 0)
-		RowDotCorner.Parent = RowDot
-		local toggled = default or false
-		if toggled then
-			RowDot.BackgroundColor3 = PresetColor
-		end
-		Row.MouseButton1Click:Connect(function()
-			toggled = not toggled
-			if toggled then
-				TweenService:Create(RowDot, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), {BackgroundColor3 = PresetColor}):Play()
-			else
-				TweenService:Create(RowDot, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), {BackgroundColor3 = Color3.fromRGB(90, 90, 90)}):Play()
-			end
-			pcall(callback, toggled)
-		end)
-		Row.MouseEnter:Connect(function()
-			TweenService:Create(Row, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = Color3.fromRGB(62, 65, 74)}):Play()
-		end)
-		Row.MouseLeave:Connect(function()
-			TweenService:Create(Row, TweenInfo.new(0.15, Enum.EasingStyle.Cubic), {BackgroundColor3 = Color3.fromRGB(50, 52, 60)}):Play()
-		end)
-	end
-
-	AddSettingRow("4K Monitor Mode (2x Scale)", false, function(on)
-		UIScaleObj.Scale = on and 2 or 1
-	 end)
-
-	-- Gear open/close logic
-	local settingsOpen = false
-	SettingsGear.MouseEnter:Connect(function()
-		TweenService:Create(SettingsGear, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-	end)
-	SettingsGear.MouseLeave:Connect(function()
-		if not settingsOpen then
-			TweenService:Create(SettingsGear, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), {ImageColor3 = Color3.fromRGB(160, 160, 160)}):Play()
-		end
-	end)
-	SettingsGear.MouseButton1Click:Connect(function()
-		settingsOpen = not settingsOpen
-		local targetH = settingsOpen and (SettingsPanelLayout.AbsoluteContentSize.Y + 20) or 0
-		TweenService:Create(SettingsGear, TweenInfo.new(0.35, Enum.EasingStyle.Cubic),
-			{Rotation = settingsOpen and 45 or 0,
-			 ImageColor3 = settingsOpen and PresetColor or Color3.fromRGB(160, 160, 160)}):Play()
-		SettingsPanel:TweenSize(UDim2.new(0, 240, 0, targetH), "Out", "Quart", 0.35, true)
-	end)
+	local SettingsContainerInstance = nil
+	local activeCollapseFunc = nil
 	MainFrame:TweenSize(UDim2.new(0, 706, 0, 484), "Out", "Quart", .6, true)
 	
 	local uitoggled = false
@@ -336,239 +330,10 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 		end
 	)
 	
-	function FireLib4:Notification(desc,buttontitle)
-		for i, v in next, MainFrame:GetChildren() do
-			if v.Name == "NotificationBase" then
-				v:Destroy()
-			end
-		end
-		local NotificationBase = Instance.new("TextButton")
-		local NotificationBaseCorner = Instance.new("UICorner")
-		local NotificationFrame = Instance.new("Frame")
-		local NotificationFrameCorner = Instance.new("UICorner")
-		local NotificationFrameGlow = Instance.new("ImageLabel")
-		local NotificationTitle = Instance.new("TextLabel")
-		local CloseBtn = Instance.new("TextButton")
-		local CloseBtnCorner = Instance.new("UICorner")
-		local NotificationDesc = Instance.new("TextLabel")
-
-		NotificationBase.Name = "NotificationBase"
-		NotificationBase.Parent = MainFrame
-		NotificationBase.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		NotificationBase.BackgroundTransparency = 1
-		NotificationBase.Size = UDim2.new(0, 706, 0, 484)
-		NotificationBase.AutoButtonColor = false
-		NotificationBase.Font = Enum.Font.SourceSans
-		NotificationBase.Text = ""
-		NotificationBase.TextColor3 = Color3.fromRGB(0, 0, 0)
-		NotificationBase.TextSize = 14.000
-		NotificationBase.Visible = true
-
-		NotificationBaseCorner.CornerRadius = FireLib4.CornerRadius
-		NotificationBaseCorner.Name = "NotificationBaseCorner"
-		NotificationBaseCorner.Parent = NotificationBase
-
-		NotificationFrame.Name = "NotificationFrame"
-		NotificationFrame.Parent = NotificationBase
-		NotificationFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-		NotificationFrame.BackgroundColor3 = Color3.fromRGB(50, 53, 59)
-		NotificationFrame.ClipsDescendants = true
-		NotificationFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-		NotificationFrame.Size = UDim2.new(0, 0, 0, 0)
-
-		NotificationFrameCorner.CornerRadius = FireLib4.CornerRadius
-		NotificationFrameCorner.Name = "NotificationFrameCorner"
-		NotificationFrameCorner.Parent = NotificationFrame
-
-		NotificationFrameGlow.Name = "NotificationFrameGlow"
-		NotificationFrameGlow.Parent = NotificationFrame
-		NotificationFrameGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		NotificationFrameGlow.BackgroundTransparency = 1.000
-		NotificationFrameGlow.BorderSizePixel = 0
-		NotificationFrameGlow.Position = UDim2.new(0, -15, 0, -15)
-		NotificationFrameGlow.Size = UDim2.new(1, 30, 1, 30)
-		NotificationFrameGlow.ZIndex = 0
-		NotificationFrameGlow.Image = "rbxassetid://4996891970"
-		NotificationFrameGlow.ImageColor3 = Color3.fromRGB(15, 15, 15)
-		NotificationFrameGlow.ScaleType = Enum.ScaleType.Slice
-		NotificationFrameGlow.SliceCenter = Rect.new(20, 20, 280, 280)
-
-		NotificationTitle.Name = "NotificationTitle"
-		NotificationTitle.Parent = NotificationFrame
-		NotificationTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		NotificationTitle.BackgroundTransparency = 1.000
-		NotificationTitle.Position = UDim2.new(0.0400609747, 0, 0.0761325806, 0)
-		NotificationTitle.Size = UDim2.new(0, 111, 0, 34)
-		NotificationTitle.Font = Enum.Font.GothamBold
-		NotificationTitle.Text = Title.Text .. " | NOTIFICATION"
-		NotificationTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-		NotificationTitle.TextSize = 24.000
-		NotificationTitle.TextXAlignment = Enum.TextXAlignment.Left
-		NotificationTitle.TextTransparency = 1
-
-		CloseBtn.Name = "CloseBtn"
-		CloseBtn.Parent = NotificationFrame
-		CloseBtn.BackgroundColor3 = Color3.fromRGB(64, 68, 75)
-		CloseBtn.ClipsDescendants = true
-		CloseBtn.Position = UDim2.new(0.0403124988, 0, 0.720855951, 0)
-		CloseBtn.Size = UDim2.new(0, 366, 0, 43)
-		CloseBtn.AutoButtonColor = false
-		CloseBtn.Font = Enum.Font.Gotham
-		CloseBtn.Text = buttontitle
-		CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		CloseBtn.TextSize = 15.000
-		CloseBtn.TextTransparency = 1
-		CloseBtn.BackgroundTransparency = 1
-
-		CloseBtnCorner.CornerRadius = FireLib4.CornerRadius
-		CloseBtnCorner.Name = "CloseBtnCorner"
-		CloseBtnCorner.Parent = CloseBtn
-
-		NotificationDesc.Name = "NotificationDesc"
-		NotificationDesc.Parent = NotificationFrame
-		NotificationDesc.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		NotificationDesc.BackgroundTransparency = 1.000
-		NotificationDesc.Position = UDim2.new(0.112499997, 0, 0.266355127, 0)
-		NotificationDesc.Size = UDim2.new(0, 309, 0, 82)
-		NotificationDesc.Font = Enum.Font.Gotham
-		NotificationDesc.Text = desc
-		NotificationDesc.TextColor3 = Color3.fromRGB(255, 255, 255)
-		NotificationDesc.TextSize = 15.000
-		NotificationDesc.TextWrapped = true
-		NotificationDesc.TextTransparency = 1
-		
-		CloseBtn.MouseEnter:Connect(function()
-			TweenService:Create(
-				CloseBtn,
-				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-				{TextTransparency = 0}
-			):Play()
-		end)
-
-		CloseBtn.MouseLeave:Connect(function()
-			TweenService:Create(
-				CloseBtn,
-				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-				{TextTransparency = 0.3}
-			):Play()
-		end)
-		
-		CloseBtn.MouseButton1Click:Connect(function()
-			
-			TweenService:Create(
-				NotificationDesc,
-				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-				{TextTransparency = 1}
-			):Play()
-			TweenService:Create(
-				CloseBtn,
-				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-				{TextTransparency = 1}
-			):Play()
-			TweenService:Create(
-				NotificationTitle,
-				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-				{TextTransparency = 1}
-			):Play()
-			TweenService:Create(
-				CloseBtn,
-				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-				{BackgroundTransparency = 1}
-			):Play()
-			
-			wait(.4)
-			CloseBtn.Visible = false
-			NotificationFrame:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Quart", .6, true)
-
-			wait(.2)
-			
-			TweenService:Create(
-				NotificationBase,
-				TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-				{BackgroundTransparency = 1}
-			):Play()
-			
-			wait(.2)
-			
-			NotificationBase.Visible = false
-		end)
-
-		
-		TweenService:Create(
-			NotificationBase,
-			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-			{BackgroundTransparency = 0.550}
-		):Play()
-		
-		wait(.1)
-		
-		NotificationFrame:TweenSize(UDim2.new(0, 400, 0, 214), "Out", "Quart", .6, true)
-		
-		wait(.4)
-		TweenService:Create(
-			NotificationDesc,
-			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-			{TextTransparency = .3}
-		):Play()
-		TweenService:Create(
-			CloseBtn,
-			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-			{TextTransparency = .3}
-		):Play()
-		TweenService:Create(
-			NotificationTitle,
-			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-			{TextTransparency = 0}
-		):Play()
-		TweenService:Create(
-			CloseBtn,
-			TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-			{BackgroundTransparency = 0}
-		):Play()
-	end
 	local Tabs = {}
-	function Tabs:Tab(text,ico)
-		local Tab = Instance.new("TextButton")
-		local TabIcon = Instance.new("ImageLabel")
-		local TabTitle = Instance.new("TextLabel")
-
-		Tab.Name = "Tab"
-		Tab.Parent = TabHold
-		Tab.BackgroundColor3 = PresetColor
-		Tab.BorderSizePixel = 0
-		Tab.Size = UDim2.new(0, 205, 0, 40)
-		Tab.AutoButtonColor = false
-		Tab.Font = Enum.Font.SourceSans
-		Tab.Text = ""
-		Tab.TextColor3 = Color3.fromRGB(0, 0, 0)
-		Tab.TextSize = 14.000
-		Tab.BackgroundTransparency = 1
-
-		TabIcon.Name = "TabIcon"
-		TabIcon.Parent = Tab
-		TabIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		TabIcon.BackgroundTransparency = 1.000
-		TabIcon.Position = UDim2.new(0.0634146333, 0, 0.25, 0)
-		TabIcon.Size = UDim2.new(0, 20, 0, 20)
-		TabIcon.Image = ico
-		TabIcon.ImageTransparency = .3
-
-		TabTitle.Name = "TabTitle"
-		TabTitle.Parent = Tab
-		TabTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		TabTitle.BackgroundTransparency = 1.000
-		TabTitle.Position = UDim2.new(0.1902439, 0, 0.25, 0)
-		TabTitle.Size = UDim2.new(0, 113, 0, 19)
-		TabTitle.Font = Enum.Font.Gotham
-		TabTitle.Text = text
-		TabTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-		TabTitle.TextSize = 15.000
-		TabTitle.TextXAlignment = Enum.TextXAlignment.Left
-		TabTitle.TextTransparency = .3
-		
+	function Tabs:Tab(text,ico,isSettings)
 		local Container = Instance.new("ScrollingFrame")
 		local ContainerLayout = Instance.new("UIListLayout")
-
 
 		Container.Name = "Container"
 		Container.Parent = ContainerFolder
@@ -587,73 +352,122 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 		ContainerLayout.Parent = Container
 		ContainerLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		ContainerLayout.Padding = UDim.new(0, 15)
-		
-		if fs == false then
-			fs = true
-			TabTitle.TextTransparency = 0
-			TabIcon.ImageTransparency = 0
-			Tab.BackgroundTransparency = 0
-			Container.Visible = true
-			Container.Position = UDim2.new(0.35, 0, 0.0475206599, 0)
-			Container.Size = UDim2.new(0, 470, 0, 0)
-			task.spawn(function()
-				task.wait(0.1)
+
+		if isSettings then
+			SettingsContainerInstance = Container
+		end
+
+		local Tab, TabIcon, TabTitle
+		if not isSettings then
+			Tab = Instance.new("TextButton")
+			TabIcon = Instance.new("ImageLabel")
+			TabTitle = Instance.new("TextLabel")
+
+			Tab.Name = "Tab"
+			Tab.Parent = TabHold
+			Tab.BackgroundColor3 = PresetColor
+			Tab.BorderSizePixel = 0
+			Tab.Size = UDim2.new(0, 205, 0, 40)
+			Tab.AutoButtonColor = false
+			Tab.Font = Enum.Font.SourceSans
+			Tab.Text = ""
+			Tab.TextColor3 = Color3.fromRGB(0, 0, 0)
+			Tab.TextSize = 14.000
+			Tab.BackgroundTransparency = 1
+
+			TabIcon.Name = "TabIcon"
+			TabIcon.Parent = Tab
+			TabIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			TabIcon.BackgroundTransparency = 1.000
+			TabIcon.Position = UDim2.new(0.0634146333, 0, 0.25, 0)
+			TabIcon.Size = UDim2.new(0, 20, 0, 20)
+			TabIcon.Image = ico
+			TabIcon.ImageTransparency = .3
+
+			TabTitle.Name = "TabTitle"
+			TabTitle.Parent = Tab
+			TabTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			TabTitle.BackgroundTransparency = 1.000
+			TabTitle.Position = UDim2.new(0.1902439, 0, 0.25, 0)
+			TabTitle.Size = UDim2.new(0, 113, 0, 19)
+			TabTitle.Font = Enum.Font.Gotham
+			TabTitle.Text = text
+			TabTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+			TabTitle.TextSize = 15.000
+			TabTitle.TextXAlignment = Enum.TextXAlignment.Left
+			TabTitle.TextTransparency = .3
+
+			if fs == false then
+				fs = true
+				TabTitle.TextTransparency = 0
+				TabIcon.ImageTransparency = 0
+				Tab.BackgroundTransparency = 0
+				Container.Visible = true
+				Container.Position = UDim2.new(0.35, 0, 0.0475206599, 0)
+				Container.Size = UDim2.new(0, 470, 0, 0)
+				task.spawn(function()
+					task.wait(0.1)
+					TweenService:Create(Container, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+						Position = UDim2.new(0.321529746, 0, 0.0475206599, 0),
+						Size = UDim2.new(0, 470, 0, 438)
+					}):Play()
+				end)
+			end
+
+			Tab.MouseButton1Click:Connect(function()
+				if Container.Visible then return end
+				if activeCollapseFunc then
+					activeCollapseFunc()
+					activeCollapseFunc = nil
+				end
+				for i, v in next, ContainerFolder:GetChildren() do
+					if v.Name == "Container" then
+						v.Visible = false
+					end
+				end
+				Container.Visible = true
+				Container.Position = UDim2.new(0.35, 0, 0.0475206599, 0)
+				Container.Size = UDim2.new(0, 470, 0, 0)
 				TweenService:Create(Container, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
 					Position = UDim2.new(0.321529746, 0, 0.0475206599, 0),
 					Size = UDim2.new(0, 470, 0, 438)
 				}):Play()
+				for i, v in next, TabHold:GetChildren() do
+					if v.Name == "Tab" then
+						TweenService:Create(
+							v,
+							TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+							{BackgroundTransparency = 1}
+						):Play()
+						TweenService:Create(
+							v.TabIcon,
+							TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+							{ImageTransparency = .3}
+						):Play()
+						TweenService:Create(
+							v.TabTitle,
+							TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+							{TextTransparency = .3}
+						):Play()
+						TweenService:Create(
+							Tab,
+							TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+							{BackgroundTransparency = 0}
+						):Play()
+						TweenService:Create(
+							TabIcon,
+							TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+							{ImageTransparency = 0}
+						):Play()
+						TweenService:Create(
+							TabTitle,
+							TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+							{TextTransparency = 0}
+						):Play()
+					end
+				end
 			end)
 		end
-		
-		Tab.MouseButton1Click:Connect(function()
-			if Container.Visible then return end
-			for i, v in next, ContainerFolder:GetChildren() do
-				if v.Name == "Container" then
-					v.Visible = false
-				end
-			end
-			Container.Visible = true
-			Container.Position = UDim2.new(0.35, 0, 0.0475206599, 0)
-			Container.Size = UDim2.new(0, 470, 0, 0)
-			TweenService:Create(Container, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
-				Position = UDim2.new(0.321529746, 0, 0.0475206599, 0),
-				Size = UDim2.new(0, 470, 0, 438)
-			}):Play()
-			for i, v in next, TabHold:GetChildren() do
-				if v.Name == "Tab" then
-					TweenService:Create(
-						v,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						v.TabIcon,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						v.TabTitle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = .3}
-					):Play()
-					TweenService:Create(
-						Tab,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 0}
-					):Play()
-					TweenService:Create(
-						TabIcon,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = 0}
-					):Play()
-					TweenService:Create(
-						TabTitle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0}
-					):Play()
-				end
-			end
-		end)
 		local ContainerContent = {}
 		function ContainerContent:Button(text, desc, keybind, callback)
             if type(keybind) == "function" then
@@ -824,8 +638,29 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				pcall(callback)
 			end)
 			
+			local function Collapse()
+				if BtnDescToggled then
+					BtnDescToggled = false
+					Button:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageTransparency = .3}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Rotation = 0}):Play()
+					TweenService:Create(Circle, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(211, 211, 211)}):Play()
+					TweenService:Create(CircleSmall, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 0.3}):Play()
+					TweenService:Create(Description, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+					task.spawn(function()
+						task.wait(0.4)
+						Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					end)
+				end
+			end
+
 			ArrowBtn.MouseButton1Click:Connect(function()
 				if BtnDescToggled == false then
+					if activeCollapseFunc then activeCollapseFunc() end
+					activeCollapseFunc = Collapse
 					Button:TweenSize(UDim2.new(0, 457, 0, 74), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
@@ -869,52 +704,11 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					):Play()
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					BtnDescToggled = true
 				else
-					Button:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{Rotation = 0}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					TweenService:Create(
-						Description,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 1}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					Collapse()
+					activeCollapseFunc = nil
 				end
-				BtnDescToggled = not BtnDescToggled
 			end)
 			Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 		end
@@ -1114,7 +908,6 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				end)
 			end
 
-			-- Apply default toggle state at startup
 			if default == true then
 				ToggleCircle.Position = UDim2.new(0.37, 0, -0.273, 0)
 				ToggleCircle.BackgroundColor3 = PresetColor
@@ -1146,8 +939,29 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				TriggerToggle()
 			end)
 			
+			local function Collapse()
+				if ToggleDescToggled then
+					ToggleDescToggled = false
+					Toggle:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageTransparency = .3}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Rotation = 0}):Play()
+					TweenService:Create(Circle, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(211, 211, 211)}):Play()
+					TweenService:Create(CircleSmall, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 0.3}):Play()
+					TweenService:Create(Description, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+					task.spawn(function()
+						task.wait(0.4)
+						Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					end)
+				end
+			end
+
 			ArrowBtn.MouseButton1Click:Connect(function()
 				if ToggleDescToggled == false then
+					if activeCollapseFunc then activeCollapseFunc() end
+					activeCollapseFunc = Collapse
 					Toggle:TweenSize(UDim2.new(0, 457, 0, 74), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
@@ -1191,63 +1005,12 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					):Play()
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					ToggleDescToggled = true
 				else
-					Toggle:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{Rotation = 0}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					TweenService:Create(
-						Description,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 1}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					Collapse()
+					activeCollapseFunc = nil
 				end
-				ToggleDescToggled = not ToggleDescToggled
 			end)
-			if default == true then
-				ToggleCircle:TweenPosition(UDim2.new(0.37, 0,-0.273, 0), "Out", "Quart", .3, true)
-				TweenService:Create(
-					ToggleCircle,
-					TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-					{BackgroundColor3 =PresetColor}
-				):Play()
-				Toggled = not Toggled
-				pcall(callback, Toggled)
-			end
 			Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 		end
 		
@@ -1397,8 +1160,30 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			Value.TextTransparency = 0.300
 			Value.TextXAlignment = Enum.TextXAlignment.Right
 			
+			local function Collapse()
+				if SliderDescToggled then
+					SliderDescToggled = false
+					Slider:TweenSize(UDim2.new(0, 457, 0, 60), "Out", "Quart", .6, true)
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(Value, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageTransparency = .3}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Rotation = 0}):Play()
+					TweenService:Create(Circle, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(211, 211, 211)}):Play()
+					TweenService:Create(CircleSmall, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 0.3}):Play()
+					TweenService:Create(Description, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+					task.spawn(function()
+						task.wait(0.4)
+						Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					end)
+				end
+			end
+
 			ArrowBtn.MouseButton1Click:Connect(function()
 				if SliderDescToggled == false then
+					if activeCollapseFunc then activeCollapseFunc() end
+					activeCollapseFunc = Collapse
 					Slider:TweenSize(UDim2.new(0, 457, 0, 101), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
@@ -1428,7 +1213,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					TweenService:Create(
 						Circle,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 =PresetColor}
+						{BackgroundColor3 = PresetColor}
 					):Play()
 					TweenService:Create(
 						CircleSmall,
@@ -1447,57 +1232,11 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					):Play()
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					SliderDescToggled = true
 				else
-					Slider:TweenSize(UDim2.new(0, 457, 0, 60), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						Value,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{Rotation = 0}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					TweenService:Create(
-						Description,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 1}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					Collapse()
+					activeCollapseFunc = nil
 				end
-				SliderDescToggled = not SliderDescToggled
 			end)
 			
 				local function move(input)
@@ -1668,8 +1407,29 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			end)
 
 			
+			local function Collapse()
+				if DropToggled then
+					DropToggled = false
+					Title.Text = Selected
+					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageTransparency = .3}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Rotation = 0}):Play()
+					TweenService:Create(Circle, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(211, 211, 211)}):Play()
+					TweenService:Create(CircleSmall, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 0.3}):Play()
+					task.spawn(function()
+						task.wait(0.4)
+						Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					end)
+				end
+			end
+
 			Dropdown.MouseButton1Click:Connect(function()
 				if DropToggled == false then
+					if activeCollapseFunc then activeCollapseFunc() end
+					activeCollapseFunc = Collapse
 					Title.Text = Selected
 					Dropdown:TweenSize(UDim2.new(0, 457, 0, FrameSize), "Out", "Quart", .6, true)
 					TweenService:Create(
@@ -1709,48 +1469,11 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					):Play()
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					DropToggled = true
 				else
-					Title.Text = Selected
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{Rotation = 0}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					Collapse()
+					activeCollapseFunc = nil
 				end
-			DropToggled = not DropToggled
 			end)
 			
 			for i,v in next, list do
@@ -1766,20 +1489,20 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				local Item = Instance.new("TextButton")
 				local ItemCorner = Instance.new("UICorner")
 				
-			Item.Name = "Item"
-			Item.Parent = DropItemHolder
-			Item.BackgroundColor3 = Color3.fromRGB(64, 68, 75)
-			Item.ClipsDescendants = true
-			Item.Size = UDim2.new(0, 427, 0, 25)
-			Item.AutoButtonColor = false
-			Item.Font = Enum.Font.Gotham
-			Item.Text = v
-			Item.TextColor3 = Color3.fromRGB(255, 255, 255)
-			Item.TextSize = 15.000
-			Item.TextTransparency = 0.300
+				Item.Name = "Item"
+				Item.Parent = DropItemHolder
+				Item.BackgroundColor3 = Color3.fromRGB(64, 68, 75)
+				Item.ClipsDescendants = true
+				Item.Size = UDim2.new(0, 427, 0, 25)
+				Item.AutoButtonColor = false
+				Item.Font = Enum.Font.Gotham
+				Item.Text = v
+				Item.TextColor3 = Color3.fromRGB(255, 255, 255)
+				Item.TextSize = 15.000
+				Item.TextTransparency = 0.300
 
-			ItemCorner.CornerRadius = FireLib4.CornerRadius
-			ItemCorner.Name = "ItemCorner"
+				ItemCorner.CornerRadius = FireLib4.CornerRadius
+				ItemCorner.Name = "ItemCorner"
 				ItemCorner.Parent = Item
 				DropItemHolder.CanvasSize = UDim2.new(0, 0, 0, DropLayout.AbsoluteContentSize.Y)
 				
@@ -1803,46 +1526,8 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					pcall(callback, v)
 					Title.Text = text
 					Selected = v
-					DropToggled = not DropToggled
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{Rotation = 0}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
-					
+					Collapse()
+					activeCollapseFunc = nil
 				end)
 			end
 			function DropFunc:Add(addtext)
@@ -1895,86 +1580,12 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					pcall(callback, addtext)
 					Title.Text = text
 					Selected = addtext
-					DropToggled = not DropToggled
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{Rotation = 0}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					Collapse()
+					activeCollapseFunc = nil
 				end)
 				if DropToggled == true then
-					Title.Text = Selected
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{Rotation = 0}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					Collapse()
+					activeCollapseFunc = nil
 				end
 			end
 			function DropFunc:Clear()
@@ -1987,45 +1598,8 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					end
 				end
 				if DropToggled == true then
-					Title.Text = Selected
-					Dropdown:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{Rotation = 0}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					Collapse()
+					activeCollapseFunc = nil
 				end
 			end
 			return DropFunc
@@ -2284,8 +1858,27 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				):Play()
 			end)
 		 	
+			local function Collapse()
+				if ColorPickerToggled then
+					ColorPickerToggled = false
+					ColorSelection.Visible = false
+					HueSelection.Visible = false
+					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+					TweenService:Create(Circle, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(211, 211, 211)}):Play()
+					TweenService:Create(CircleSmall, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 0.3}):Play()
+					task.spawn(function()
+						task.wait(0.4)
+						Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					end)
+				end
+			end
+
 			ColorpickerBtn.MouseButton1Click:Connect(function()
 				if ColorPickerToggled == false then
+					if activeCollapseFunc then activeCollapseFunc() end
+					activeCollapseFunc = Collapse
 					ColorSelection.Visible = true
 					HueSelection.Visible = true
 					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 138), "Out", "Quart", .6, true)
@@ -2311,37 +1904,13 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					):Play()
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					ColorPickerToggled = true
 				else
-					ColorSelection.Visible = false
-					HueSelection.Visible = false
-					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					Collapse()
+					activeCollapseFunc = nil
 				end
-				ColorPickerToggled = not ColorPickerToggled
 			end)
 			
-
 			local function UpdateColorPicker(nope)
 				BoxColor.BackgroundColor3 = Color3.fromHSV(ColorH, ColorS, ColorV)
 				Color.BackgroundColor3 = Color3.fromHSV(ColorH, 1, 1)
@@ -2501,19 +2070,10 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 
 			Confirm.MouseButton1Click:Connect(
 				function()
-					ColorPickerToggled = not ColorPickerToggled
-					Colorpicker:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
+					Collapse()
+					activeCollapseFunc = nil
+				end
+			)
 						CircleSmall,
 						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
 						{BackgroundTransparency = 1}
@@ -2726,8 +2286,29 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				end
 			)
 			
+			local function Collapse()
+				if TextboxDescToggled then
+					TextboxDescToggled = false
+					Textbox:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(255,255,255)}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageTransparency = .3}):Play()
+					TweenService:Create(ArrowIco, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Rotation = 0}):Play()
+					TweenService:Create(Circle, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(211, 211, 211)}):Play()
+					TweenService:Create(CircleSmall, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+					TweenService:Create(Title, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 0.3}):Play()
+					TweenService:Create(Description, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+					task.spawn(function()
+						task.wait(0.4)
+						Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					end)
+				end
+			end
+
 			ArrowBtn.MouseButton1Click:Connect(function()
 				if TextboxDescToggled == false then
+					if activeCollapseFunc then activeCollapseFunc() end
+					activeCollapseFunc = Collapse
 					Textbox:TweenSize(UDim2.new(0, 457, 0, 81), "Out", "Quart", .6, true)
 					TweenService:Create(
 						Title,
@@ -2771,52 +2352,11 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					):Play()
 					wait(.4)
 					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					TextboxDescToggled = true
 				else
-					Textbox:TweenSize(UDim2.new(0, 457, 0, 43), "Out", "Quart", .6, true)
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageColor3 = Color3.fromRGB(255,255,255)}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{ImageTransparency = .3}
-					):Play()
-					TweenService:Create(
-						ArrowIco,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{Rotation = 0}
-					):Play()
-					TweenService:Create(
-						Circle,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundColor3 = Color3.fromRGB(211, 211, 211)}
-					):Play()
-					TweenService:Create(
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					TweenService:Create(
-						Description,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 1}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
+					Collapse()
+					activeCollapseFunc = nil
 				end
-				TextboxDescToggled = not TextboxDescToggled
 			end)
 			Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 		end
@@ -2999,6 +2539,57 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 		end
 		return ContainerContent
 	end
+
+	local SettingsContent = Tabs:Tab("Settings", "", true)
+	Tabs.Settings = SettingsContent
+	
+	function Tabs:GetSettingsPage()
+		return SettingsContent
+	end
+
+	SettingsContent:Toggle("4K Monitor Mode (2x Scale)", "Enables 2x scaling for high-resolution/4K screens.", false, function(on)
+		UIScaleObj.Scale = on and 2 or 1
+	end)
+
+	SettingsGear.MouseEnter:Connect(function()
+		TweenService:Create(SettingsGear, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+	end)
+	SettingsGear.MouseLeave:Connect(function()
+		TweenService:Create(SettingsGear, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), {ImageColor3 = Color3.fromRGB(160, 160, 160)}):Play()
+	end)
+
+	SettingsGear.MouseButton1Click:Connect(function()
+		if not SettingsContainerInstance then return end
+		if SettingsContainerInstance.Visible then return end
+		
+		if activeCollapseFunc then
+			activeCollapseFunc()
+			activeCollapseFunc = nil
+		end
+
+		for i, v in next, TabHold:GetChildren() do
+			if v.Name == "Tab" then
+				TweenService:Create(v, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+				TweenService:Create(v.TabIcon, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageTransparency = .3}):Play()
+				TweenService:Create(v.TabTitle, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {TextTransparency = .3}):Play()
+			end
+		end
+
+		for i, v in next, ContainerFolder:GetChildren() do
+			if v.Name == "Container" then
+				v.Visible = false
+			end
+		end
+
+		SettingsContainerInstance.Visible = true
+		SettingsContainerInstance.Position = UDim2.new(0.35, 0, 0.0475206599, 0)
+		SettingsContainerInstance.Size = UDim2.new(0, 470, 0, 0)
+		TweenService:Create(SettingsContainerInstance, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0.321529746, 0, 0.0475206599, 0),
+			Size = UDim2.new(0, 470, 0, 438)
+		}):Play()
+	end)
+
 	return Tabs
 end
 return FireLib4
