@@ -17,7 +17,7 @@ NotifHolder.Name = "NotifHolder"
 NotifHolder.Parent = FireLib4_UI
 NotifHolder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 NotifHolder.BackgroundTransparency = 1.000
-NotifHolder.Position = UDim2.new(1, -320, 0, 20)
+NotifHolder.Position = UDim2.new(0.5, -150, 0.5, -150)
 NotifHolder.Size = UDim2.new(0, 300, 1, -20)
 local NotifLayout = Instance.new("UIListLayout")
 NotifLayout.Parent = NotifHolder
@@ -104,6 +104,28 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
     local MainFrame = Instance.new("Frame")
     local MainScale = Instance.new("UIScale")
     MainScale.Parent = MainFrame
+    
+    local SettingsGear = Instance.new("ImageButton")
+    SettingsGear.Name = "SettingsGear"
+    SettingsGear.Parent = MainFrame
+    SettingsGear.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SettingsGear.BackgroundTransparency = 1.000
+    SettingsGear.Position = UDim2.new(1, -35, 0, 5)
+    SettingsGear.Size = UDim2.new(0, 25, 0, 25)
+    SettingsGear.Image = "rbxassetid://6031280882"
+    SettingsGear.ImageTransparency = 0.5
+    
+    local is4K = false
+    SettingsGear.MouseButton1Click:Connect(function()
+        is4K = not is4K
+        if is4K then
+            MainScale.Scale = 2
+            SettingsGear.ImageTransparency = 0
+        else
+            MainScale.Scale = 1
+            SettingsGear.ImageTransparency = 0.5
+        end
+    end)
     local MainCorner = Instance.new("UICorner")
     local LeftFrame = Instance.new("Frame")
     local LeftCorner = Instance.new("UICorner")
@@ -319,6 +341,11 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
         end
 
         CloseBtn.MouseButton1Click:Connect(CloseNotification)
+
+        coroutine.wrap(function()
+            wait(3)
+            CloseNotification()
+        end)()
 
         TweenService:Create(NotificationFrame, TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
         NotificationFrame:TweenSize(UDim2.new(1, 0, 0, 120), Enum.EasingDirection.Out, Enum.EasingStyle.Cubic, .3, true)
@@ -554,7 +581,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
             BindBtn.Parent = Button
             BindBtn.BackgroundColor3 = Color3.fromRGB(50, 53, 59)
             BindBtn.BackgroundTransparency = 0
-            BindBtn.Position = UDim2.new(0.72, 0, 0.5, -12)
+            BindBtn.Position = UDim2.new(0.72, 0, 0, 9)
             BindBtn.Size = UDim2.new(0, 60, 0, 24)
             BindBtn.Font = Enum.Font.Gotham
             BindBtn.Text = keybind and "[" .. keybind.Name .. "]" or "[None]"
@@ -2710,14 +2737,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
         return ContainerContent
     end
 
-    local SettingsTab = Tabs:Tab("⚙ Settings", "rbxassetid://6031280882")
-    SettingsTab:Toggle("4K Monitor Mode", "Scales the UI for 4K resolutions.", false, function(t)
-        if t then
-            MainScale.Scale = 2
-        else
-            MainScale.Scale = 1
-        end
-    end)
+
 
     return Tabs
 end
