@@ -594,15 +594,31 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 			TabIcon.ImageTransparency = 0
 			Tab.BackgroundTransparency = 0
 			Container.Visible = true
+			Container.Position = UDim2.new(0.35, 0, 0.0475206599, 0)
+			Container.Size = UDim2.new(0, 470, 0, 0)
+			task.spawn(function()
+				task.wait(0.1)
+				TweenService:Create(Container, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+					Position = UDim2.new(0.321529746, 0, 0.0475206599, 0),
+					Size = UDim2.new(0, 470, 0, 438)
+				}):Play()
+			end)
 		end
 		
 		Tab.MouseButton1Click:Connect(function()
+			if Container.Visible then return end
 			for i, v in next, ContainerFolder:GetChildren() do
 				if v.Name == "Container" then
 					v.Visible = false
 				end
-				Container.Visible = true
 			end
+			Container.Visible = true
+			Container.Position = UDim2.new(0.35, 0, 0.0475206599, 0)
+			Container.Size = UDim2.new(0, 470, 0, 0)
+			TweenService:Create(Container, TweenInfo.new(0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+				Position = UDim2.new(0.321529746, 0, 0.0475206599, 0),
+				Size = UDim2.new(0, 470, 0, 438)
+			}):Play()
 			for i, v in next, TabHold:GetChildren() do
 				if v.Name == "Tab" then
 					TweenService:Create(
@@ -757,7 +773,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				BindBtn.Parent = Button
 				BindBtn.BackgroundColor3 = Color3.fromRGB(36, 38, 44)
 				BindBtn.AnchorPoint = Vector2.new(1, 0.5)
-				BindBtn.Position = UDim2.new(1, -40, 0.5, 0)
+				BindBtn.Position = UDim2.new(1, -85, 0.5, 0)
 				BindBtn.Size = UDim2.new(0, 64, 0, 22)
 				BindBtn.Font = Enum.Font.Gotham
 				BindBtn.Text = "[" .. keybind.Name .. "]"
@@ -1045,7 +1061,7 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 				BindBtn.Parent = Toggle
 				BindBtn.BackgroundColor3 = Color3.fromRGB(36, 38, 44)
 				BindBtn.AnchorPoint = Vector2.new(1, 0.5)
-				BindBtn.Position = UDim2.new(1, -40, 0.5, 0)
+				BindBtn.Position = UDim2.new(1, -85, 0.5, 0)
 				BindBtn.Size = UDim2.new(0, 64, 0, 22)
 				BindBtn.Font = Enum.Font.Gotham
 				BindBtn.Text = "[" .. keybind.Name .. "]"
