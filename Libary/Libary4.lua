@@ -2074,19 +2074,6 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					activeCollapseFunc = nil
 				end
 			)
-						CircleSmall,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{BackgroundTransparency = 1}
-					):Play()
-					TweenService:Create(
-						Title,
-						TweenInfo.new(.3, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-						{TextTransparency = 0.3}
-					):Play()
-					wait(.4)
-					Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
-				end
-			)
 			Container.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y)
 		end
 		function ContainerContent:Line()
