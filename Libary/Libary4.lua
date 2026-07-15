@@ -10,8 +10,63 @@ local CloseBind = Enum.KeyCode.RightControl
 
 local FireLib4_UI = Instance.new("ScreenGui")
 FireLib4_UI.Name = "FireLib4_UI"
-FireLib4_UI.Parent = game.CoreGui
 FireLib4_UI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+FireLib4_UI.ResetOnSpawn = false
+FireLib4_UI.IgnoreGuiInset = true
+
+local function GetSafeParent()
+    if type(gethui) == "function" then
+        local ok, hui = pcall(gethui)
+        if ok and hui then return hui end
+    end
+    return game:GetService("CoreGui")
+end
+
+local safeParent = GetSafeParent()
+FireLib4_UI.Parent = safeParent
+
+task.spawn(function()
+    while task.wait(0.15) do
+        local ok, alive = pcall(function() return FireLib4_UI and FireLib4_UI.Parent end)
+        if not ok or not alive then
+            pcall(function() FireLib4_UI.Parent = GetSafeParent() end)
+        end
+    end
+end)
+
+local function HookParentRemoving(container)
+    pcall(function()
+        container.DescendantRemoving:Connect(function(inst)
+            if inst == FireLib4_UI then
+                task.defer(function()
+                    pcall(function() FireLib4_UI.Parent = GetSafeParent() end)
+                end)
+            end
+        end)
+    end)
+end
+HookParentRemoving(game:GetService("CoreGui"))
+if type(gethui) == "function" then
+    pcall(function()
+        local hui = gethui()
+        if hui and hui ~= game:GetService("CoreGui") then
+            HookParentRemoving(hui)
+        end
+    end)
+end
+
+pcall(function()
+    FireLib4_UI.Destroying:Connect(function()
+        task.defer(function()
+            pcall(function()
+                warn("[FireLib4] ScreenGui destroyed - attempting re-parent...")
+                FireLib4_UI.Parent = GetSafeParent()
+            end)
+        end)
+    end)
+end)
+
+
 
 local NotifHolder = Instance.new("Frame")
 NotifHolder.Name = "NotifHolder"
