@@ -14,6 +14,8 @@ FireLib4_UI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 FireLib4_UI.ResetOnSpawn = false
 FireLib4_UI.IgnoreGuiInset = true
 
+FireLib4.ScreenGui = FireLib4_UI
+
 local function GetSafeParent()
     if type(gethui) == "function" then
         local ok, hui = pcall(gethui)
