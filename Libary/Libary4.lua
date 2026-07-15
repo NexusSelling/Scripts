@@ -2577,6 +2577,30 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 		}):Play()
 	end)
 
+	function Tabs:SetThemeColor(color)
+		local oldColor = PresetColor
+		PresetColor = color
+		if FireLib4_UI then
+			for _, v in ipairs(FireLib4_UI:GetDescendants()) do
+				if v:IsA("Frame") or v:IsA("TextButton") or v:IsA("ImageButton") then
+					if v.BackgroundColor3 == oldColor then
+						v.BackgroundColor3 = color
+					end
+				end
+				if v:IsA("TextLabel") or v:IsA("TextButton") then
+					if v.TextColor3 == oldColor then
+						v.TextColor3 = color
+					end
+				end
+				if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+					if v.ImageColor3 == oldColor then
+						v.ImageColor3 = color
+					end
+				end
+			end
+		end
+	end
+
 	return Tabs
 end
 return FireLib4
