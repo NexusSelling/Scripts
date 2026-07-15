@@ -320,10 +320,10 @@ function FireLib4:Window(text, bottom,mainclr,toclose)
 					MainFrame:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Quart", .6, true)
 					uitoggled = true
 					wait(.5)
-					FireLib4_UI.Enabled = false
+					MainFrame.Visible = false
 				else
+					MainFrame.Visible = true
 					MainFrame:TweenSize(UDim2.new(0, 706, 0, 484), "Out", "Quart", .6, true)
-					FireLib4_UI.Enabled = true
 					uitoggled = false
 				end
 			end
