@@ -79,7 +79,8 @@ local function createButton(parent, name, text, size, position, bgColor, textCol
 	button.Text = text
 	button.Size = size
 	button.Position = position
-	button.BackgroundColor3 = bgColor or COLORS.Primary
+	local originalColor = bgColor or COLORS.Primary -- Bug Fix #2: store original color
+	button.BackgroundColor3 = originalColor
 	button.TextColor3 = textColor or COLORS.White
 	button.TextSize = DEFAULTS.FontSize
 	button.Font = DEFAULTS.FontFamily
@@ -94,13 +95,13 @@ local function createButton(parent, name, text, size, position, bgColor, textCol
 		button.MouseButton1Click:Connect(callback)
 	end
 
-	-- Hover effect
+	-- Hover effect (Bug Fix #2: use stored originalColor, not current button color)
 	button.MouseEnter:Connect(function()
-		button.BackgroundColor3 = button.BackgroundColor3:lerp(COLORS.Black, 0.1)
+		button.BackgroundColor3 = originalColor:lerp(COLORS.Black, 0.1)
 	end)
 
 	button.MouseLeave:Connect(function()
-		button.BackgroundColor3 = bgColor or COLORS.Primary
+		button.BackgroundColor3 = originalColor
 	end)
 
 	return button
@@ -115,6 +116,7 @@ function SwiftUI.new()
 	self.screenGui = Instance.new("ScreenGui")
 	self.screenGui.Name = "SwiftUI_ScreenGui"
 	self.screenGui.ResetOnSpawn = false
+	self.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling -- Bug Fix #4: proper ZIndex layering
 	self.screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 	self.panels = {}
 	return self
@@ -176,7 +178,7 @@ end
 function SwiftUI:createButton(parent, text, size, position, bgColor, callback)
 	local button = createButton(
 		parent,
-		text,
+		"Button_" .. text, -- Bug Fix #1: use unique name instead of text
 		text,
 		size or UDim2.new(1, -DEFAULTS.Padding * 2, 0, 40),
 		position or UDim2.new(0, DEFAULTS.Padding, 0, DEFAULTS.Padding),
@@ -322,6 +324,7 @@ function SwiftUI:createDropdown(parent, options, defaultIndex, callback, size, p
 	dropdownList.Position = UDim2.new(0, 0, 1, 5)
 	dropdownList.BackgroundColor3 = COLORS.White
 	dropdownList.BorderSizePixel = 0
+	dropdownList.ZIndex = 10 -- Bug Fix #5: render dropdown list above other elements
 	dropdownList.Visible = false
 	dropdownList.Parent = dropdownFrame
 
@@ -398,5 +401,5 @@ end
 
 -- ============================================================================
 -- UTILITY METHODS
--- =====================================================================
+-- ============================================================================
 return SwiftUI
