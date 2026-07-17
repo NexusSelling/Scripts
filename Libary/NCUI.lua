@@ -225,16 +225,16 @@ function NCUI.new()
     return self
 end
 
-function NCUI:createPanel(name, title, size, position)
+function NCUI:createPanel(name, title, size, position, keySettings)
     local finalSize = size or UDim2.new(0, 560, 0, 420)
     local finalPos = position or UDim2.new(0.5, -280, 0.5, -210)
 
+    -- Loader Box Shell with matching menu background style
     local shell = Instance.new("Frame")
     shell.Name             = name
     shell.Size             = UDim2.new(0, 280, 0, 160)
     shell.Position         = UDim2.new(0.5, -140, 0.5, -80)
-    shell.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-    shell.BackgroundTransparency = 0.2
+    shell.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     shell.BorderSizePixel  = 0
     shell.ClipsDescendants = true
     shell.Parent           = self.screenGui
@@ -246,19 +246,31 @@ function NCUI:createPanel(name, title, size, position)
     local stroke = newStroke(shell, THEME.Accent, 1.5)
     stroke.Transparency = 0
 
-    local splashLabel = newLabel(
-        shell, "SplashLabel", "NC",
-        UDim2.new(1, 0, 0, 40),
-        UDim2.new(0, 0, 0, 25),
-        THEME.Accent, 32, DEFAULTS.FontTitle
-    )
-    splashLabel.TextXAlignment = Enum.TextXAlignment.Center
-    splashLabel.TextTransparency = 1
+    local bgGradient = newGradient(shell, THEME.GradPanel[1], THEME.GradPanel[2], THEME.GradPanel[3])
+
+    -- Spinning loading wheel in the center
+    local spinner = Instance.new("ImageLabel")
+    spinner.Name = "Spinner"
+    spinner.Size = UDim2.new(0, 42, 0, 42)
+    spinner.Position = UDim2.new(0.5, -21, 0, 25)
+    spinner.BackgroundTransparency = 1
+    spinner.Image = "rbxassetid://6031267490"
+    spinner.ImageColor3 = THEME.Accent
+    spinner.ImageTransparency = 1
+    spinner.Parent = shell
+
+    -- Spin the loading wheel
+    task.spawn(function()
+        while spinner.Parent do
+            spinner.Rotation = spinner.Rotation + 6
+            task.wait(0.02)
+        end
+    end)
 
     local statusLabel = newLabel(
         shell, "StatusLabel", "Connecting...",
         UDim2.new(1, 0, 0, 20),
-        UDim2.new(0, 0, 0, 75),
+        UDim2.new(0, 0, 0, 78),
         THEME.TextSecondary, 12, DEFAULTS.FontBody
     )
     statusLabel.TextXAlignment = Enum.TextXAlignment.Center
@@ -275,7 +287,6 @@ function NCUI:createPanel(name, title, size, position)
     titleBar.Position              = UDim2.new(0, 0, 0, 0)
     titleBar.BackgroundTransparency = 1
     titleBar.Text                  = ""
-    titleBar.AutoButtonColor       = false
     titleBar.ZIndex                = 5
     titleBar.Visible               = false
     titleBar.Parent                = shell
@@ -296,7 +307,6 @@ function NCUI:createPanel(name, title, size, position)
     closeBtn.BackgroundColor3      = Color3.fromRGB(255, 255, 255)
     closeBtn.BorderSizePixel       = 0
     closeBtn.Text                  = ""
-    closeBtn.AutoButtonColor       = false
     closeBtn.ZIndex                = 6
     closeBtn.Parent                = titleBar
 
@@ -481,35 +491,7 @@ function NCUI:createPanel(name, title, size, position)
         end
     end
 
-    task.spawn(function()
-        tw(splashLabel, { TextTransparency = 0 }, 0.3)
-        tw(statusLabel, { TextTransparency = 0 }, 0.3)
-        task.wait(0.4)
-        local steps = {
-            "Connecting to servers...",
-            "Validating whitelist...",
-            "Loading assets...",
-            "Injecting scripts...",
-            "Ready!"
-        }
-        
-        for i, step in ipairs(steps) do
-            statusLabel.Text = step
-            tw(loadBar, { Size = UDim2.new(i / #steps, 0, 1, 0) }, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            task.wait(0.45)
-        end
-        task.wait(0.2)
-        tw(splashLabel, { TextTransparency = 1 }, 0.25)
-        tw(statusLabel, { TextTransparency = 1 }, 0.25)
-        tw(loadBarBg, { BackgroundTransparency = 1 }, 0.25)
-        tw(loadBar, { BackgroundTransparency = 1 }, 0.25)
-        task.wait(0.25)
-
-        splashLabel:Destroy()
-        statusLabel:Destroy()
-        loadBarBg:Destroy()
-        tw(shell, { BackgroundTransparency = 0 }, 0.2)
-        local bgGradient = newGradient(shell, THEME.GradPanel[1], THEME.GradPanel[2], THEME.GradPanel[3])
+    local function openMainMenu()
         tw(stroke, { Color = THEME.Border }, 0.3)
 
         shell.ClipsDescendants = false
@@ -531,6 +513,109 @@ function NCUI:createPanel(name, title, size, position)
                 child.TextTransparency = 1
                 tw(child, { TextTransparency = 0 }, 0.3)
             end
+        end
+    end
+
+    local function showKeySystem(onCorrect)
+        tw(shell, {
+            Size = UDim2.new(0, 320, 0, 180),
+            Position = UDim2.new(0.5, -160, 0.5, -90)
+        }, 0.3)
+        task.wait(0.3)
+
+        local keyTitle = newLabel(
+            shell, "KeyTitle", "KEY SYSTEM",
+            UDim2.new(1, -20, 0, 30),
+            UDim2.new(0, 10, 0, 15),
+            THEME.Accent, 16, DEFAULTS.FontTitle
+        )
+        keyTitle.TextXAlignment = Enum.TextXAlignment.Center
+
+        local keyInputFrame, keyInput = self:createInputBox(
+            shell,
+            "Enter key here...",
+            UDim2.new(1, -30, 0, 42),
+            UDim2.new(0, 15, 0, 55)
+        )
+
+        local submitBtn
+        local getBtn
+
+        submitBtn = self:createButton(
+            shell,
+            "Submit Key",
+            UDim2.new(0.5, -20, 0, 38),
+            UDim2.new(0, 15, 0, 115),
+            "primary",
+            function()
+                local entered = keyInput.Text
+                if entered == keySettings.Key then
+                    keyTitle:Destroy()
+                    keyInputFrame:Destroy()
+                    submitBtn:Destroy()
+                    getBtn:Destroy()
+                    onCorrect()
+                else
+                    self:notify("Incorrect key, try again!", "danger", 2.5)
+                end
+            end
+        )
+
+        getBtn = self:createButton(
+            shell,
+            "Get Key",
+            UDim2.new(0.5, -20, 0, 38),
+            UDim2.new(0.5, 5, 0, 115),
+            "ghost",
+            function()
+                if setclipboard then
+                    setclipboard(keySettings.Link)
+                elseif syn and syn.write_clipboard then
+                    syn.write_clipboard(keySettings.Link)
+                end
+                self:notify("Key link copied to clipboard!", "success", 2.5)
+            end
+        )
+    end
+
+    task.spawn(function()
+        -- Fade in loader UI
+        tw(spinner, { ImageTransparency = 0 }, 0.3)
+        tw(statusLabel, { TextTransparency = 0 }, 0.3)
+        task.wait(0.4)
+
+        -- Load steps sequence
+        local steps = {
+            "Connecting to servers...",
+            "Validating whitelist...",
+            "Loading assets...",
+            "Injecting scripts...",
+            "Ready!"
+        }
+        
+        for i, step in ipairs(steps) do
+            statusLabel.Text = step
+            tw(loadBar, { Size = UDim2.new(i / #steps, 0, 1, 0) }, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            task.wait(0.45)
+        end
+        task.wait(0.2)
+
+        -- Fade out loader UI elements
+        tw(spinner, { ImageTransparency = 1 }, 0.25)
+        tw(statusLabel, { TextTransparency = 1 }, 0.25)
+        tw(loadBarBg, { BackgroundTransparency = 1 }, 0.25)
+        tw(loadBar, { BackgroundTransparency = 1 }, 0.25)
+        task.wait(0.25)
+
+        -- Destroy loading components
+        spinner:Destroy()
+        statusLabel:Destroy()
+        loadBarBg:Destroy()
+
+        if keySettings then
+            showKeySystem(openMainMenu)
+        else
+            openMainMenu()
         end
     end)
 
@@ -934,7 +1019,6 @@ function NCUI:notify(message, kind, duration)
 
     return toast
 end
-
 
 function NCUI:createKeybind(parent, label, defaultKey, callback, size, position)
     local row = newFrame(
