@@ -382,8 +382,15 @@ function NCUI:createPanel(name, title, size, position, keySettings)
         ContentContainer = contentContainer,
         Tabs = {},
         ActiveTab = nil,
-        UI = self
+        UI = self,
+        ToggleKey = Enum.KeyCode.Insert
     }
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == Window.ToggleKey then
+            shell.Visible = not shell.Visible
+        end
+    end)
 
     function Window:CreateTab(tabName)
         local tabBtn = Instance.new("TextButton")
@@ -471,13 +478,24 @@ function NCUI:createPanel(name, title, size, position, keySettings)
             if tab == tabToSelect then
                 tw(tab.ActiveBg, { BackgroundTransparency = 0 }, 0.15)
                 if label then tw(label, { TextColor3 = THEME.TextOnAccent }, 0.15) end
+                
                 tab.Body.Visible = true
+                tab.Body.Position = UDim2.new(0, 20, 0, 0)
+                tab.Body.ScrollBarImageTransparency = 1
+                tw(tab.Body, { Position = UDim2.new(0, 0, 0, 0), ScrollBarImageTransparency = 0 }, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
             else
                 tw(tab.ActiveBg, { BackgroundTransparency = 1 }, 0.15)
                 if label then tw(label, { TextColor3 = THEME.TextSecondary }, 0.15) end
-                tab.Body.Visible = false
+                
+                local t = tw(tab.Body, { Position = UDim2.new(0, -20, 0, 0), ScrollBarImageTransparency = 1 }, 0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+                t.Completed:Connect(function()
+                    if self.ActiveTab ~= tab then
+                        tab.Body.Visible = false
+                    end
+                end)
             end
         end
+        self.ActiveTab = tabToSelect
     end
 
     local function openMainMenu()
