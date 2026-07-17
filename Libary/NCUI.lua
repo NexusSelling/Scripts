@@ -229,7 +229,6 @@ function NCUI:createPanel(name, title, size, position)
     local finalSize = size or UDim2.new(0, 560, 0, 420)
     local finalPos = position or UDim2.new(0.5, -280, 0.5, -210)
 
-    -- Fullscreen Intro Splash
     local splashScreen = Instance.new("Frame")
     splashScreen.Name = "SplashScreen"
     splashScreen.Size = UDim2.new(1, 0, 1, 0)
@@ -291,10 +290,7 @@ function NCUI:createPanel(name, title, size, position)
     closeBtn.Position              = UDim2.new(1, -38, 0.5, -14)
     closeBtn.BackgroundColor3      = Color3.fromRGB(255, 255, 255)
     closeBtn.BorderSizePixel       = 0
-    closeBtn.Text                  = "×"
-    closeBtn.TextColor3            = THEME.TextSecondary
-    closeBtn.TextSize              = 18
-    closeBtn.Font                  = DEFAULTS.FontTitle
+    closeBtn.Text                  = ""
     closeBtn.AutoButtonColor       = false
     closeBtn.ZIndex                = 6
     closeBtn.Parent                = titleBar
@@ -305,12 +301,21 @@ function NCUI:createPanel(name, title, size, position)
 
     newGradient(closeBtn, Color3.fromRGB(50, 50, 62), Color3.fromRGB(38, 38, 50), 180)
 
+    local closeLabel = newLabel(
+        closeBtn, "CloseLabel", "x",
+        UDim2.new(1, 0, 1, 0),
+        UDim2.new(0, 0, 0, -2),
+        THEME.TextSecondary, 18, DEFAULTS.FontTitle
+    )
+    closeLabel.TextXAlignment = Enum.TextXAlignment.Center
+    closeLabel.ZIndex = 7
+
     closeBtn.MouseEnter:Connect(function()
         tw(closeBtn, { BackgroundTransparency = 0.15 }, 0.1)
     end)
     closeBtn.MouseLeave:Connect(function()
         tw(closeBtn, { BackgroundTransparency = 0 }, 0.1)
-        closeBtn.TextColor3 = THEME.TextSecondary
+        closeLabel.TextColor3 = THEME.TextSecondary
     end)
     closeBtn.MouseButton1Click:Connect(function()
         tw(shell, { Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0) }, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
@@ -378,10 +383,7 @@ function NCUI:createPanel(name, title, size, position)
         tabBtn.Size = UDim2.new(1, 0, 0, 34)
         tabBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         tabBtn.BackgroundTransparency = 1
-        tabBtn.Text = tabName
-        tabBtn.TextColor3 = THEME.TextSecondary
-        tabBtn.TextSize = DEFAULTS.FontSize
-        tabBtn.Font = DEFAULTS.FontTitle
+        tabBtn.Text = ""
         tabBtn.BorderSizePixel = 0
         tabBtn.AutoButtonColor = false
         tabBtn.ZIndex = 2
@@ -391,7 +393,6 @@ function NCUI:createPanel(name, title, size, position)
         btnCorner.CornerRadius = UDim.new(0, 8)
         btnCorner.Parent = tabBtn
 
-        -- Active Background Frame to avoid gradient affecting text visibility
         local activeBg = Instance.new("Frame")
         activeBg.Name = "ActiveBg"
         activeBg.Size = UDim2.new(1, 0, 1, 0)
@@ -406,6 +407,15 @@ function NCUI:createPanel(name, title, size, position)
         activeCorner.Parent = activeBg
 
         newGradient(activeBg, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
+
+        local textLabel = newLabel(
+            tabBtn, "TextLabel", tabName,
+            UDim2.new(1, 0, 1, 0),
+            UDim2.new(0, 0, 0, 0),
+            THEME.TextSecondary, DEFAULTS.FontSize, DEFAULTS.FontTitle
+        )
+        textLabel.TextXAlignment = Enum.TextXAlignment.Center
+        textLabel.ZIndex = 3
 
         local body = Instance.new("ScrollingFrame")
         body.Name = "TabBody_" .. tabName
@@ -449,20 +459,20 @@ function NCUI:createPanel(name, title, size, position)
 
     function Window:SelectTab(tabToSelect)
         for _, tab in ipairs(self.Tabs) do
+            local label = tab.Button:FindFirstChild("TextLabel")
             if tab == tabToSelect then
                 tw(tab.ActiveBg, { BackgroundTransparency = 0 }, 0.15)
-                tw(tab.Button, { TextColor3 = THEME.TextOnAccent }, 0.15)
+                if label then tw(label, { TextColor3 = THEME.TextOnAccent }, 0.15) end
                 tab.Body.Visible = true
             else
                 tw(tab.ActiveBg, { BackgroundTransparency = 1 }, 0.15)
-                tw(tab.Button, { TextColor3 = THEME.TextSecondary }, 0.15)
+                if label then tw(label, { TextColor3 = THEME.TextSecondary }, 0.15) end
                 tab.Body.Visible = false
             end
         end
     end
 
     task.spawn(function()
-        -- Play Fullscreen Intro
         tw(splashLabel, { TextTransparency = 0 }, 0.3)
         task.wait(0.6)
 
@@ -475,12 +485,10 @@ function NCUI:createPanel(name, title, size, position)
         end
         task.wait(0.8)
 
-        -- Fade out fullscreen intro
         tw(splashLabel, { TextTransparency = 1 }, 0.2)
         task.wait(0.2)
         splashScreen:Destroy()
 
-        -- Pop Window In
         tw(shell, { BackgroundTransparency = 0 }, 0.1)
         local bgGradient = newGradient(shell, THEME.GradPanel[1], THEME.GradPanel[2], THEME.GradPanel[3])
         tw(stroke, { Transparency = 0 }, 0.3)
@@ -493,8 +501,10 @@ function NCUI:createPanel(name, title, size, position)
 
         for _, child in ipairs(shell:GetDescendants()) do
             if child:IsA("TextLabel") or child:IsA("TextButton") then
-                child.TextTransparency = 1
-                tw(child, { TextTransparency = 0 }, 0.3)
+                if child.Name ~= "SplashLabel" then
+                    child.TextTransparency = 1
+                    tw(child, { TextTransparency = 0 }, 0.3)
+                end
             end
         end
     end)
@@ -528,48 +538,63 @@ function NCUI:createButton(parent, text, size, position, style, callback)
 
     local btn = Instance.new("TextButton")
     btn.Name             = "Button_" .. text
-    btn.Text             = text
+    btn.Text             = ""
     btn.Size             = size     or UDim2.new(1, -4, 0, 40)
     btn.Position         = position or UDim2.new(0, 2, 0, 0)
-    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextColor3       = THEME.TextOnAccent
-    btn.TextSize         = DEFAULTS.FontSize
-    btn.Font             = DEFAULTS.FontTitle
+    btn.BackgroundTransparency = 1
     btn.BorderSizePixel  = 0
     btn.AutoButtonColor  = false
+    btn.ZIndex           = 2
     btn.Parent           = parent
+
+    local btnBg = Instance.new("Frame")
+    btnBg.Name = "Bg"
+    btnBg.Size = UDim2.new(1, 0, 1, 0)
+    btnBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btnBg.BorderSizePixel = 0
+    btnBg.ZIndex = 1
+    btnBg.Parent = btn
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = btn
+    corner.Parent = btnBg
+
+    local label = newLabel(
+        btn, "TextLabel", text,
+        UDim2.new(1, 0, 1, 0),
+        UDim2.new(0, 0, 0, 0),
+        THEME.TextOnAccent, DEFAULTS.FontSize, DEFAULTS.FontTitle
+    )
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.ZIndex = 3
 
     local stroke
     if style == "primary" then
-        newGradient(btn, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
-        btn.TextColor3 = THEME.TextOnAccent
+        newGradient(btnBg, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
+        label.TextColor3 = THEME.TextOnAccent
     elseif style == "ghost" then
-        newGradient(btn, Color3.fromRGB(38, 38, 50), Color3.fromRGB(28, 28, 38), 180)
-        btn.TextColor3 = THEME.TextSecondary
-        stroke = newStroke(btn, THEME.Border, 1)
+        newGradient(btnBg, Color3.fromRGB(38, 38, 50), Color3.fromRGB(28, 28, 38), 180)
+        label.TextColor3 = THEME.TextSecondary
+        stroke = newStroke(btnBg, THEME.Border, 1)
     elseif style == "danger" then
-        newGradient(btn, Color3.fromRGB(220, 60, 60), Color3.fromRGB(180, 40, 40), 145)
-        btn.TextColor3 = THEME.TextOnAccent
+        newGradient(btnBg, Color3.fromRGB(220, 60, 60), Color3.fromRGB(180, 40, 40), 145)
+        label.TextColor3 = THEME.TextOnAccent
     end
 
     btn.MouseEnter:Connect(function()
-        tw(btn, { BackgroundTransparency = 0.08 }, 0.1)
+        tw(btnBg, { BackgroundTransparency = 0.08 }, 0.1)
         if stroke then tw(stroke, { Color = THEME.BorderFocus }, 0.1) end
     end)
     btn.MouseLeave:Connect(function()
-        tw(btn, { BackgroundTransparency = 0 }, 0.1)
+        tw(btnBg, { BackgroundTransparency = 0 }, 0.1)
         if stroke then tw(stroke, { Color = THEME.Border }, 0.1) end
     end)
 
     btn.MouseButton1Down:Connect(function()
-        tw(btn, { BackgroundTransparency = 0.2 }, 0.07)
+        tw(btnBg, { BackgroundTransparency = 0.2 }, 0.07)
     end)
     btn.MouseButton1Up:Connect(function()
-        tw(btn, { BackgroundTransparency = 0 }, 0.1)
+        tw(btnBg, { BackgroundTransparency = 0 }, 0.1)
     end)
 
     if callback then
@@ -717,7 +742,7 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
 
     local list = Instance.new("Frame")
     list.Name             = "DropdownList"
-    list.Size             = UDim2.new(1, 0, 0, #options * 38)
+    list.Size             = UDim2.new(1, 0, 0, 0)
     list.Position         = UDim2.new(0, 0, 1, 6)
     list.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     list.BorderSizePixel  = 0
@@ -732,6 +757,9 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
 
     newGradient(list, Color3.fromRGB(34, 34, 46), Color3.fromRGB(24, 24, 34), 180)
     newStroke(list, THEME.Border, 1)
+
+    local isOpen = false
+    local targetHeight = #options * 38
 
     for i, option in ipairs(options) do
         local optBtn = Instance.new("TextButton")
@@ -757,19 +785,35 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
         end)
         optBtn.MouseButton1Click:Connect(function()
             selectedLabel.Text = option
-            list.Visible = false
+            isOpen = false
             tw(stroke,  { Color = THEME.Border }, 0.15)
             tw(chevron, { Rotation = 90 }, 0.18)
+            tw(list, { Size = UDim2.new(1, 0, 0, 0) }, 0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+            task.delay(0.2, function()
+                if not isOpen then
+                    list.Visible = false
+                end
+            end)
             if callback then callback(i, option) end
         end)
     end
 
-    local isOpen = false
     local function toggle()
         isOpen = not isOpen
-        list.Visible = isOpen
         tw(stroke,  { Color = isOpen and THEME.BorderFocus or THEME.Border }, 0.15)
         tw(chevron, { Rotation = isOpen and 270 or 90 }, 0.18)
+        
+        if isOpen then
+            list.Visible = true
+            tw(list, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        else
+            tw(list, { Size = UDim2.new(1, 0, 0, 0) }, 0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+            task.delay(0.2, function()
+                if not isOpen then
+                    list.Visible = false
+                end
+            end)
+        end
     end
 
     chevron.MouseButton1Click:Connect(toggle)
