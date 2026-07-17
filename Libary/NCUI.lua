@@ -229,7 +229,6 @@ function NCUI:createPanel(name, title, size, position, keySettings)
     local finalSize = size or UDim2.new(0, 560, 0, 420)
     local finalPos = position or UDim2.new(0.5, -280, 0.5, -210)
 
-    -- Loader Box Shell with matching menu background style
     local shell = Instance.new("Frame")
     shell.Name             = name
     shell.Size             = UDim2.new(0, 280, 0, 160)
@@ -248,7 +247,6 @@ function NCUI:createPanel(name, title, size, position, keySettings)
 
     local bgGradient = newGradient(shell, THEME.GradPanel[1], THEME.GradPanel[2], THEME.GradPanel[3])
 
-    -- "NC" Label in Blue, centered at the top
     local ncLabel = newLabel(
         shell, "NCLabel", "NC",
         UDim2.new(1, 0, 0, 32),
@@ -256,20 +254,18 @@ function NCUI:createPanel(name, title, size, position, keySettings)
         THEME.Accent, 28, DEFAULTS.FontTitle
     )
     ncLabel.TextXAlignment = Enum.TextXAlignment.Center
-    ncLabel.TextTransparency = 1
+    ncLabel.TextTransparency = 0
 
-    -- Spinning loading wheel in the center
     local spinner = Instance.new("ImageLabel")
     spinner.Name = "Spinner"
     spinner.Size = UDim2.new(0, 36, 0, 36)
     spinner.Position = UDim2.new(0.5, -18, 0, 58)
     spinner.BackgroundTransparency = 1
-    spinner.Image = "rbxassetid://6031267490"
+    spinner.Image = "rbxassetid://4805222891"
     spinner.ImageColor3 = THEME.Accent
-    spinner.ImageTransparency = 1
+    spinner.ImageTransparency = 0
     spinner.Parent = shell
 
-    -- Spin the loading wheel
     local spinning = true
     task.spawn(function()
         while spinning and spinner.Parent do
@@ -285,7 +281,7 @@ function NCUI:createPanel(name, title, size, position, keySettings)
         THEME.TextSecondary, 12, DEFAULTS.FontBody
     )
     statusLabel.TextXAlignment = Enum.TextXAlignment.Center
-    statusLabel.TextTransparency = 1
+    statusLabel.TextTransparency = 0
 
     local titleBar = Instance.new("TextButton")
     titleBar.Name                  = "TitleBar"
@@ -359,7 +355,7 @@ function NCUI:createPanel(name, title, size, position, keySettings)
     sidebar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     newGradient(sidebar, Color3.fromRGB(18, 18, 24), Color3.fromRGB(12, 12, 16), 180)
     sidebar.Visible = false
-    
+
     local sidebarCorner = Instance.new("UICorner")
     sidebarCorner.CornerRadius = UDim.new(0, DEFAULTS.CornerRadius)
     sidebarCorner.Parent = sidebar
@@ -390,7 +386,7 @@ function NCUI:createPanel(name, title, size, position, keySettings)
     )
     contentContainer.BackgroundTransparency = 1
     contentContainer.Visible = false
-    
+
     makeDraggable(shell, titleBar)
 
     local Window = {
@@ -454,14 +450,14 @@ function NCUI:createPanel(name, title, size, position, keySettings)
         body.AutomaticCanvasSize = Enum.AutomaticSize.Y
         body.Visible = false
         body.Parent = self.ContentContainer
-        
+
         local innerPad = Instance.new("UIPadding")
         innerPad.PaddingTop    = UDim.new(0, DEFAULTS.Padding)
         innerPad.PaddingBottom = UDim.new(0, DEFAULTS.Padding)
         innerPad.PaddingLeft   = UDim.new(0, DEFAULTS.Padding)
         innerPad.PaddingRight  = UDim.new(0, DEFAULTS.Padding)
         innerPad.Parent        = body
-        
+
         local layout = Instance.new("UIListLayout")
         layout.SortOrder        = Enum.SortOrder.LayoutOrder
         layout.FillDirection    = Enum.FillDirection.Vertical
@@ -585,13 +581,8 @@ function NCUI:createPanel(name, title, size, position, keySettings)
     end
 
     task.spawn(function()
-        -- Fade in loader UI
-        tw(ncLabel, { TextTransparency = 0 }, 0.3)
-        tw(spinner, { ImageTransparency = 0 }, 0.3)
-        tw(statusLabel, { TextTransparency = 0 }, 0.3)
         task.wait(0.4)
 
-        -- Load steps sequence
         local steps = {
             "Connecting to servers...",
             "Validating whitelist...",
@@ -599,20 +590,18 @@ function NCUI:createPanel(name, title, size, position, keySettings)
             "Injecting scripts...",
             "Ready!"
         }
-        
+
         for i, step in ipairs(steps) do
             statusLabel.Text = step
             task.wait(0.5)
         end
         task.wait(0.2)
 
-        -- Fade out loader UI elements
         tw(ncLabel, { TextTransparency = 1 }, 0.25)
         tw(spinner, { ImageTransparency = 1 }, 0.25)
         tw(statusLabel, { TextTransparency = 1 }, 0.25)
         task.wait(0.25)
 
-        -- Clean up
         spinning = false
         ncLabel:Destroy()
         spinner:Destroy()
@@ -918,7 +907,7 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
         isOpen = not isOpen
         tw(stroke,  { Color = isOpen and THEME.BorderFocus or THEME.Border }, 0.15)
         tw(chevron, { Rotation = isOpen and 270 or 90 }, 0.18)
-        
+
         if isOpen then
             list.Visible = true
             tw(list, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
@@ -1104,7 +1093,7 @@ function NCUI:createKeybind(parent, label, defaultKey, callback, size, position)
                     btnLabel.Text = "[ " .. pressed.Name .. " ]"
                     btnLabel.TextColor3 = THEME.TextPrimary
                 end
-                
+
                 waiting = false
                 connection:Disconnect()
                 if callback then callback(currentKey) end
@@ -1145,7 +1134,7 @@ function NCUI:createSlider(parent, label, min, max, defaultVal, callback, size, 
         UDim2.new(0, DEFAULTS.Padding, 0, 32),
         Color3.fromRGB(48, 48, 60), 999
     )
-    
+
     local fill = newFrame(
         track, "Fill",
         UDim2.new(0, 0, 1, 0),
