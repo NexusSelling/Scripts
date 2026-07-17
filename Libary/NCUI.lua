@@ -248,11 +248,21 @@ function NCUI:createPanel(name, title, size, position, keySettings)
 
     local bgGradient = newGradient(shell, THEME.GradPanel[1], THEME.GradPanel[2], THEME.GradPanel[3])
 
+    -- "NC" Label in Blue, centered at the top
+    local ncLabel = newLabel(
+        shell, "NCLabel", "NC",
+        UDim2.new(1, 0, 0, 32),
+        UDim2.new(0, 0, 0, 18),
+        THEME.Accent, 28, DEFAULTS.FontTitle
+    )
+    ncLabel.TextXAlignment = Enum.TextXAlignment.Center
+    ncLabel.TextTransparency = 1
+
     -- Spinning loading wheel in the center
     local spinner = Instance.new("ImageLabel")
     spinner.Name = "Spinner"
-    spinner.Size = UDim2.new(0, 42, 0, 42)
-    spinner.Position = UDim2.new(0.5, -21, 0, 25)
+    spinner.Size = UDim2.new(0, 36, 0, 36)
+    spinner.Position = UDim2.new(0.5, -18, 0, 58)
     spinner.BackgroundTransparency = 1
     spinner.Image = "rbxassetid://6031267490"
     spinner.ImageColor3 = THEME.Accent
@@ -260,8 +270,9 @@ function NCUI:createPanel(name, title, size, position, keySettings)
     spinner.Parent = shell
 
     -- Spin the loading wheel
+    local spinning = true
     task.spawn(function()
-        while spinner.Parent do
+        while spinning and spinner.Parent do
             spinner.Rotation = spinner.Rotation + 6
             task.wait(0.02)
         end
@@ -270,16 +281,11 @@ function NCUI:createPanel(name, title, size, position, keySettings)
     local statusLabel = newLabel(
         shell, "StatusLabel", "Connecting...",
         UDim2.new(1, 0, 0, 20),
-        UDim2.new(0, 0, 0, 78),
+        UDim2.new(0, 0, 0, 108),
         THEME.TextSecondary, 12, DEFAULTS.FontBody
     )
     statusLabel.TextXAlignment = Enum.TextXAlignment.Center
     statusLabel.TextTransparency = 1
-
-    local loadBarBg = newFrame(shell, "LoadBarBg", UDim2.new(0.8, 0, 0, 4), UDim2.new(0.1, 0, 0, 110), Color3.fromRGB(30, 30, 40), 999)
-    loadBarBg.BackgroundTransparency = 0.5
-    
-    local loadBar = newFrame(loadBarBg, "LoadBar", UDim2.new(0, 0, 1, 0), UDim2.new(0, 0, 0, 0), THEME.Accent, 999)
 
     local titleBar = Instance.new("TextButton")
     titleBar.Name                  = "TitleBar"
@@ -580,6 +586,7 @@ function NCUI:createPanel(name, title, size, position, keySettings)
 
     task.spawn(function()
         -- Fade in loader UI
+        tw(ncLabel, { TextTransparency = 0 }, 0.3)
         tw(spinner, { ImageTransparency = 0 }, 0.3)
         tw(statusLabel, { TextTransparency = 0 }, 0.3)
         task.wait(0.4)
@@ -595,22 +602,21 @@ function NCUI:createPanel(name, title, size, position, keySettings)
         
         for i, step in ipairs(steps) do
             statusLabel.Text = step
-            tw(loadBar, { Size = UDim2.new(i / #steps, 0, 1, 0) }, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            task.wait(0.45)
+            task.wait(0.5)
         end
         task.wait(0.2)
 
         -- Fade out loader UI elements
+        tw(ncLabel, { TextTransparency = 1 }, 0.25)
         tw(spinner, { ImageTransparency = 1 }, 0.25)
         tw(statusLabel, { TextTransparency = 1 }, 0.25)
-        tw(loadBarBg, { BackgroundTransparency = 1 }, 0.25)
-        tw(loadBar, { BackgroundTransparency = 1 }, 0.25)
         task.wait(0.25)
 
-        -- Destroy loading components
+        -- Clean up
+        spinning = false
+        ncLabel:Destroy()
         spinner:Destroy()
         statusLabel:Destroy()
-        loadBarBg:Destroy()
 
         if keySettings then
             showKeySystem(openMainMenu)
