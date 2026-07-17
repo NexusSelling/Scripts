@@ -229,31 +229,12 @@ function NCUI:createPanel(name, title, size, position)
     local finalSize = size or UDim2.new(0, 560, 0, 420)
     local finalPos = position or UDim2.new(0.5, -280, 0.5, -210)
 
-    local splashScreen = Instance.new("Frame")
-    splashScreen.Name = "SplashScreen"
-    splashScreen.Size = UDim2.new(1, 0, 1, 0)
-    splashScreen.BackgroundTransparency = 1
-    splashScreen.ZIndex = 100
-    splashScreen.Parent = self.screenGui
-
-    local splashLabel = Instance.new("TextLabel")
-    splashLabel.Name = "SplashLabel"
-    splashLabel.Size = UDim2.new(1, 0, 1, 0)
-    splashLabel.BackgroundTransparency = 1
-    splashLabel.Text = "NC"
-    splashLabel.TextColor3 = THEME.Accent
-    splashLabel.TextSize = 48
-    splashLabel.Font = DEFAULTS.FontTitle
-    splashLabel.TextTransparency = 1
-    splashLabel.ZIndex = 101
-    splashLabel.Parent = splashScreen
-
     local shell = Instance.new("Frame")
     shell.Name             = name
-    shell.Size             = UDim2.new(0, 0, 0, 0)
-    shell.Position         = UDim2.new(0.5, 0, 0.5, 0)
-    shell.BackgroundColor3 = THEME.Background
-    shell.BackgroundTransparency = 1
+    shell.Size             = UDim2.new(0, 280, 0, 160)
+    shell.Position         = UDim2.new(0.5, -140, 0.5, -80)
+    shell.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    shell.BackgroundTransparency = 0.2
     shell.BorderSizePixel  = 0
     shell.ClipsDescendants = true
     shell.Parent           = self.screenGui
@@ -263,7 +244,30 @@ function NCUI:createPanel(name, title, size, position)
     shellCorner.Parent = shell
 
     local stroke = newStroke(shell, THEME.Accent, 1.5)
-    stroke.Transparency = 1
+    stroke.Transparency = 0
+
+    local splashLabel = newLabel(
+        shell, "SplashLabel", "NC",
+        UDim2.new(1, 0, 0, 40),
+        UDim2.new(0, 0, 0, 25),
+        THEME.Accent, 32, DEFAULTS.FontTitle
+    )
+    splashLabel.TextXAlignment = Enum.TextXAlignment.Center
+    splashLabel.TextTransparency = 1
+
+    local statusLabel = newLabel(
+        shell, "StatusLabel", "Connecting...",
+        UDim2.new(1, 0, 0, 20),
+        UDim2.new(0, 0, 0, 75),
+        THEME.TextSecondary, 12, DEFAULTS.FontBody
+    )
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+    statusLabel.TextTransparency = 1
+
+    local loadBarBg = newFrame(shell, "LoadBarBg", UDim2.new(0.8, 0, 0, 4), UDim2.new(0.1, 0, 0, 110), Color3.fromRGB(30, 30, 40), 999)
+    loadBarBg.BackgroundTransparency = 0.5
+    
+    local loadBar = newFrame(loadBarBg, "LoadBar", UDim2.new(0, 0, 1, 0), UDim2.new(0, 0, 0, 0), THEME.Accent, 999)
 
     local titleBar = Instance.new("TextButton")
     titleBar.Name                  = "TitleBar"
@@ -273,6 +277,7 @@ function NCUI:createPanel(name, title, size, position)
     titleBar.Text                  = ""
     titleBar.AutoButtonColor       = false
     titleBar.ZIndex                = 5
+    titleBar.Visible               = false
     titleBar.Parent                = shell
 
     local titleLabel = newLabel(
@@ -328,6 +333,7 @@ function NCUI:createPanel(name, title, size, position)
         UDim2.new(0, 0, 0, 44),
         THEME.Border, 0
     )
+    div.Visible = false
 
     local sidebar = newFrame(shell, "Sidebar",
         UDim2.new(0, 140, 1, -45),
@@ -336,6 +342,7 @@ function NCUI:createPanel(name, title, size, position)
     )
     sidebar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     newGradient(sidebar, Color3.fromRGB(18, 18, 24), Color3.fromRGB(12, 12, 16), 180)
+    sidebar.Visible = false
     
     local sidebarCorner = Instance.new("UICorner")
     sidebarCorner.CornerRadius = UDim.new(0, DEFAULTS.CornerRadius)
@@ -346,6 +353,7 @@ function NCUI:createPanel(name, title, size, position)
         UDim2.new(0, 140, 0, 45),
         THEME.Border, 0
     )
+    sidebarDiv.Visible = false
 
     local sidebarLayout = Instance.new("UIListLayout")
     sidebarLayout.FillDirection = Enum.FillDirection.Vertical
@@ -365,6 +373,7 @@ function NCUI:createPanel(name, title, size, position)
         THEME.Background, DEFAULTS.CornerRadius
     )
     contentContainer.BackgroundTransparency = 1
+    contentContainer.Visible = false
     
     makeDraggable(shell, titleBar)
 
@@ -474,24 +483,34 @@ function NCUI:createPanel(name, title, size, position)
 
     task.spawn(function()
         tw(splashLabel, { TextTransparency = 0 }, 0.3)
-        task.wait(0.6)
-
-        splashLabel.TextSize = 32
-        local fullText = "NOX CHEATS"
-        splashLabel.Text = ""
-        for i = 1, #fullText do
-            splashLabel.Text = string.sub(fullText, 1, i)
-            task.wait(0.04)
+        tw(statusLabel, { TextTransparency = 0 }, 0.3)
+        task.wait(0.4)
+        local steps = {
+            "Connecting to servers...",
+            "Validating whitelist...",
+            "Loading assets...",
+            "Injecting scripts...",
+            "Ready!"
+        }
+        
+        for i, step in ipairs(steps) do
+            statusLabel.Text = step
+            tw(loadBar, { Size = UDim2.new(i / #steps, 0, 1, 0) }, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            task.wait(0.45)
         end
-        task.wait(0.8)
-
-        tw(splashLabel, { TextTransparency = 1 }, 0.2)
         task.wait(0.2)
-        splashScreen:Destroy()
+        tw(splashLabel, { TextTransparency = 1 }, 0.25)
+        tw(statusLabel, { TextTransparency = 1 }, 0.25)
+        tw(loadBarBg, { BackgroundTransparency = 1 }, 0.25)
+        tw(loadBar, { BackgroundTransparency = 1 }, 0.25)
+        task.wait(0.25)
 
-        tw(shell, { BackgroundTransparency = 0 }, 0.1)
+        splashLabel:Destroy()
+        statusLabel:Destroy()
+        loadBarBg:Destroy()
+        tw(shell, { BackgroundTransparency = 0 }, 0.2)
         local bgGradient = newGradient(shell, THEME.GradPanel[1], THEME.GradPanel[2], THEME.GradPanel[3])
-        tw(stroke, { Transparency = 0 }, 0.3)
+        tw(stroke, { Color = THEME.Border }, 0.3)
 
         shell.ClipsDescendants = false
         tw(shell, {
@@ -499,12 +518,18 @@ function NCUI:createPanel(name, title, size, position)
             Position = finalPos
         }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
+        task.wait(0.5)
+
+        titleBar.Visible = true
+        div.Visible = true
+        sidebar.Visible = true
+        sidebarDiv.Visible = true
+        contentContainer.Visible = true
+
         for _, child in ipairs(shell:GetDescendants()) do
             if child:IsA("TextLabel") or child:IsA("TextButton") then
-                if child.Name ~= "SplashLabel" then
-                    child.TextTransparency = 1
-                    tw(child, { TextTransparency = 0 }, 0.3)
-                end
+                child.TextTransparency = 1
+                tw(child, { TextTransparency = 0 }, 0.3)
             end
         end
     end)
