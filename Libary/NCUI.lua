@@ -935,6 +935,199 @@ function NCUI:notify(message, kind, duration)
     return toast
 end
 
+
+function NCUI:createKeybind(parent, label, defaultKey, callback, size, position)
+    local row = newFrame(
+        parent, "Keybind",
+        size     or UDim2.new(1, -4, 0, 44),
+        position or UDim2.new(0, 2, 0, 0),
+        Color3.fromRGB(255, 255, 255), 8
+    )
+    newGradient(row, Color3.fromRGB(34, 34, 44), Color3.fromRGB(26, 26, 34), 180)
+
+    newLabel(
+        row, "Label", label,
+        UDim2.new(0.6, 0, 1, 0),
+        UDim2.new(0, DEFAULTS.Padding, 0, 0),
+        THEME.TextPrimary
+    )
+
+    local bindBtn = Instance.new("TextButton")
+    bindBtn.Name             = "BindBtn"
+    bindBtn.Size             = UDim2.new(0, 80, 0, 26)
+    bindBtn.Position         = UDim2.new(1, -92, 0.5, -13)
+    bindBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    bindBtn.BorderSizePixel  = 0
+    bindBtn.Text             = ""
+    bindBtn.AutoButtonColor  = false
+    bindBtn.ZIndex           = 2
+    bindBtn.Parent           = row
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = bindBtn
+
+    local btnBg = Instance.new("Frame")
+    btnBg.Name = "Bg"
+    btnBg.Size = UDim2.new(1, 0, 1, 0)
+    btnBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btnBg.BorderSizePixel = 0
+    btnBg.ZIndex = 1
+    btnBg.Parent = bindBtn
+
+    local activeCorner = Instance.new("UICorner")
+    activeCorner.CornerRadius = UDim.new(0, 6)
+    activeCorner.Parent = btnBg
+
+    newGradient(btnBg, Color3.fromRGB(48, 48, 60), Color3.fromRGB(34, 34, 44), 180)
+
+    local currentKey = defaultKey
+    local keyName = currentKey and currentKey.Name or "None"
+
+    local btnLabel = newLabel(
+        bindBtn, "TextLabel", "[ " .. keyName .. " ]",
+        UDim2.new(1, 0, 1, 0),
+        UDim2.new(0, 0, 0, 0),
+        THEME.TextSecondary, DEFAULTS.FontSize - 1, DEFAULTS.FontTitle
+    )
+    btnLabel.TextXAlignment = Enum.TextXAlignment.Center
+    btnLabel.ZIndex = 3
+
+    local connection
+    local waiting = false
+
+    bindBtn.MouseButton1Click:Connect(function()
+        if waiting then return end
+        waiting = true
+        btnLabel.Text = "[ ... ]"
+        btnLabel.TextColor3 = THEME.Accent
+
+        connection = UserInputService.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                local pressed = input.KeyCode
+                if pressed == Enum.KeyCode.Escape then
+                    currentKey = nil
+                    btnLabel.Text = "[ None ]"
+                    btnLabel.TextColor3 = THEME.TextSecondary
+                else
+                    currentKey = pressed
+                    btnLabel.Text = "[ " .. pressed.Name .. " ]"
+                    btnLabel.TextColor3 = THEME.TextPrimary
+                end
+                
+                waiting = false
+                connection:Disconnect()
+                if callback then callback(currentKey) end
+            end
+        end)
+    end)
+
+    return row, bindBtn, currentKey
+end
+
+function NCUI:createSlider(parent, label, min, max, defaultVal, callback, size, position)
+    local row = newFrame(
+        parent, "Slider",
+        size     or UDim2.new(1, -4, 0, 50),
+        position or UDim2.new(0, 2, 0, 0),
+        Color3.fromRGB(255, 255, 255), 8
+    )
+    newGradient(row, Color3.fromRGB(34, 34, 44), Color3.fromRGB(26, 26, 34), 180)
+
+    local titleLabel = newLabel(
+        row, "Label", label,
+        UDim2.new(0.6, 0, 0, 22),
+        UDim2.new(0, DEFAULTS.Padding, 0, 4),
+        THEME.TextPrimary, 13
+    )
+
+    local valLabel = newLabel(
+        row, "ValLabel", tostring(defaultVal or min),
+        UDim2.new(0.3, 0, 0, 22),
+        UDim2.new(0.7, -DEFAULTS.Padding, 0, 4),
+        THEME.Accent, 13, DEFAULTS.FontTitle
+    )
+    valLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+    local track = newFrame(
+        row, "Track",
+        UDim2.new(1, -DEFAULTS.Padding * 2, 0, 4),
+        UDim2.new(0, DEFAULTS.Padding, 0, 32),
+        Color3.fromRGB(48, 48, 60), 999
+    )
+    
+    local fill = newFrame(
+        track, "Fill",
+        UDim2.new(0, 0, 1, 0),
+        UDim2.new(0, 0, 0, 0),
+        Color3.fromRGB(255, 255, 255), 999
+    )
+    newGradient(fill, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
+
+    local thumb = Instance.new("TextButton")
+    thumb.Name             = "Thumb"
+    thumb.Size             = UDim2.new(0, 12, 0, 12)
+    thumb.Position         = UDim2.new(0, -6, 0.5, -6)
+    thumb.BackgroundColor3 = THEME.White
+    thumb.BorderSizePixel  = 0
+    thumb.Text             = ""
+    thumb.ZIndex           = 5
+    thumb.Parent           = track
+
+    local thumbCorner = Instance.new("UICorner")
+    thumbCorner.CornerRadius = UDim.new(0, 999)
+    thumbCorner.Parent = thumb
+
+    local function updateValue(percentage)
+        local value = min + (max - min) * percentage
+        value = math.floor(value + 0.5)
+
+        valLabel.Text = tostring(value)
+        fill.Size = UDim2.new(percentage, 0, 1, 0)
+        thumb.Position = UDim2.new(percentage, -6, 0.5, -6)
+
+        if callback then callback(value) end
+    end
+
+    local initialPercent = math.clamp(((defaultVal or min) - min) / (max - min), 0, 1)
+    updateValue(initialPercent)
+
+    local dragging = false
+
+    local function handleDrag(input)
+        local relativeX = input.Position.X - track.AbsolutePosition.X
+        local percent = math.clamp(relativeX / track.AbsoluteSize.X, 0, 1)
+        updateValue(percent)
+    end
+
+    thumb.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            handleDrag(input)
+        end
+    end)
+
+    track.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            handleDrag(input)
+        end
+    end)
+
+    return row, track, thumb
+end
+
 function NCUI:animate(instance, props, duration, style, direction)
     return tw(instance, props, duration, style, direction)
 end
