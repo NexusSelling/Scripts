@@ -33,6 +33,9 @@ local THEME = {
 
     White        = Color3.fromRGB(255, 255, 255),
     Black        = Color3.fromRGB(0,   0,   0),
+
+    ToastBackground = Color3.fromRGB(16, 16, 22),
+    ToastLine       = Color3.fromRGB(0, 110, 255),
 }
 
 local DEFAULTS = {
@@ -113,7 +116,6 @@ local function newLabel(parent, name, text, size, position, color, fontSize, fon
 end
 
 local function newGradient(parent, colorA, colorB, rotation)
-
     parent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     local g = Instance.new("UIGradient")
     g.Color = ColorSequence.new({
@@ -171,9 +173,9 @@ end
 
 local _notifySlots = {}
 
-local NOTIFY_W   = 300
-local NOTIFY_H   = 62
-local NOTIFY_GAP = 10
+local NOTIFY_W   = 320
+local NOTIFY_H   = 70
+local NOTIFY_GAP = 12
 local NOTIFY_X   = -1 * (NOTIFY_W + 16)
 
 local function _rebuildNotifyPositions()
@@ -192,7 +194,16 @@ local function _removeNotify(toast)
     end
     _rebuildNotifyPositions()
 
-    tw(toast, { Position = UDim2.new(1, 16, 0, toast.Position.Y.Offset) }, 0.22)
+    tw(toast, { Position = UDim2.new(1, 16, 0, toast.Position.Y.Offset), BackgroundTransparency = 1 }, 0.22)
+    for _, child in ipairs(toast:GetDescendants()) do
+        if child:IsA("TextLabel") or child:IsA("TextButton") then
+            tw(child, { TextTransparency = 1 }, 0.22)
+        elseif child:IsA("Frame") then
+            tw(child, { BackgroundTransparency = 1 }, 0.22)
+        elseif child:IsA("UIStroke") then
+            tw(child, { Transparency = 1 }, 0.22)
+        end
+    end
     task.delay(0.25, function()
         toast:Destroy()
     end)
@@ -205,21 +216,25 @@ function NCUI.new()
     self.screenGui.Name           = "NCUI"
     self.screenGui.ResetOnSpawn   = false
     self.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    self.screenGui.Parent         = LocalPlayer:WaitForChild("PlayerGui")
+    local success, _ = pcall(function() self.screenGui.Parent = game:GetService("CoreGui") end)
+    if not success then
+        self.screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    end
 
     self.panels = {}
     return self
 end
 
 function NCUI:createPanel(name, title, size, position)
-    local finalSize = size or UDim2.new(0, 400, 0, 500)
-    local finalPos = position or UDim2.new(0.5, -200, 0.5, -250)
+    local finalSize = size or UDim2.new(0, 560, 0, 420)
+    local finalPos = position or UDim2.new(0.5, -280, 0.5, -210)
 
     local shell = Instance.new("Frame")
     shell.Name             = name
-    shell.Size             = UDim2.new(0, 120, 0, 120)
-    shell.Position         = UDim2.new(0.5, -60, 0.5, -60)
-    shell.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    shell.Size             = UDim2.new(0, 240, 0, 100)
+    shell.Position         = UDim2.new(0.5, -120, 0.5, -50)
+    shell.BackgroundColor3 = THEME.Background
+    shell.BackgroundTransparency = 1
     shell.BorderSizePixel  = 0
     shell.Parent           = self.screenGui
 
@@ -227,13 +242,8 @@ function NCUI:createPanel(name, title, size, position)
     shellCorner.CornerRadius = UDim.new(0, DEFAULTS.CornerRadius)
     shellCorner.Parent = shell
 
-    newGradient(shell,
-        THEME.GradPanel[1],
-        THEME.GradPanel[2],
-        THEME.GradPanel[3]
-    )
-
     local stroke = newStroke(shell, THEME.Accent, 1.5)
+    stroke.Transparency = 1
 
     local titleBar = Instance.new("TextButton")
     titleBar.Name                  = "TitleBar"
@@ -284,6 +294,15 @@ function NCUI:createPanel(name, title, size, position)
     end)
     closeBtn.MouseButton1Click:Connect(function()
         tw(shell, { BackgroundTransparency = 1 }, 0.18)
+        for _, child in ipairs(shell:GetDescendants()) do
+            if child:IsA("TextLabel") or child:IsA("TextButton") then
+                tw(child, { TextTransparency = 1 }, 0.18)
+            elseif child:IsA("Frame") then
+                tw(child, { BackgroundTransparency = 1 }, 0.18)
+            elseif child:IsA("UIStroke") then
+                tw(child, { Transparency = 1 }, 0.18)
+            end
+        end
         task.delay(0.2, function() shell:Destroy() end)
     end)
 
@@ -294,19 +313,46 @@ function NCUI:createPanel(name, title, size, position)
     )
     div.Visible = false
 
-    local body = Instance.new("ScrollingFrame")
-    body.Name = "Body"
-    body.Size = UDim2.new(1, 0, 1, -45)
-    body.Position = UDim2.new(0, 0, 0, 45)
-    body.BackgroundTransparency = 1
-    body.BorderSizePixel = 0
-    body.ScrollBarThickness = 4
-    body.ScrollBarImageColor3 = THEME.Border
-    body.CanvasSize = UDim2.new(0, 0, 0, 0)
-    body.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    body.Visible = false
-    body.Parent = shell
+    local sidebar = newFrame(shell, "Sidebar",
+        UDim2.new(0, 140, 1, -45),
+        UDim2.new(0, 0, 0, 45),
+        THEME.Surface, DEFAULTS.CornerRadius
+    )
+    sidebar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    newGradient(sidebar, Color3.fromRGB(18, 18, 24), Color3.fromRGB(12, 12, 16), 180)
+    sidebar.Visible = false
+    
+    local sidebarCorner = Instance.new("UICorner")
+    sidebarCorner.CornerRadius = UDim.new(0, DEFAULTS.CornerRadius)
+    sidebarCorner.Parent = sidebar
 
+    local sidebarDiv = newFrame(shell, "SidebarDivider",
+        UDim2.new(0, 1, 1, -45),
+        UDim2.new(0, 140, 0, 45),
+        THEME.Border, 0
+    )
+    sidebarDiv.Visible = false
+
+    local sidebarLayout = Instance.new("UIListLayout")
+    sidebarLayout.FillDirection = Enum.FillDirection.Vertical
+    sidebarLayout.Padding = UDim.new(0, 6)
+    sidebarLayout.Parent = sidebar
+
+    local sidebarPadding = Instance.new("UIPadding")
+    sidebarPadding.PaddingTop = UDim.new(0, 10)
+    sidebarPadding.PaddingBottom = UDim.new(0, 10)
+    sidebarPadding.PaddingLeft = UDim.new(0, 10)
+    sidebarPadding.PaddingRight = UDim.new(0, 10)
+    sidebarPadding.Parent = sidebar
+
+    local contentContainer = newFrame(shell, "ContentContainer",
+        UDim2.new(1, -141, 1, -45),
+        UDim2.new(0, 141, 0, 45),
+        THEME.Background, DEFAULTS.CornerRadius
+    )
+    contentContainer.BackgroundTransparency = 1
+    contentContainer.Visible = false
+    
     makeDraggable(shell, titleBar)
 
     local splashLabel = Instance.new("TextLabel")
@@ -320,28 +366,114 @@ function NCUI:createPanel(name, title, size, position)
     splashLabel.TextTransparency = 1
     splashLabel.Parent = shell
 
-    task.spawn(function()
+    local Window = {
+        Shell = shell,
+        Sidebar = sidebar,
+        ContentContainer = contentContainer,
+        Tabs = {},
+        ActiveTab = nil,
+        UI = self
+    }
 
+    function Window:CreateTab(tabName)
+        local tabBtn = Instance.new("TextButton")
+        tabBtn.Name = "TabBtn_" .. tabName
+        tabBtn.Size = UDim2.new(1, 0, 0, 34)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        tabBtn.BackgroundTransparency = 1
+        tabBtn.Text = tabName
+        tabBtn.TextColor3 = THEME.TextSecondary
+        tabBtn.TextSize = DEFAULTS.FontSize
+        tabBtn.Font = DEFAULTS.FontTitle
+        tabBtn.BorderSizePixel = 0
+        tabBtn.AutoButtonColor = false
+        tabBtn.Parent = self.Sidebar
+
+        local c = Instance.new("UICorner")
+        c.CornerRadius = UDim.new(0, 8)
+        c.Parent = tabBtn
+
+        local body = Instance.new("ScrollingFrame")
+        body.Name = "TabBody_" .. tabName
+        body.Size = UDim2.new(1, 0, 1, 0)
+        body.Position = UDim2.new(0, 0, 0, 0)
+        body.BackgroundTransparency = 1
+        body.BorderSizePixel = 0
+        body.ScrollBarThickness = 2
+        body.ScrollBarImageColor3 = THEME.Border
+        body.CanvasSize = UDim2.new(0, 0, 0, 0)
+        body.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        body.Visible = false
+        body.Parent = self.ContentContainer
+        
+        local innerPad = Instance.new("UIPadding")
+        innerPad.PaddingTop    = UDim.new(0, DEFAULTS.Padding)
+        innerPad.PaddingBottom = UDim.new(0, DEFAULTS.Padding)
+        innerPad.PaddingLeft   = UDim.new(0, DEFAULTS.Padding)
+        innerPad.PaddingRight  = UDim.new(0, DEFAULTS.Padding)
+        innerPad.Parent        = body
+        
+        local layout = Instance.new("UIListLayout")
+        layout.SortOrder        = Enum.SortOrder.LayoutOrder
+        layout.FillDirection    = Enum.FillDirection.Vertical
+        layout.Padding          = UDim.new(0, 8)
+        layout.Parent           = body
+
+        local tab = { Button = tabBtn, Body = body }
+        table.insert(self.Tabs, tab)
+
+        tabBtn.MouseButton1Click:Connect(function()
+            self:SelectTab(tab)
+        end)
+
+        if #self.Tabs == 1 then
+            self:SelectTab(tab)
+        end
+
+        return body
+    end
+
+    function Window:SelectTab(tabToSelect)
+        for _, tab in ipairs(self.Tabs) do
+            local isSelected = (tab == tabToSelect)
+            if isSelected then
+                tab.Button.BackgroundTransparency = 0
+                local existing = tab.Button:FindFirstChildOfClass("UIGradient")
+                if not existing then
+                    newGradient(tab.Button, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
+                end
+                tw(tab.Button, { TextColor3 = THEME.TextOnAccent }, 0.15)
+                tab.Body.Visible = true
+            else
+                tab.Button.BackgroundTransparency = 1
+                local g = tab.Button:FindFirstChildOfClass("UIGradient")
+                if g then g:Destroy() end
+                tw(tab.Button, { TextColor3 = THEME.TextSecondary }, 0.15)
+                tab.Body.Visible = false
+            end
+        end
+    end
+
+    task.spawn(function()
+        tw(stroke, { Transparency = 0 }, 0.3)
         tw(splashLabel, { TextTransparency = 0 }, 0.3)
+        task.wait(0.6)
+
+        splashLabel.TextSize = 26
+        local fullText = "NOX CHEATS"
+        splashLabel.Text = ""
+        for i = 1, #fullText do
+            splashLabel.Text = string.sub(fullText, 1, i)
+            task.wait(0.04)
+        end
         task.wait(0.8)
 
-        tw(shell, {
-            Size = UDim2.new(0, 240, 0, 120),
-            Position = UDim2.new(0.5, -120, 0.5, -60)
-        }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-
-        tw(splashLabel, { TextTransparency = 1 }, 0.15)
-        task.wait(0.15)
-        splashLabel.Text = "NOX CHEATS"
-        splashLabel.TextSize = 22
-        tw(splashLabel, { TextTransparency = 0 }, 0.2)
-
-        task.wait(1.0)
-
         tw(splashLabel, { TextTransparency = 1 }, 0.2)
-        tw(stroke, { Color = THEME.Border }, 0.4)
-
         task.wait(0.2)
+
+        tw(shell, { BackgroundTransparency = 0 }, 0.2)
+        
+        local bgGradient = newGradient(shell, THEME.GradPanel[1], THEME.GradPanel[2], THEME.GradPanel[3])
 
         tw(shell, {
             Size = finalSize,
@@ -354,7 +486,9 @@ function NCUI:createPanel(name, title, size, position)
 
         titleBar.Visible = true
         div.Visible = true
-        body.Visible = true
+        sidebar.Visible = true
+        sidebarDiv.Visible = true
+        contentContainer.Visible = true
 
         titleLabel.TextTransparency = 1
         closeBtn.TextTransparency = 1
@@ -362,15 +496,15 @@ function NCUI:createPanel(name, title, size, position)
         tw(closeBtn, { TextTransparency = 0 }, 0.25)
     end)
 
-    table.insert(self.panels, { instance = shell, body = body })
-    return shell, body
+    table.insert(self.panels, { instance = shell, window = Window })
+    return Window
 end
 
 function NCUI:createTitle(parent, text, fontSize)
     local l = newLabel(
         parent, "Title", text,
-        UDim2.new(1, -DEFAULTS.Padding * 2, 0, 30),
-        UDim2.new(0, DEFAULTS.Padding, 0, DEFAULTS.Padding),
+        UDim2.new(1, -4, 0, 30),
+        UDim2.new(0, 2, 0, 0),
         THEME.TextPrimary, fontSize or 16, DEFAULTS.FontTitle
     )
     l.TextXAlignment = Enum.TextXAlignment.Left
@@ -380,8 +514,8 @@ end
 function NCUI:createLabel(parent, text, size, position, fontSize)
     return newLabel(
         parent, "Label", text,
-        size     or UDim2.new(1, -DEFAULTS.Padding * 2, 0, 26),
-        position or UDim2.new(0, DEFAULTS.Padding, 0, DEFAULTS.Padding),
+        size     or UDim2.new(1, -4, 0, 26),
+        position or UDim2.new(0, 2, 0, 0),
         THEME.TextSecondary, fontSize or DEFAULTS.FontSize, DEFAULTS.FontLight
     )
 end
@@ -392,8 +526,8 @@ function NCUI:createButton(parent, text, size, position, style, callback)
     local btn = Instance.new("TextButton")
     btn.Name             = "Button_" .. text
     btn.Text             = text
-    btn.Size             = size     or UDim2.new(0, 120, 0, 40)
-    btn.Position         = position or UDim2.new(0, DEFAULTS.Padding, 0, DEFAULTS.Padding)
+    btn.Size             = size     or UDim2.new(1, -4, 0, 40)
+    btn.Position         = position or UDim2.new(0, 2, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextColor3       = THEME.TextOnAccent
     btn.TextSize         = DEFAULTS.FontSize
@@ -403,12 +537,11 @@ function NCUI:createButton(parent, text, size, position, style, callback)
     btn.Parent           = parent
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, DEFAULTS.PillRadius)
+    corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = btn
 
     local stroke
     if style == "primary" then
-
         newGradient(btn, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
         btn.TextColor3 = THEME.TextOnAccent
     elseif style == "ghost" then
@@ -431,14 +564,9 @@ function NCUI:createButton(parent, text, size, position, style, callback)
 
     btn.MouseButton1Down:Connect(function()
         tw(btn, { BackgroundTransparency = 0.2 }, 0.07)
-        tw(btn, { Size = UDim2.new(
-            btn.Size.X.Scale, btn.Size.X.Offset - 2,
-            btn.Size.Y.Scale, btn.Size.Y.Offset - 2
-        )}, 0.07)
     end)
     btn.MouseButton1Up:Connect(function()
         tw(btn, { BackgroundTransparency = 0 }, 0.1)
-        tw(btn, { Size = size or UDim2.new(0, 120, 0, 40) }, 0.1)
     end)
 
     if callback then
@@ -448,99 +576,20 @@ function NCUI:createButton(parent, text, size, position, style, callback)
     return btn
 end
 
-function NCUI:createTabBar(parent, tabs, size, position, callback)
-    local bar = newFrame(
-        parent, "TabBar",
-        size     or UDim2.new(0, (#tabs * 100) + 12, 0, 44),
-        position or UDim2.new(0, DEFAULTS.Padding, 0, DEFAULTS.Padding),
-        Color3.fromRGB(255, 255, 255),
-        DEFAULTS.PillRadius
-    )
-    newGradient(bar, Color3.fromRGB(36, 36, 46), Color3.fromRGB(28, 28, 36), 180)
-    newStroke(bar, THEME.Border, 1)
-
-    local rowLayout = Instance.new("UIListLayout")
-    rowLayout.FillDirection       = Enum.FillDirection.Horizontal
-    rowLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    rowLayout.VerticalAlignment   = Enum.VerticalAlignment.Center
-    rowLayout.Padding             = UDim.new(0, 4)
-    rowLayout.Parent              = bar
-
-    local innerPad = Instance.new("UIPadding")
-    innerPad.PaddingLeft  = UDim.new(0, 5)
-    innerPad.PaddingRight = UDim.new(0, 5)
-    innerPad.Parent       = bar
-
-    local buttons = {}
-
-    local function setActive(index)
-        for i, btn in ipairs(buttons) do
-            local isActive = (i == index)
-            if isActive then
-                btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                btn.BackgroundTransparency = 0
-
-                local existing = btn:FindFirstChildOfClass("UIGradient")
-                if not existing then
-                    newGradient(btn, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
-                end
-                tw(btn, { TextColor3 = THEME.TextOnAccent }, 0.15)
-            else
-                btn.BackgroundTransparency = 1
-                local g = btn:FindFirstChildOfClass("UIGradient")
-                if g then g:Destroy() end
-                tw(btn, { TextColor3 = THEME.TextSecondary }, 0.15)
-            end
-        end
-    end
-
-    for i, tabName in ipairs(tabs) do
-        local btn = Instance.new("TextButton")
-        btn.Name                   = "Tab_" .. tabName
-        btn.Text                   = tabName
-        btn.Size                   = UDim2.new(0, 96, 0, 34)
-        btn.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
-        btn.BackgroundTransparency = i == 1 and 0 or 1
-        btn.TextColor3             = i == 1 and THEME.TextOnAccent or THEME.TextSecondary
-        btn.TextSize               = DEFAULTS.FontSize
-        btn.Font                   = DEFAULTS.FontTitle
-        btn.BorderSizePixel        = 0
-        btn.AutoButtonColor        = false
-        btn.Parent                 = bar
-
-        local c = Instance.new("UICorner")
-        c.CornerRadius = UDim.new(0, DEFAULTS.PillRadius)
-        c.Parent = btn
-
-        if i == 1 then
-            newGradient(btn, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
-        end
-
-        btn.MouseButton1Click:Connect(function()
-            setActive(i)
-            if callback then callback(i, tabName) end
-        end)
-
-        table.insert(buttons, btn)
-    end
-
-    return bar, setActive
-end
-
 function NCUI:createInputBox(parent, placeholder, size, position)
     local frame = newFrame(
         parent, "InputBox",
-        size     or UDim2.new(1, -DEFAULTS.Padding * 2, 0, 42),
-        position or UDim2.new(0, DEFAULTS.Padding, 0, DEFAULTS.Padding),
-        Color3.fromRGB(255, 255, 255)
+        size     or UDim2.new(1, -4, 0, 42),
+        position or UDim2.new(0, 2, 0, 0),
+        Color3.fromRGB(255, 255, 255), 8
     )
     newGradient(frame, Color3.fromRGB(36, 36, 48), Color3.fromRGB(28, 28, 38), 180)
     local stroke = newStroke(frame, THEME.Border, 1)
 
     local input = Instance.new("TextBox")
     input.Name                   = "TextInput"
-    input.Size                   = UDim2.new(1, -DEFAULTS.Padding, 1, 0)
-    input.Position               = UDim2.new(0, DEFAULTS.Padding / 2, 0, 0)
+    input.Size                   = UDim2.new(1, -20, 1, 0)
+    input.Position               = UDim2.new(0, 10, 0, 0)
     input.BackgroundTransparency = 1
     input.TextColor3             = THEME.TextPrimary
     input.PlaceholderColor3      = THEME.TextSecondary
@@ -548,6 +597,7 @@ function NCUI:createInputBox(parent, placeholder, size, position)
     input.TextSize               = DEFAULTS.FontSize
     input.Font                   = DEFAULTS.FontBody
     input.ClearTextOnFocus       = false
+    input.TextXAlignment         = Enum.TextXAlignment.Left
     input.Parent                 = frame
 
     input.Focused:Connect(function()
@@ -563,9 +613,9 @@ end
 function NCUI:createToggle(parent, label, defaultValue, callback, size, position)
     local row = newFrame(
         parent, "Toggle",
-        size     or UDim2.new(1, -DEFAULTS.Padding * 2, 0, 44),
-        position or UDim2.new(0, DEFAULTS.Padding, 0, DEFAULTS.Padding),
-        Color3.fromRGB(255, 255, 255)
+        size     or UDim2.new(1, -4, 0, 44),
+        position or UDim2.new(0, 2, 0, 0),
+        Color3.fromRGB(255, 255, 255), 8
     )
     newGradient(row, Color3.fromRGB(34, 34, 44), Color3.fromRGB(26, 26, 34), 180)
 
@@ -613,7 +663,6 @@ function NCUI:createToggle(parent, label, defaultValue, callback, size, position
 
     track.MouseButton1Click:Connect(function()
         isOn = not isOn
-
         local g = track:FindFirstChildOfClass("UIGradient")
         if g then g:Destroy() end
 
@@ -624,9 +673,7 @@ function NCUI:createToggle(parent, label, defaultValue, callback, size, position
         end
 
         tw(thumb, {
-            Position = isOn
-                and UDim2.new(0, 25, 0.5, -10)
-                or  UDim2.new(0, 3,  0.5, -10)
+            Position = isOn and UDim2.new(0, 25, 0.5, -10) or UDim2.new(0, 3, 0.5, -10)
         }, 0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
         if callback then callback(isOn) end
@@ -638,9 +685,9 @@ end
 function NCUI:createDropdown(parent, options, defaultIndex, callback, size, position)
     local wrapper = newFrame(
         parent, "Dropdown",
-        size     or UDim2.new(1, -DEFAULTS.Padding * 2, 0, 42),
-        position or UDim2.new(0, DEFAULTS.Padding, 0, DEFAULTS.Padding),
-        Color3.fromRGB(255, 255, 255)
+        size     or UDim2.new(1, -4, 0, 42),
+        position or UDim2.new(0, 2, 0, 0),
+        Color3.fromRGB(255, 255, 255), 8
     )
     newGradient(wrapper, Color3.fromRGB(36, 36, 48), Color3.fromRGB(28, 28, 38), 180)
     local stroke = newStroke(wrapper, THEME.Border, 1)
@@ -658,7 +705,7 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
     chevron.Size                   = UDim2.new(0, 32, 1, 0)
     chevron.Position               = UDim2.new(1, -36, 0, 0)
     chevron.BackgroundTransparency = 1
-    chevron.Text                   = "›"
+    chevron.Text                   = ">"
     chevron.TextColor3             = THEME.TextSecondary
     chevron.TextSize               = 22
     chevron.Font                   = DEFAULTS.FontTitle
@@ -677,7 +724,7 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
     list.Parent           = wrapper
 
     local listCorner = Instance.new("UICorner")
-    listCorner.CornerRadius = UDim.new(0, DEFAULTS.CornerRadius)
+    listCorner.CornerRadius = UDim.new(0, 8)
     listCorner.Parent = list
 
     newGradient(list, Color3.fromRGB(34, 34, 46), Color3.fromRGB(24, 24, 34), 180)
@@ -735,8 +782,8 @@ end
 function NCUI:createDivider(parent, position)
     return newFrame(
         parent, "Divider",
-        UDim2.new(1, -DEFAULTS.Padding * 2, 0, 1),
-        position or UDim2.new(0, DEFAULTS.Padding, 0, DEFAULTS.Padding),
+        UDim2.new(1, -4, 0, 1),
+        position or UDim2.new(0, 2, 0, 0),
         THEME.Border, 0
     )
 end
@@ -750,11 +797,11 @@ function NCUI:notify(message, kind, duration)
     })[kind or "info"] or THEME.Accent
 
     local kindIcon = ({
-        success = "✓",
-        danger  = "✕",
-        warning = "⚠",
-        info    = "ℹ",
-    })[kind or "info"] or "ℹ"
+        success = "V",
+        danger  = "X",
+        warning = "!",
+        info    = "i",
+    })[kind or "info"] or "i"
 
     local slotIndex = #_notifySlots + 1
     local yPos = 16 + (slotIndex - 1) * (NOTIFY_H + NOTIFY_GAP)
@@ -769,39 +816,50 @@ function NCUI:notify(message, kind, duration)
     toast.Parent           = self.screenGui
 
     local toastCorner = Instance.new("UICorner")
-    toastCorner.CornerRadius = UDim.new(0, 12)
+    toastCorner.CornerRadius = UDim.new(0, 8)
     toastCorner.Parent = toast
 
-    newGradient(toast, Color3.fromRGB(32, 32, 42), Color3.fromRGB(22, 22, 30), 180)
+    newGradient(toast, THEME.ToastBackground, Color3.fromRGB(22, 22, 30), 180)
     newStroke(toast, THEME.Border, 1)
 
-    local strip = newFrame(toast, "Strip", UDim2.new(0, 3, 1, -16), UDim2.new(0, 8, 0, 8), kindColor, 999)
+    local strip = newFrame(toast, "Strip", UDim2.new(0, 4, 1, 0), UDim2.new(0, 0, 0, 0), kindColor, 0)
     strip.ZIndex = 101
+    local stripCorner = Instance.new("UICorner")
+    stripCorner.CornerRadius = UDim.new(0, 8)
+    stripCorner.Parent = strip
 
+    local iconBg = newFrame(toast, "IconBg", UDim2.new(0, 30, 0, 30), UDim2.new(0, 14, 0.5, -15), kindColor, 8)
+    iconBg.ZIndex = 101
+    iconBg.BackgroundTransparency = 0.8
+    
     local icon = newLabel(
-        toast, "Icon", kindIcon,
-        UDim2.new(0, 24, 1, 0),
-        UDim2.new(0, 20, 0, 0),
-        kindColor, 16, DEFAULTS.FontTitle
+        iconBg, "Icon", kindIcon,
+        UDim2.new(1, 0, 1, 0),
+        UDim2.new(0, 0, 0, 0),
+        kindColor, 18, DEFAULTS.FontTitle
     )
     icon.TextXAlignment = Enum.TextXAlignment.Center
-    icon.ZIndex = 101
+    icon.ZIndex = 102
 
     local msg = newLabel(
         toast, "Msg", message,
-        UDim2.new(1, -56, 1, 0),
-        UDim2.new(0, 48, 0, 0),
-        THEME.TextPrimary, 13, DEFAULTS.FontBody
+        UDim2.new(1, -85, 1, 0),
+        UDim2.new(0, 55, 0, 0),
+        THEME.TextPrimary, 14, DEFAULTS.FontBody
     )
     msg.ZIndex = 101
 
     local progBg = newFrame(toast, "ProgBg",
-        UDim2.new(1, -16, 0, 2),
-        UDim2.new(0, 8, 1, -8),
+        UDim2.new(1, 0, 0, 3),
+        UDim2.new(0, 0, 1, -3),
         Color3.fromRGB(255, 255, 255), 999
     )
-    progBg.BackgroundTransparency = 0.85
+    progBg.BackgroundTransparency = 0.95
     progBg.ZIndex = 101
+    
+    local progBgCorner = Instance.new("UICorner")
+    progBgCorner.CornerRadius = UDim.new(0, 8)
+    progBgCorner.Parent = progBg
 
     local prog = newFrame(progBg, "Prog",
         UDim2.new(1, 0, 1, 0),
@@ -810,22 +868,9 @@ function NCUI:notify(message, kind, duration)
     )
     prog.ZIndex = 102
 
-    local closeX = Instance.new("TextButton")
-    closeX.Name                   = "CloseX"
-    closeX.Size                   = UDim2.new(0, 20, 0, 20)
-    closeX.Position               = UDim2.new(1, -26, 0, 6)
-    closeX.BackgroundTransparency = 1
-    closeX.Text                   = "×"
-    closeX.TextColor3             = THEME.TextSecondary
-    closeX.TextSize               = 16
-    closeX.Font                   = DEFAULTS.FontTitle
-    closeX.ZIndex                 = 102
-    closeX.Parent                 = toast
-
     table.insert(_notifySlots, toast)
 
-    tw(toast, { Position = UDim2.new(1, -(NOTIFY_W + 16), 0, yPos) }, 0.3,
-        Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    tw(toast, { Position = UDim2.new(1, -(NOTIFY_W + 16), 0, yPos) }, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
     local dur = duration or 3.5
     tw(prog, { Size = UDim2.new(0, 0, 1, 0) }, dur, Enum.EasingStyle.Linear)
@@ -837,7 +882,6 @@ function NCUI:notify(message, kind, duration)
         _removeNotify(toast)
     end
 
-    closeX.MouseButton1Click:Connect(dismiss)
     task.delay(dur, dismiss)
 
     return toast
@@ -845,15 +889,6 @@ end
 
 function NCUI:animate(instance, props, duration, style, direction)
     return tw(instance, props, duration, style, direction)
-end
-
-function NCUI:fadeIn(instance, duration)
-    instance.BackgroundTransparency = 1
-    return tw(instance, { BackgroundTransparency = 0 }, duration)
-end
-
-function NCUI:fadeOut(instance, duration)
-    return tw(instance, { BackgroundTransparency = 1 }, duration)
 end
 
 function NCUI:destroy()
