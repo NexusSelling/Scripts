@@ -804,17 +804,25 @@ function NCUI:createToggle(parent, label, defaultValue, callback, size, position
 end
 
 function NCUI:createDropdown(parent, options, defaultIndex, callback, size, position)
-    local wrapper = newFrame(
-        parent, "Dropdown",
-        size     or UDim2.new(1, -4, 0, 42),
-        position or UDim2.new(0, 2, 0, 0),
+    local wrapper = Instance.new("Frame")
+    wrapper.Name = "Dropdown"
+    wrapper.Size = size or UDim2.new(1, -4, 0, 42)
+    wrapper.Position = position or UDim2.new(0, 2, 0, 0)
+    wrapper.BackgroundTransparency = 1
+    wrapper.BorderSizePixel = 0
+    wrapper.Parent = parent
+
+    local header = newFrame(
+        wrapper, "Header",
+        UDim2.new(1, 0, 0, 42),
+        UDim2.new(0, 0, 0, 0),
         Color3.fromRGB(255, 255, 255), 8
     )
-    newGradient(wrapper, Color3.fromRGB(36, 36, 48), Color3.fromRGB(28, 28, 38), 180)
-    local stroke = newStroke(wrapper, THEME.Border, 1)
+    newGradient(header, Color3.fromRGB(36, 36, 48), Color3.fromRGB(28, 28, 38), 180)
+    local stroke = newStroke(header, THEME.Border, 1)
 
     local selectedLabel = newLabel(
-        wrapper, "SelectedLabel",
+        header, "SelectedLabel",
         options[defaultIndex or 1],
         UDim2.new(0.8, 0, 1, 0),
         UDim2.new(0, DEFAULTS.Padding, 0, 0),
@@ -831,12 +839,12 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
     chevron.TextSize               = 22
     chevron.Font                   = DEFAULTS.FontTitle
     chevron.Rotation               = 90
-    chevron.Parent                 = wrapper
+    chevron.Parent                 = header
 
     local list = Instance.new("Frame")
     list.Name             = "DropdownList"
     list.Size             = UDim2.new(1, 0, 0, 0)
-    list.Position         = UDim2.new(0, 0, 1, 6)
+    list.Position         = UDim2.new(0, 0, 0, 48)
     list.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     list.BorderSizePixel  = 0
     list.ZIndex           = 10
@@ -882,6 +890,7 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
             tw(stroke,  { Color = THEME.Border }, 0.15)
             tw(chevron, { Rotation = 90 }, 0.18)
             tw(list, { Size = UDim2.new(1, 0, 0, 0) }, 0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+            tw(wrapper, { Size = size or UDim2.new(1, -4, 0, 42) }, 0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
             task.delay(0.2, function()
                 if not isOpen then
                     list.Visible = false
@@ -899,8 +908,10 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
         if isOpen then
             list.Visible = true
             tw(list, { Size = UDim2.new(1, 0, 0, targetHeight) }, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+            tw(wrapper, { Size = UDim2.new(1, -4, 0, 42 + targetHeight + 6) }, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
         else
             tw(list, { Size = UDim2.new(1, 0, 0, 0) }, 0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+            tw(wrapper, { Size = size or UDim2.new(1, -4, 0, 42) }, 0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
             task.delay(0.2, function()
                 if not isOpen then
                     list.Visible = false
@@ -910,7 +921,7 @@ function NCUI:createDropdown(parent, options, defaultIndex, callback, size, posi
     end
 
     chevron.MouseButton1Click:Connect(toggle)
-    wrapper.InputBegan:Connect(function(inp)
+    header.InputBegan:Connect(function(inp)
         if inp.UserInputType == Enum.UserInputType.MouseButton1 then
             toggle()
         end
