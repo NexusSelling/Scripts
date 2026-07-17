@@ -173,9 +173,9 @@ end
 
 local _notifySlots = {}
 
-local NOTIFY_W   = 320
-local NOTIFY_H   = 70
-local NOTIFY_GAP = 12
+local NOTIFY_W   = 280
+local NOTIFY_H   = 56
+local NOTIFY_GAP = 10
 local NOTIFY_X   = -1 * (NOTIFY_W + 16)
 
 local function _rebuildNotifyPositions()
@@ -229,13 +229,34 @@ function NCUI:createPanel(name, title, size, position)
     local finalSize = size or UDim2.new(0, 560, 0, 420)
     local finalPos = position or UDim2.new(0.5, -280, 0.5, -210)
 
+    -- Fullscreen Intro Splash
+    local splashScreen = Instance.new("Frame")
+    splashScreen.Name = "SplashScreen"
+    splashScreen.Size = UDim2.new(1, 0, 1, 0)
+    splashScreen.BackgroundTransparency = 1
+    splashScreen.ZIndex = 100
+    splashScreen.Parent = self.screenGui
+
+    local splashLabel = Instance.new("TextLabel")
+    splashLabel.Name = "SplashLabel"
+    splashLabel.Size = UDim2.new(1, 0, 1, 0)
+    splashLabel.BackgroundTransparency = 1
+    splashLabel.Text = "NC"
+    splashLabel.TextColor3 = THEME.Accent
+    splashLabel.TextSize = 48
+    splashLabel.Font = DEFAULTS.FontTitle
+    splashLabel.TextTransparency = 1
+    splashLabel.ZIndex = 101
+    splashLabel.Parent = splashScreen
+
     local shell = Instance.new("Frame")
     shell.Name             = name
-    shell.Size             = UDim2.new(0, 240, 0, 100)
-    shell.Position         = UDim2.new(0.5, -120, 0.5, -50)
+    shell.Size             = UDim2.new(0, 0, 0, 0)
+    shell.Position         = UDim2.new(0.5, 0, 0.5, 0)
     shell.BackgroundColor3 = THEME.Background
     shell.BackgroundTransparency = 1
     shell.BorderSizePixel  = 0
+    shell.ClipsDescendants = true
     shell.Parent           = self.screenGui
 
     local shellCorner = Instance.new("UICorner")
@@ -253,7 +274,6 @@ function NCUI:createPanel(name, title, size, position)
     titleBar.Text                  = ""
     titleBar.AutoButtonColor       = false
     titleBar.ZIndex                = 5
-    titleBar.Visible               = false
     titleBar.Parent                = shell
 
     local titleLabel = newLabel(
@@ -293,17 +313,9 @@ function NCUI:createPanel(name, title, size, position)
         closeBtn.TextColor3 = THEME.TextSecondary
     end)
     closeBtn.MouseButton1Click:Connect(function()
-        tw(shell, { BackgroundTransparency = 1 }, 0.18)
-        for _, child in ipairs(shell:GetDescendants()) do
-            if child:IsA("TextLabel") or child:IsA("TextButton") then
-                tw(child, { TextTransparency = 1 }, 0.18)
-            elseif child:IsA("Frame") then
-                tw(child, { BackgroundTransparency = 1 }, 0.18)
-            elseif child:IsA("UIStroke") then
-                tw(child, { Transparency = 1 }, 0.18)
-            end
-        end
-        task.delay(0.2, function() shell:Destroy() end)
+        tw(shell, { Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0) }, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+        tw(stroke, { Transparency = 1 }, 0.2)
+        task.delay(0.3, function() shell:Destroy() end)
     end)
 
     local div = newFrame(shell, "TitleDivider",
@@ -311,7 +323,6 @@ function NCUI:createPanel(name, title, size, position)
         UDim2.new(0, 0, 0, 44),
         THEME.Border, 0
     )
-    div.Visible = false
 
     local sidebar = newFrame(shell, "Sidebar",
         UDim2.new(0, 140, 1, -45),
@@ -320,7 +331,6 @@ function NCUI:createPanel(name, title, size, position)
     )
     sidebar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     newGradient(sidebar, Color3.fromRGB(18, 18, 24), Color3.fromRGB(12, 12, 16), 180)
-    sidebar.Visible = false
     
     local sidebarCorner = Instance.new("UICorner")
     sidebarCorner.CornerRadius = UDim.new(0, DEFAULTS.CornerRadius)
@@ -331,7 +341,6 @@ function NCUI:createPanel(name, title, size, position)
         UDim2.new(0, 140, 0, 45),
         THEME.Border, 0
     )
-    sidebarDiv.Visible = false
 
     local sidebarLayout = Instance.new("UIListLayout")
     sidebarLayout.FillDirection = Enum.FillDirection.Vertical
@@ -351,20 +360,8 @@ function NCUI:createPanel(name, title, size, position)
         THEME.Background, DEFAULTS.CornerRadius
     )
     contentContainer.BackgroundTransparency = 1
-    contentContainer.Visible = false
     
     makeDraggable(shell, titleBar)
-
-    local splashLabel = Instance.new("TextLabel")
-    splashLabel.Name = "SplashLabel"
-    splashLabel.Size = UDim2.new(1, 0, 1, 0)
-    splashLabel.BackgroundTransparency = 1
-    splashLabel.Text = "NC"
-    splashLabel.TextColor3 = THEME.Accent
-    splashLabel.TextSize = 36
-    splashLabel.Font = DEFAULTS.FontTitle
-    splashLabel.TextTransparency = 1
-    splashLabel.Parent = shell
 
     local Window = {
         Shell = shell,
@@ -387,11 +384,28 @@ function NCUI:createPanel(name, title, size, position)
         tabBtn.Font = DEFAULTS.FontTitle
         tabBtn.BorderSizePixel = 0
         tabBtn.AutoButtonColor = false
+        tabBtn.ZIndex = 2
         tabBtn.Parent = self.Sidebar
 
-        local c = Instance.new("UICorner")
-        c.CornerRadius = UDim.new(0, 8)
-        c.Parent = tabBtn
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 8)
+        btnCorner.Parent = tabBtn
+
+        -- Active Background Frame to avoid gradient affecting text visibility
+        local activeBg = Instance.new("Frame")
+        activeBg.Name = "ActiveBg"
+        activeBg.Size = UDim2.new(1, 0, 1, 0)
+        activeBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        activeBg.BackgroundTransparency = 1
+        activeBg.BorderSizePixel = 0
+        activeBg.ZIndex = 1
+        activeBg.Parent = tabBtn
+
+        local activeCorner = Instance.new("UICorner")
+        activeCorner.CornerRadius = UDim.new(0, 8)
+        activeCorner.Parent = activeBg
+
+        newGradient(activeBg, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
 
         local body = Instance.new("ScrollingFrame")
         body.Name = "TabBody_" .. tabName
@@ -419,7 +433,7 @@ function NCUI:createPanel(name, title, size, position)
         layout.Padding          = UDim.new(0, 8)
         layout.Parent           = body
 
-        local tab = { Button = tabBtn, Body = body }
+        local tab = { Button = tabBtn, ActiveBg = activeBg, Body = body }
         table.insert(self.Tabs, tab)
 
         tabBtn.MouseButton1Click:Connect(function()
@@ -435,19 +449,12 @@ function NCUI:createPanel(name, title, size, position)
 
     function Window:SelectTab(tabToSelect)
         for _, tab in ipairs(self.Tabs) do
-            local isSelected = (tab == tabToSelect)
-            if isSelected then
-                tab.Button.BackgroundTransparency = 0
-                local existing = tab.Button:FindFirstChildOfClass("UIGradient")
-                if not existing then
-                    newGradient(tab.Button, THEME.GradPrimary[1], THEME.GradPrimary[2], THEME.GradPrimary[3])
-                end
+            if tab == tabToSelect then
+                tw(tab.ActiveBg, { BackgroundTransparency = 0 }, 0.15)
                 tw(tab.Button, { TextColor3 = THEME.TextOnAccent }, 0.15)
                 tab.Body.Visible = true
             else
-                tab.Button.BackgroundTransparency = 1
-                local g = tab.Button:FindFirstChildOfClass("UIGradient")
-                if g then g:Destroy() end
+                tw(tab.ActiveBg, { BackgroundTransparency = 1 }, 0.15)
                 tw(tab.Button, { TextColor3 = THEME.TextSecondary }, 0.15)
                 tab.Body.Visible = false
             end
@@ -455,11 +462,11 @@ function NCUI:createPanel(name, title, size, position)
     end
 
     task.spawn(function()
-        tw(stroke, { Transparency = 0 }, 0.3)
+        -- Play Fullscreen Intro
         tw(splashLabel, { TextTransparency = 0 }, 0.3)
         task.wait(0.6)
 
-        splashLabel.TextSize = 26
+        splashLabel.TextSize = 32
         local fullText = "NOX CHEATS"
         splashLabel.Text = ""
         for i = 1, #fullText do
@@ -468,32 +475,28 @@ function NCUI:createPanel(name, title, size, position)
         end
         task.wait(0.8)
 
+        -- Fade out fullscreen intro
         tw(splashLabel, { TextTransparency = 1 }, 0.2)
         task.wait(0.2)
+        splashScreen:Destroy()
 
-        tw(shell, { BackgroundTransparency = 0 }, 0.2)
-        
+        -- Pop Window In
+        tw(shell, { BackgroundTransparency = 0 }, 0.1)
         local bgGradient = newGradient(shell, THEME.GradPanel[1], THEME.GradPanel[2], THEME.GradPanel[3])
+        tw(stroke, { Transparency = 0 }, 0.3)
 
+        shell.ClipsDescendants = false
         tw(shell, {
             Size = finalSize,
             Position = finalPos
-        }, 0.55, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut)
+        }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
-        task.wait(0.55)
-
-        splashLabel:Destroy()
-
-        titleBar.Visible = true
-        div.Visible = true
-        sidebar.Visible = true
-        sidebarDiv.Visible = true
-        contentContainer.Visible = true
-
-        titleLabel.TextTransparency = 1
-        closeBtn.TextTransparency = 1
-        tw(titleLabel, { TextTransparency = 0 }, 0.25)
-        tw(closeBtn, { TextTransparency = 0 }, 0.25)
+        for _, child in ipairs(shell:GetDescendants()) do
+            if child:IsA("TextLabel") or child:IsA("TextButton") then
+                child.TextTransparency = 1
+                tw(child, { TextTransparency = 0 }, 0.3)
+            end
+        end
     end)
 
     table.insert(self.panels, { instance = shell, window = Window })
@@ -796,13 +799,6 @@ function NCUI:notify(message, kind, duration)
         info    = THEME.Accent,
     })[kind or "info"] or THEME.Accent
 
-    local kindIcon = ({
-        success = "V",
-        danger  = "X",
-        warning = "!",
-        info    = "i",
-    })[kind or "info"] or "i"
-
     local slotIndex = #_notifySlots + 1
     local yPos = 16 + (slotIndex - 1) * (NOTIFY_H + NOTIFY_GAP)
 
@@ -816,7 +812,7 @@ function NCUI:notify(message, kind, duration)
     toast.Parent           = self.screenGui
 
     local toastCorner = Instance.new("UICorner")
-    toastCorner.CornerRadius = UDim.new(0, 8)
+    toastCorner.CornerRadius = UDim.new(0, 6)
     toastCorner.Parent = toast
 
     newGradient(toast, THEME.ToastBackground, Color3.fromRGB(22, 22, 30), 180)
@@ -825,41 +821,24 @@ function NCUI:notify(message, kind, duration)
     local strip = newFrame(toast, "Strip", UDim2.new(0, 4, 1, 0), UDim2.new(0, 0, 0, 0), kindColor, 0)
     strip.ZIndex = 101
     local stripCorner = Instance.new("UICorner")
-    stripCorner.CornerRadius = UDim.new(0, 8)
+    stripCorner.CornerRadius = UDim.new(0, 6)
     stripCorner.Parent = strip
-
-    local iconBg = newFrame(toast, "IconBg", UDim2.new(0, 30, 0, 30), UDim2.new(0, 14, 0.5, -15), kindColor, 8)
-    iconBg.ZIndex = 101
-    iconBg.BackgroundTransparency = 0.8
-    
-    local icon = newLabel(
-        iconBg, "Icon", kindIcon,
-        UDim2.new(1, 0, 1, 0),
-        UDim2.new(0, 0, 0, 0),
-        kindColor, 18, DEFAULTS.FontTitle
-    )
-    icon.TextXAlignment = Enum.TextXAlignment.Center
-    icon.ZIndex = 102
 
     local msg = newLabel(
         toast, "Msg", message,
-        UDim2.new(1, -85, 1, 0),
-        UDim2.new(0, 55, 0, 0),
-        THEME.TextPrimary, 14, DEFAULTS.FontBody
+        UDim2.new(1, -30, 1, 0),
+        UDim2.new(0, 18, 0, 0),
+        THEME.TextPrimary, 14, DEFAULTS.FontTitle
     )
     msg.ZIndex = 101
 
     local progBg = newFrame(toast, "ProgBg",
-        UDim2.new(1, 0, 0, 3),
-        UDim2.new(0, 0, 1, -3),
+        UDim2.new(1, 0, 0, 2),
+        UDim2.new(0, 0, 1, -2),
         Color3.fromRGB(255, 255, 255), 999
     )
-    progBg.BackgroundTransparency = 0.95
+    progBg.BackgroundTransparency = 0.9
     progBg.ZIndex = 101
-    
-    local progBgCorner = Instance.new("UICorner")
-    progBgCorner.CornerRadius = UDim.new(0, 8)
-    progBgCorner.Parent = progBg
 
     local prog = newFrame(progBg, "Prog",
         UDim2.new(1, 0, 1, 0),
@@ -870,7 +849,7 @@ function NCUI:notify(message, kind, duration)
 
     table.insert(_notifySlots, toast)
 
-    tw(toast, { Position = UDim2.new(1, -(NOTIFY_W + 16), 0, yPos) }, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    tw(toast, { Position = UDim2.new(1, -(NOTIFY_W + 16), 0, yPos) }, 0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
     local dur = duration or 3.5
     tw(prog, { Size = UDim2.new(0, 0, 1, 0) }, dur, Enum.EasingStyle.Linear)
